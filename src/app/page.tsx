@@ -15,12 +15,12 @@ export default function Home() {
       {/* Content Container */}
       <div className="relative z-10 flex flex-col items-center justify-center">
 
-        <div className="mb-8">
+        <div className="mb-0">
           <LogoFirstPage />
         </div>
 
         {/* Main Title */}
-        <h1 className="text-3xl font-bold text-gray-800 mb-12 text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-5 text-center">
           Pet-Friendly Hotel
         </h1>
 
@@ -28,28 +28,28 @@ export default function Home() {
         <div className="flex gap-6 mb-12 flex-wrap justify-center">
           <div className="rounded-lg overflow-hidden shadow-lg">
             <Image
-              src="/assets/images/pet1.svg"
+              src="/assets/images/first_page/1.png"
               alt="Pet in Hotel Room"
-              width={200}
-              height={150}
+              width={150}
+              height={100}
               className="object-cover"
             />
           </div>
           <div className="rounded-lg overflow-hidden shadow-lg">
             <Image
-              src="/assets/images/pet2.svg"
+              src="/assets/images/first_page/2.png"
               alt="Pet in Lobby"
-              width={200}
-              height={150}
+              width={150}
+              height={100}
               className="object-cover"
             />
           </div>
           <div className="rounded-lg overflow-hidden shadow-lg">
             <Image
-              src="/assets/images/pet3.svg"
+              src="/assets/images/first_page/3.png"
               alt="Pet Grooming"
-              width={200}
-              height={150}
+              width={150}
+              height={100}
               className="object-cover"
             />
           </div>
