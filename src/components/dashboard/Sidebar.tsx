@@ -10,7 +10,6 @@ import {
     TeamOutlined, 
     DollarOutlined,
     QuestionCircleOutlined,
-    MenuOutlined,
     CloseOutlined
 } from '@ant-design/icons';
 

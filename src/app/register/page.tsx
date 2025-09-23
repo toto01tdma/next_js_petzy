@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import LogoFirstPage from "@/component/first_page/logo";
 import { UserOutlined, MailOutlined, PhoneOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone, ArrowLeftOutlined } from "@ant-design/icons";
@@ -34,7 +35,7 @@ export default function Register() {
 
                 {/* Logo */}
                 <div className="mb-8">
-                    <LogoFirstPage />
+                    <LogoFirstPage subtext='Find Your Perfect Stay, Anytime, Anywhere'/>
                 </div>
 
                 <div className="w-full flex gap-8">
@@ -144,15 +145,9 @@ export default function Register() {
                             {/* Social Login Buttons */}
                             <div>
                                 <div className="mb-3">
-                                    <button className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl hover:bg-gray-50 transition-colors shadow">
-                                        <span className="text-xl">🔍</span>
+                                    <button className="w-full flex items-center justify-center gap-3 py-3 rounded-lg hover:bg-gray-50 transition-colors shadow">
+                                        <Image src="/assets/images/svg/google.png" alt="Google" width={20} height={20} />
                                         <span className="text-gray-700">เข้าสู่ระบบด้วย Google</span>
-                                    </button>
-                                </div>
-                                <div>
-                                    <button className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl hover:bg-gray-50 transition-colors shadow">
-                                        <span className="text-xl text-blue-600">f</span>
-                                        <span className="text-gray-700">เข้าสู่ระบบด้วย Facebook</span>
                                     </button>
                                 </div>
                             </div>

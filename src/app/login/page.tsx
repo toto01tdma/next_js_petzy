@@ -1,21 +1,24 @@
 'use client';
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import LogoFirstPage from "@/component/first_page/logo";
-import { MailOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone, ArrowRightOutlined } from "@ant-design/icons";
+import { MailOutlined, PhoneOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone, ArrowRightOutlined } from "@ant-design/icons";
 import { Switch } from "antd";
 
 export default function Login() {
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
+    const [inputValue, setInputValue] = useState('');
+    const [inputType, setInputType] = useState<'email' | 'phone'>('email');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         // Here you would normally validate credentials
-        // For now, we'll just redirect to dashboard
-        router.push('/dashboard');
+        // For now, we'll redirect to data entry page first
+        router.push('/data-entry');
     };
 
     const togglePasswordVisibility = () => {
@@ -32,14 +35,14 @@ export default function Login() {
             {/* Content Container */}
             <div className="relative z-10 w-full flex flex-col items-center justify-center">
                 {/* Logo */}
-                <div className="mb-8">
-                    <LogoFirstPage />
+                <div className="mb-3">
+                    <LogoFirstPage subtext='Find Your Perfect Stay, Anytime, Anywhere' />
                 </div>
 
                 {/* Login Form */}
                 <div className="w-full max-w-md">
 
-                    <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">
+                    <h1 className="text-4xl text-gray-800 mb-8 text-center" style={{ fontWeight: 'bold' }}>
                         เข้าสู่ระบบผู้ให้บริการ
                     </h1>
 
@@ -48,14 +51,29 @@ export default function Login() {
                     </p>
 
                     <form className="space-y-4" onSubmit={handleSubmit}>
-                        {/* Email Input */}
+                        {/* Email/Phone Input */}
                         <div className="relative">
                             <input
-                                type="email"
-                                placeholder="กรุณา กรอกอีเมลของคุณ"
+                                type={inputType === 'email' ? 'email' : 'tel'}
+                                value={inputValue}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setInputValue(value);
+                                    // Auto-detect input type based on content
+                                    if (value.includes('@')) {
+                                        setInputType('email');
+                                    } else if (/^[0-9+\-\s()]*$/.test(value)) {
+                                        setInputType('phone');
+                                    }
+                                }}
+                                placeholder={inputType === 'email' ? 'กรุณา กรอกอีเมลของคุณ' : 'กรุณา กรอกเบอร์โทรศัพท์ของคุณ'}
                                 className="w-full px-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                             />
-                            <MailOutlined className="absolute left-3 top-4 text-gray-400" />
+                            {inputType === 'email' ? (
+                                <MailOutlined className="absolute left-3 top-4 text-gray-400" />
+                            ) : (
+                                <PhoneOutlined className="absolute left-3 top-4 text-gray-400" />
+                            )}
                         </div>
 
                         {/* Password Input */}
@@ -107,15 +125,9 @@ export default function Login() {
                     {/* Social Login Buttons */}
                     <div>
                         <div className="mb-3">
-                            <button className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-2xl hover:bg-gray-50 transition-colors">
-                                <span className="text-xl">🔍</span>
+                            <button className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                <Image src="/assets/images/svg/google.png" alt="Google" width={20} height={20} />
                                 <span className="text-gray-700">เข้าสู่ระบบด้วย Google</span>
-                            </button>
-                        </div>
-                        <div>
-                            <button className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-2xl hover:bg-gray-50 transition-colors">
-                                <span className="text-xl text-blue-600">f</span>
-                                <span className="text-gray-700">เข้าสู่ระบบด้วย Facebook</span>
                             </button>
                         </div>
                     </div>

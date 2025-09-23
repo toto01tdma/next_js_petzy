@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
-import { MenuOutlined, CalendarOutlined, SearchOutlined, UserOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { Input, Select, Button, Table } from 'antd';
+import { MenuOutlined, CalendarOutlined, SearchOutlined, CheckCircleOutlined, HomeOutlined } from '@ant-design/icons';
+import { Input, Select, Button } from 'antd';
+import DataTable from '@/components/shared/DataTable';
 
 const { Option } = Select;
 
@@ -14,8 +15,8 @@ export default function Dashboard() {
         setSidebarOpen(!sidebarOpen);
     };
 
-    // Sample data for the table
-    const columns = [
+    // Dashboard table columns configuration
+    const dashboardColumns = [
         {
             title: 'รหัสการจอง',
             dataIndex: 'bookingCode',
@@ -27,15 +28,15 @@ export default function Dashboard() {
             key: 'customerName',
         },
         {
-            title: 'ของราคา',
+            title: 'ยอดราคา',
             dataIndex: 'price',
-            key: 'price',
+            key: 'totalPrice',
             render: (text: string) => <span className="text-red-500">{text}</span>,
         },
         {
-            title: 'วงเงินใช้จ่าย',
+            title: 'เวลาในการจอง',
             dataIndex: 'budget',
-            key: 'budget',
+            key: 'bookingTime',
         },
         {
             title: 'วันที่เข้าพัก',
@@ -43,55 +44,53 @@ export default function Dashboard() {
             key: 'checkInDate',
         },
         {
-            title: 'รายได้ต่อคืน',
+            title: 'รายได้ของคุณ',
             dataIndex: 'dailyIncome',
-            key: 'dailyIncome',
+            key: 'yourIncome',
         },
         {
-            title: 'สถานะเงิน',
+            title: 'สถานะล่าสุด',
             dataIndex: 'paymentStatus',
-            key: 'paymentStatus',
+            key: 'latestStatus',
             render: (status: string) => (
-                <span className={`px-2 py-1 rounded text-xs ${
-                    status === 'รอดำเนินการ' ? 'bg-yellow-100 text-yellow-800' :
+                <span className={`px-2 py-1 rounded text-xs ${status === 'รอดำเนินการ' ? 'bg-yellow-100 text-yellow-800' :
                     status === 'ชำระแล้ว' ? 'bg-green-100 text-green-800' :
-                    'bg-red-100 text-red-800'
-                }`}>
+                        'bg-red-100 text-red-800'
+                    }`}>
                     {status}
                 </span>
             ),
         },
         {
-            title: 'อพเดทสถานะ',
+            title: 'อัพเดทสถานะ',
             dataIndex: 'updateStatus',
             key: 'updateStatus',
             render: (status: string) => (
-                <span className={`px-2 py-1 rounded text-xs ${
-                    status === 'ชำระแล้ว' ? 'bg-green-100 text-green-800' :
+                <span className={`px-2 py-1 rounded text-xs ${status === 'ชำระแล้ว' ? 'bg-green-100 text-green-800' :
                     status === 'รอชำระ' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-800'
-                }`}>
+                        'bg-gray-100 text-gray-800'
+                    }`}>
                     {status}
                 </span>
             ),
         },
         {
-            title: 'รูปแบบการชำระ',
+            title: 'รูปแบบที่ใช้บริการ',
             dataIndex: 'paymentMethod',
-            key: 'paymentMethod',
+            key: 'serviceType',
             render: (method: string) => (
-                <span className={`px-2 py-1 rounded text-xs ${
-                    method === 'โอนเงินออนไลน์' ? 'bg-blue-100 text-blue-800' :
+                <span className={`px-2 py-1 rounded text-xs ${method === 'โอนเงินออนไลน์' ? 'bg-blue-100 text-blue-800' :
                     method === 'สมาชิกสำคัญ' ? 'bg-purple-100 text-purple-800' :
-                    'bg-gray-100 text-gray-800'
-                }`}>
+                        'bg-gray-100 text-gray-800'
+                    }`}>
                     {method}
                 </span>
             ),
         },
         {
             title: 'ดูรายละเอียด',
-            key: 'action',
+            dataIndex: 'action',
+            key: 'viewDetails',
             render: () => (
                 <Button type="link" size="small">
                     👁️
@@ -159,7 +158,7 @@ export default function Dashboard() {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                <header className="bg-gradient-to-r from-[#C6CEDE] to-[#FFFFFF] shadow-sm border-b border-gray-200 px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
@@ -178,55 +177,55 @@ export default function Dashboard() {
                 </header>
 
                 {/* Dashboard Content */}
-                <main className="flex-1 overflow-auto p-6">
+                <main className="flex-1 overflow-auto p-6 bg-white">
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
-                            <div className="flex items-center justify-between">
+                        <div className="bg-gradient-to-r from-[#0097EC] to-[#003AD2] rounded-2xl p-6 text-white">
+                            <div className="">
                                 <div>
-                                    <h3 className="text-lg font-medium opacity-90">ลูกค้าที่พักของคุณ</h3>
-                                    <p className="text-3xl font-bold mt-2">24</p>
-                                    <p className="text-sm opacity-75">คนที่ได้เข้าพัก</p>
+                                    <div className="flex items-center justify-between w-full">
+                                        <h3 className="text-lg font-medium opacity-90">ลูกค้าที่พักของคุณ</h3>
+                                        <HomeOutlined className='text-3xl' />
+                                    </div>
+                                    <p className="text-5xl" style={{ marginBottom: '0.5rem' }}>24</p>
+                                    <p className="text-sm" style={{ marginBottom: '0rem' }}>คุณทำได้ดีมาก</p>
                                 </div>
-                                <div className="text-4xl opacity-75">📋</div>
                             </div>
                         </div>
-
-                        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white">
-                            <div className="flex items-center justify-between">
+                        <div className="bg-gradient-to-r from-[#1FD071] to-[#00A843] rounded-2xl p-6 text-white">
+                            <div className="">
                                 <div>
-                                    <h3 className="text-lg font-medium opacity-90">รายได้ที่พักของคุณ</h3>
-                                    <p className="text-3xl font-bold mt-2">12,000.-</p>
-                                    <p className="text-sm opacity-75">รายได้ต่อคืน</p>
-                                    <div className="flex items-center mt-2">
-                                        <span className="text-sm">33.1% ↗</span>
-                                        <span className="text-xs ml-2 opacity-75">Since Last month</span>
+                                    <div className="flex items-center justify-between w-full">
+                                        <h3 className="text-lg font-medium opacity-90">รายได้ทั้งหมดของคุณ</h3>
+                                        <CheckCircleOutlined className='text-3xl' />
                                     </div>
+                                    <p className="text-5xl" style={{ marginBottom: '0.5rem' }}>24</p>
+                                    <p className="text-sm" style={{ marginBottom: '0rem' }}>คุณทำได้ดีมาก</p>
                                 </div>
-                                <div className="text-4xl opacity-75">✅</div>
                             </div>
                         </div>
                     </div>
 
+                    <div className="w-full border-1 border-black rounded-lg"></div>
                     {/* Table Section */}
-                    <div className="bg-white rounded-lg shadow-sm">
-                        <div className="p-6 border-b border-gray-200">
-                            <h2 className="text-xl font-semibold text-gray-800 mb-4">รายงานสำคัญประจำวัน</h2>
-                            
+                    <div className="">
+                        <div className="py-3 px-2 border-gray-200">
+                            <h2 className="text-3xl font-semibold text-gray-800 mb-4">รายงานสำคัญประจำวัน</h2>
+
                             {/* Filters */}
                             <div className="flex flex-wrap gap-4 items-center">
                                 <div className="flex-1 min-w-64">
                                     <Input
                                         placeholder="ค้นหา..."
                                         prefix={<SearchOutlined />}
-                                        className="w-full"
+                                        className="w-full min-h-[40px]"
                                     />
                                 </div>
-                                <Select defaultValue="ค้นหาจากชื่อ" className="w-40">
+                                <Select defaultValue="ค้นหาจากชื่อ" className="w-40 min-h-[40px]">
                                     <Option value="name">ค้นหาจากชื่อ</Option>
                                     <Option value="code">รหัสการจอง</Option>
                                 </Select>
-                                <Select defaultValue="ค้นหาสถานะ" className="w-40">
+                                <Select defaultValue="ค้นหาสถานะ" className="w-40 min-h-[40px]">
                                     <Option value="all">ค้นหาสถานะ</Option>
                                     <Option value="pending">รอดำเนินการ</Option>
                                     <Option value="paid">ชำระแล้ว</Option>
@@ -234,13 +233,10 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <Table
-                                columns={columns}
-                                dataSource={data}
-                                pagination={false}
-                                className="w-full"
-                                scroll={{ x: 1200 }}
+                        <div className="">
+                            <DataTable
+                                columns={dashboardColumns}
+                                data={data}
                             />
                         </div>
                     </div>

@@ -1,15 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+  --font-family-sans: var(--font-kanit), 'Kanit', ui-sans-serif, system-ui;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-kanit: 'Kanit', sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +20,44 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-kanit), 'Kanit', sans-serif;
+}
+
+/* Apply Kanit font to all elements */
+* {
+  font-family: var(--font-kanit), 'Kanit', sans-serif;
+}
+
+/* 
+  Note: We're using React 19 with Ant Design v5.27.3
+  Ant Design officially supports React 16-18, but works fine with React 19
+  The compatibility warning is suppressed via WarningSupressor component
+*/
+
+/* Ensure Ant Design components use Kanit font */
+.ant-typography,
+.ant-btn,
+.ant-input,
+.ant-table,
+.ant-menu,
+.ant-select,
+.ant-form-item-label,
+.ant-upload,
+.ant-message {
+  font-family: var(--font-kanit), 'Kanit', sans-serif !important;
+}
+
+/* Custom Upload Styles */
+.ant-upload-select-picture-card {
+  width: 100% !important;
+  height: 120px !important;
+}
+
+.ant-upload-list-picture-card .ant-upload-list-item {
+  width: 100% !important;
+  height: 120px !important;
+}
+
+.ant-upload-list-picture-card-container {
+  width: 100% !important;
 }

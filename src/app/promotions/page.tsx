@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
-import { MenuOutlined, EyeOutlined } from '@ant-design/icons';
-import { Table } from 'antd';
+import { MenuOutlined, HomeOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import DataTable from '@/components/shared/DataTable';
 
 export default function ManagePromotions() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -12,12 +12,12 @@ export default function ManagePromotions() {
         setSidebarOpen(!sidebarOpen);
     };
 
-    // Table columns
-    const columns = [
+    // Promotions table columns configuration
+    const promotionsColumns = [
         {
             title: 'ลำดับรายการ',
             dataIndex: 'id',
-            key: 'id',
+            key: 'itemOrder',
             render: (text: number) => `${text}.`,
         },
         {
@@ -26,19 +26,19 @@ export default function ManagePromotions() {
             key: 'roomType',
         },
         {
-            title: 'ราคาต่อวัน',
+            title: 'ราคาส่วนลด',
             dataIndex: 'dailyPrice',
-            key: 'dailyPrice',
+            key: 'discountPrice',
         },
         {
-            title: 'ราคาต่อเดือน',
+            title: 'ราคาที่คุณเสนอ',
             dataIndex: 'monthlyPrice',
-            key: 'monthlyPrice',
+            key: 'yourOfferedPrice',
         },
         {
-            title: 'ยอดเงินมัดจำ',
+            title: 'ยอดรับเงินจริง',
             dataIndex: 'deposit',
-            key: 'deposit',
+            key: 'actualReceived',
         },
         {
             title: 'วันที่เข้าร่วม',
@@ -114,7 +114,7 @@ export default function ManagePromotions() {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                <header className="bg-gradient-to-r from-[#C6CEDE] to-[#FFFFFF] shadow-sm border-b border-gray-200 px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
@@ -129,51 +129,48 @@ export default function ManagePromotions() {
                 </header>
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-auto p-6">
+                <main className="flex-1 overflow-auto p-6 bg-white">
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white relative">
-                            <div className="flex items-center justify-between">
+                        <div className="bg-gradient-to-r from-[#0097EC] to-[#003AD2] rounded-2xl p-6 text-white">
+                            <div className="">
                                 <div>
-                                    <h3 className="text-lg font-medium opacity-90">โปรโมชันส่วนลด</h3>
-                                    <p className="text-3xl font-bold mt-2">5 รายการ</p>
-                                    <p className="text-sm opacity-75">รายการที่คุณเข้าร่วม</p>
-                                </div>
-                                <div className="absolute top-4 right-4">
-                                    <EyeOutlined className="text-2xl" />
+                                    <div className="flex items-center justify-between w-full">
+                                        <h3 className="text-lg font-medium opacity-90">โปรโมชันส่วนลด</h3>
+                                        <HomeOutlined className='text-3xl' />
+                                    </div>
+                                    <p className="text-5xl" style={{ marginBottom: '0.5rem' }}>5</p>
+                                    <p className="text-sm" style={{ marginBottom: '0rem' }}>รายการที่คุณเข้าร่วม</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white relative">
-                            <div className="flex items-center justify-between">
+                        <div className="bg-gradient-to-r from-[#1FD071] to-[#00A843] rounded-2xl p-6 text-white">
+                            <div className="">
                                 <div>
-                                    <h3 className="text-lg font-medium opacity-90">โปรโมชันพิเศษ</h3>
-                                    <p className="text-3xl font-bold mt-2">0 รายการ</p>
-                                    <p className="text-sm opacity-75">ยังไม่มีโปรโมชันพิเศษ</p>
-                                </div>
-                                <div className="absolute top-4 right-4">
-                                    <EyeOutlined className="text-2xl" />
+                                    <div className="flex items-center justify-between w-full">
+                                        <h3 className="text-lg font-medium opacity-90">โปรโมชันพิเศษ</h3>
+                                        <CheckCircleOutlined className='text-3xl' />
+                                    </div>
+                                    <p className="text-5xl" style={{ marginBottom: '0.5rem' }}>0</p>
+                                    <p className="text-sm" style={{ marginBottom: '0rem' }}>ยังไม่มีโปรโมชันพิเศษ</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Table Section */}
-                    <div className="bg-white rounded-lg shadow-sm">
-                        <div className="p-6 border-b border-gray-200">
-                            <h2 className="text-xl font-semibold text-gray-800">
+                    <div className="">
+                        <div className="py-3 px-2 border-gray-200">
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4">
                                 รายการโปรโมชันที่เข้าร่วมรายการ
                             </h2>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <Table
-                                columns={columns}
-                                dataSource={data}
-                                pagination={false}
-                                className="w-full"
-                                scroll={{ x: 1000 }}
+                        <div className="">
+                            <DataTable
+                                columns={promotionsColumns}
+                                data={data}
                             />
                         </div>
                     </div>

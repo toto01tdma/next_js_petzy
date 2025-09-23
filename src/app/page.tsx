@@ -16,11 +16,11 @@ export default function Home() {
       <div className="relative z-10 flex flex-col items-center justify-center">
 
         <div className="mb-0">
-          <LogoFirstPage />
+          <LogoFirstPage subtext='Find Your Perfect Stay, Anytime, Anywhere'/>
         </div>
 
         {/* Main Title */}
-        <h1 className="text-3xl font-bold text-gray-800 mb-5 text-center">
+        <h1 className="text-3xl text-gray-800 mb-5 text-center" style={{ fontWeight: 'bold' }}>
           Pet-Friendly Hotel
         </h1>
 

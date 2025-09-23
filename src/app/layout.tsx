@@ -1,16 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Kanit } from "next/font/google";
 import "./globals.css";
 import "antd/dist/reset.css";
+import WarningSupressor from "./components/WarningSupressor";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const kanit = Kanit({
+  weight: ['200', '300', '400', '500', '600', '700', '800'],
+  subsets: ["latin", "thai"],
+  variable: "--font-kanit",
 });
 
 export const metadata: Metadata = {
@@ -25,9 +22,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script src="/suppress-warnings.js" async />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${kanit.variable} font-kanit antialiased`}
       >
+        <WarningSupressor />
         {children}
       </body>
     </html>

@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import { MenuOutlined, PlusOutlined, EyeOutlined } from '@ant-design/icons';
-import { Button, Input, Calendar, Badge } from 'antd';
-import type { CalendarProps } from 'antd';
-import type { Dayjs } from 'dayjs';
+import { Button } from 'antd';
+import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import DataTable from '@/components/shared/DataTable';
 
 export default function ManageRooms() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [editMode, setEditMode] = useState(false);
+    const [editingRowId, setEditingRowId] = useState<string | null>(null);
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -18,23 +20,23 @@ export default function ManageRooms() {
     const rooms = [
         {
             id: 'PZ1',
-            title: 'รายการห้องพักกับหมดของคุณ',
+            title: 'รายการห้องพักทั้งหมดของคุณ',
             subtitle: '10 ห้อง',
-            color: 'bg-blue-600',
+            color: 'bg-[#1F4173]',
             icon: '👁️'
         },
         {
             id: 'PZ2',
             title: 'บริการรับฝากสัตว์เลี้ยงของคุณ',
             subtitle: '3 บริการ',
-            color: 'bg-gray-600',
+            color: 'bg-[#484848]',
             icon: '👁️'
         },
         {
             id: 'PZ3',
             title: 'บริการสปาสัตว์เลี้ยง',
             subtitle: '3 บริการ',
-            color: 'bg-gray-600',
+            color: 'bg-[#484848]',
             icon: '👁️'
         }
     ];
@@ -42,6 +44,7 @@ export default function ManageRooms() {
     // Sample room details
     const roomDetails = [
         {
+            key: '1',
             id: 1,
             roomCode: 'PZ01-001',
             roomType: 'ห้องเดี่ยวเตียง',
@@ -52,31 +55,82 @@ export default function ManageRooms() {
         }
     ];
 
-    // Calendar event data
-    const getListData = (value: Dayjs) => {
-        let listData;
-        switch (value.date()) {
-            case 7:
-                listData = [
-                    { type: 'success', content: 'Available' },
-                ];
-                break;
-            default:
+    // Table columns configuration
+    const roomTableColumns = [
+        {
+            key: 'itemOrder',
+            title: 'ลำดับรายการ',
+            dataIndex: 'id',
+            render: (value: number) => `${value}.`
+        },
+        {
+            key: 'roomCode',
+            title: 'รหัสห้องพัก',
+            dataIndex: 'roomCode'
+        },
+        {
+            key: 'roomType',
+            title: 'ประเภทห้องพัก',
+            dataIndex: 'roomType'
+        },
+        {
+            key: 'discountPrice',
+            title: 'ราคาส่วนลด',
+            dataIndex: 'dailyRate'
+        },
+        {
+            key: 'yourOfferedPrice',
+            title: 'ราคาที่คุณเสนอ',
+            dataIndex: 'monthlyRate'
+        },
+        {
+            key: 'actualReceived',
+            title: 'ยอดรับเงินจริง',
+            dataIndex: 'deposit'
+        },
+        {
+            key: 'status',
+            title: 'สถานะ',
+            dataIndex: 'status',
+            render: (value: string) => (
+                <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+                    {value}
+                </span>
+            )
+        },
+        {
+            key: 'edit',
+            title: 'แก้ไข',
+            dataIndex: 'action',
+            render: (value: string, record: { key: string; [key: string]: unknown }) => (
+                <div className="flex items-center justify-center">
+                    <Pencil
+                        className="w-5 h-5 text-blue-600 cursor-pointer hover:text-blue-800"
+                        onClick={() => {
+                            setEditingRowId(record.key);
+                            setEditMode(true);
+                        }}
+                    />
+                </div>
+            )
         }
-        return listData || [];
-    };
+    ];
 
-    const dateCellRender: CalendarProps<Dayjs>['dateCellRender'] = (value) => {
-        const listData = getListData(value);
-        return (
-            <ul className="events">
-                {listData.map((item) => (
-                    <li key={item.content}>
-                        <Badge status={item.type as any} text={item.content} />
-                    </li>
-                ))}
-            </ul>
-        );
+
+    const [isOpen, setIsOpen] = useState(true);
+    const [selectedDate, setSelectedDate] = useState(7);
+
+    const daysInMonth = Array.from({ length: 30 }, (_, i) => i + 1);
+
+    const [price] = useState("900");
+    const [newPrice, setNewPrice] = useState("900");
+    const [roomCode] = useState("SBI-001");
+    const [newRoomCode, setNewRoomCode] = useState("SBI-001");
+
+    const handleUpdate = () => {
+        alert(`✅ อัปเดตข้อมูลแล้ว!
+  ราคาใหม่: ${newPrice}
+  รหัสห้องพักใหม่: ${newRoomCode}`);
     };
 
     return (
@@ -87,7 +141,7 @@ export default function ManageRooms() {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                <header className="bg-white shadow-sm border-gray-200 px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
@@ -98,36 +152,44 @@ export default function ManageRooms() {
                             </button>
                             <h1 className="text-2xl font-semibold text-gray-800">จัดการห้องพักของคุณ</h1>
                         </div>
-                        <Button 
-                            type="primary" 
-                            icon={<PlusOutlined />}
-                            className="bg-teal-500 hover:bg-teal-600 border-teal-500"
-                        >
-                            สร้างบริการของคุณเพิ่มเติม
-                        </Button>
                     </div>
                 </header>
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-auto p-6">
+                <main className="flex-1 overflow-auto p-6 bg-white">
                     {/* Section Title */}
                     <div className="mb-6">
-                        <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                            รายการห้องพักและบริการกับหมดของคุณ
-                        </h2>
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-3xl font-semibold text-gray-800 px-2" style={{ marginBottom: '0px' }}>
+                                รายการห้องพักและบริการกับหมดของคุณ
+                            </h2>
+                            <Button
+                                size="large"
+                                className="bg-teal-500 hover:bg-teal-600 border-teal-500"
+                                style={{ backgroundColor: '#00B6AA' }}
+                            >
+                                <span className="text-white font-bold text-lg">สร้างบริการของคุณเพิ่มเติม</span>
+                                <PlusOutlined style={{ color: 'white' }} />
+                            </Button>
+                        </div>
+                        <div className="w-full border-1 border-black rounded-lg mb-6 mt-1"></div>
 
                         {/* Room Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                             {rooms.map((room) => (
-                                <div key={room.id} className={`${room.color} rounded-2xl p-6 text-white relative`}>
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h3 className="text-lg font-medium mb-2">{room.title}</h3>
-                                            <p className="text-2xl font-bold">{room.subtitle}</p>
-                                        </div>
-                                        <div className="absolute top-4 right-4">
-                                            <EyeOutlined className="text-2xl" />
-                                        </div>
+                                <div
+                                    key={room.id}
+                                    className={`${room.color} rounded-2xl px-6 pt-6 pb-0 text-white relative flex items-center justify-center`}
+                                >
+                                    {/* ไอคอนขวาบน */}
+                                    <div className="absolute top-4 right-4">
+                                        <EyeOutlined className="text-2xl" />
+                                    </div>
+
+                                    {/* เนื้อหาตรงกลาง */}
+                                    <div className="text-center mt-4">
+                                        <p className="text-lg font-medium mb-2" style={{ marginBottom: '0.25rem' }}>{room.title}</p>
+                                        <p className="text-2xl">{room.subtitle}</p>
                                     </div>
                                 </div>
                             ))}
@@ -135,154 +197,175 @@ export default function ManageRooms() {
                     </div>
 
                     {/* Room Details Section */}
-                    <div className="bg-white rounded-lg shadow-sm mb-8">
-                        <div className="p-6 border-b border-gray-200">
+                    <div className="bg-white rounded-xl shadow-md mb-8 border-1 border-gray-200">
+                        <div className="p-6">
                             <h3 className="text-lg font-semibold text-gray-800">
-                                รายการห้องพักกับหมดของคุณ 10 ห้อง
+                                รายการห้องพักทั้งหมดของคุณ 10 ห้อง
                             </h3>
                         </div>
 
                         {/* Room Details Table */}
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ลำดับรายการ
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            รหัสห้องพัก
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ประเภทห้องพัก
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ราคาต่อวัน
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ราคาต่อเดือน
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ยอดเงินมัดจำ
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            สถานะ
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ยกเลิกจองเดอร์
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {roomDetails.map((room) => (
-                                        <tr key={room.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {room.id}.
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {room.roomCode}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {room.roomType}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {room.dailyRate}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {room.monthlyRate}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {room.deposit}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                                                    {room.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <Button size="small" icon={<EyeOutlined />} />
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* Bottom Section with Room Management and Calendar */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Room Management Section */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <div className="space-y-4">
-                                {/* Room Code Input */}
-                                <div className="flex gap-4">
-                                    <div className="flex-1">
-                                        <Button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black border-yellow-400">
-                                            รหัสห้องพัก
-                                        </Button>
-                                    </div>
-                                    <div className="flex-1">
-                                        <Input placeholder="SB1-001" className="w-full" />
-                                    </div>
-                                </div>
-
-                                {/* Room Management Button */}
-                                <Button className="w-full bg-teal-500 hover:bg-teal-600 text-white border-teal-500">
-                                    กำหนด วันเวลา ให้บริการ
-                                </Button>
-
-                                {/* Price Inputs */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Button className="w-full mb-2 bg-teal-500 hover:bg-teal-600 text-white border-teal-500">
-                                            ราคาต่อหมด
-                                        </Button>
-                                        <Input placeholder="900" className="w-full" />
-                                    </div>
-                                    <div>
-                                        <Button className="w-full mb-2 bg-teal-500 hover:bg-teal-600 text-white border-teal-500">
-                                            กำหนดราคาใหม่
-                                        </Button>
-                                        <Input placeholder="900" className="w-full" />
-                                    </div>
-                                </div>
-
-                                {/* Room Code and Update Buttons */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Button className="w-full mb-2 bg-teal-500 hover:bg-teal-600 text-white border-teal-500">
-                                            รหัสห้องพัก
-                                        </Button>
-                                        <Input placeholder="SB1-001" className="w-full" />
-                                    </div>
-                                    <div>
-                                        <Button className="w-full mb-2 bg-teal-500 hover:bg-teal-600 text-white border-teal-500">
-                                            เปลี่ยนรหัสห้องพัก
-                                        </Button>
-                                        <Input placeholder="SB1-001" className="w-full" />
-                                    </div>
-                                </div>
-
-                                {/* Action Buttons */}
-                                <div className="flex gap-4 pt-4">
-                                    <Button className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black border-yellow-400">
-                                        อัพเดทข้อมูล
-                                    </Button>
-                                    <Button className="flex-1 bg-gray-800 hover:bg-gray-900 text-white border-gray-800">
-                                        ปิดหน้าต่าง
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Calendar Section */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <Calendar 
-                                dateCellRender={dateCellRender}
-                                className="custom-calendar"
+                        <div className="">
+                            <DataTable
+                                columns={roomTableColumns}
+                                data={roomDetails}
                             />
                         </div>
                     </div>
+
+                    {/* Bottom Section with Room Management and Calendar - Only show when editing a specific row */}
+                    {editMode && editingRowId && (
+                        <div className="flex justify-between w-full border-b">
+                            <div className="flex-[1] min-h-screen bg-white flex flex-col items-center justify-start py-6 px-0">
+                                {/* Header */}
+                                <div className="flex flex-col gap-4 w-full max-w-md">
+                                    {/* Room Code */}
+                                    <div className="flex justify-between items-center">
+                                        <div className="px-4 py-2 bg-yellow-400 rounded-md font-bold text-white">
+                                            <span>รหัสห้องพัก</span> <span className="text-black">{roomDetails.find(room => room.key === editingRowId)?.roomCode || 'SBI-001'}</span>
+                                        </div>
+                                        {/* Toggle */}
+                                        <div className="flex items-center gap-2">
+                                            <span className={`${!isOpen ? "text-black" : "text-gray-400"}`}>ปิด</span>
+                                            <div
+                                                className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition ${isOpen ? "bg-green-500" : "bg-gray-300"
+                                                    }`}
+                                                onClick={() => setIsOpen(!isOpen)}
+                                            >
+                                                <div
+                                                    className={`bg-white w-6 h-6 rounded-full shadow-md transform transition ${isOpen ? "translate-x-6" : "translate-x-0"
+                                                        }`}
+                                                />
+                                            </div>
+                                            <span className={`${isOpen ? "text-black" : "text-gray-400"}`}>เปิด</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Set Time Button */}
+                                    <button className="bg-teal-500 py-2 rounded-md font-bold">
+                                        <span className="text-white">กำหนด วันเวลา ให้บริการ</span>
+                                    </button>
+                                </div>
+
+                                {/* Calendar */}
+                                <div className="mt-6 w-full max-w-md">
+                                    <div className="flex justify-between items-center px-2">
+                                        <button>
+                                            <ChevronLeft />
+                                        </button>
+                                        <h2 className="font-bold text-lg">June 2025</h2>
+                                        <button>
+                                            <ChevronRight />
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-7 gap-2 mt-4 text-center font-medium text-gray-500">
+                                        <span>Sun</span>
+                                        <span>Mon</span>
+                                        <span>Tue</span>
+                                        <span>Wed</span>
+                                        <span>Thu</span>
+                                        <span>Fri</span>
+                                        <span>Sat</span>
+                                    </div>
+                                    <div className="grid grid-cols-7 gap-2 mt-2 text-center">
+                                        {/* Blank before 1st June */}
+                                        <span></span><span></span>
+                                        {daysInMonth.map((day) => (
+                                            <button
+                                                key={day}
+                                                className={`py-2 rounded-full ${selectedDate === day ? "bg-green-200 text-green-800 font-bold" : "hover:bg-gray-100"
+                                                    }`}
+                                                onClick={() => setSelectedDate(day)}
+                                            >
+                                                {day}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex-[1] min-h-screen bg-white flex flex-col items-center justify-start p-6 space-y-10">
+                                {/* Grid Form */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
+                                    {/* ราคาที่กำหนด */}
+                                    <div>
+                                        <div className="bg-teal-500 text-white text-center font-bold rounded-md py-2 mb-3">
+                                            ราคาที่กำหนด
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={price}
+                                            readOnly
+                                            className="w-full border border-gray-400 rounded-md px-3 py-2 mt-2 text-center"
+                                        />
+                                    </div>
+
+                                    {/* กำหนดราคาใหม่ */}
+                                    <div>
+                                        <div className="bg-teal-500 text-white text-center font-bold rounded-md py-2 mb-3">
+                                            กำหนดราคาใหม่
+                                        </div>
+                                        <div className="relative mt-2">
+                                            <input
+                                                type="text"
+                                                value={newPrice}
+                                                onChange={(e) => setNewPrice(e.target.value)}
+                                                className="w-full border border-gray-400 rounded-md px-3 py-2 pr-8 text-center"
+                                            />
+                                            <Pencil className="absolute right-2 top-2.5 w-5 h-5 text-gray-500" />
+                                        </div>
+                                    </div>
+
+                                    {/* รหัสห้องพัก */}
+                                    <div>
+                                        <div className="bg-teal-500 text-white text-center font-bold rounded-md py-2 mb-3">
+                                            รหัสห้องพัก
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={roomCode}
+                                            readOnly
+                                            className="w-full border border-gray-400 rounded-md px-3 py-2 mt-2 text-center"
+                                        />
+                                    </div>
+
+                                    {/* เปลี่ยนรหัสห้องพัก */}
+                                    <div>
+                                        <div className="bg-teal-500 text-white text-center font-bold rounded-md py-2 mb-3">
+                                            เปลี่ยนรหัสห้องพัก
+                                        </div>
+                                        <div className="relative mt-2">
+                                            <input
+                                                type="text"
+                                                value={newRoomCode}
+                                                onChange={(e) => setNewRoomCode(e.target.value)}
+                                                className="w-full border border-gray-400 rounded-md px-3 py-2 pr-8 text-center"
+                                            />
+                                            <Pencil className="absolute right-2 top-2.5 w-5 h-5 text-gray-500" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Buttons */}
+                                <div className="flex gap-4 mt-10 justify-end">
+                                    <button
+                                        onClick={handleUpdate}
+                                        className="bg-yellow-400 font-bold px-6 py-3 rounded-xl shadow"
+                                    >
+                                        <span className="text-white">อัพเดทข้อมูล</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setEditMode(false);
+                                            setEditingRowId(null);
+                                        }}
+                                        className="bg-gray-800 font-bold px-6 py-3 rounded-xl shadow"
+                                    >
+                                        <span className="text-white">ปิดหน้าต่างนี้</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

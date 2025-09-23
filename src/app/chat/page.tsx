@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
-import { MenuOutlined, SendOutlined, SmileOutlined, PaperClipOutlined } from '@ant-design/icons';
+import { MenuOutlined, SmileOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { Input, Avatar, Badge } from 'antd';
 
 const { TextArea } = Input;
