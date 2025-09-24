@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import LogoFirstPage from "@/component/first_page/logo";
+import LogoFirstPage from "@/components/first_page/logo";
 import { UserOutlined, MailOutlined, PhoneOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone, ArrowLeftOutlined } from "@ant-design/icons";
 
 export default function Register() {
@@ -35,7 +35,7 @@ export default function Register() {
 
                 {/* Logo */}
                 <div className="mb-8">
-                    <LogoFirstPage subtext='Find Your Perfect Stay, Anytime, Anywhere'/>
+                    <LogoFirstPage subtext='Find Your Perfect Stay, Anytime, Anywhere' />
                 </div>
 
                 <div className="w-full flex gap-8">
@@ -138,10 +138,6 @@ export default function Register() {
                     {/* Right Side - Social Login */}
                     <div className="flex-1 max-w-md flex flex-col justify-center">
                         <div className="border-l border-gray-300 pl-8">
-                            <div className="mb-6 text-center">
-                                <span className="text-gray-400">OR</span>
-                            </div>
-
                             {/* Social Login Buttons */}
                             <div>
                                 <div className="mb-3">

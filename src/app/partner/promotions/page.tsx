@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
+import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, HomeOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import DataTable from '@/components/shared/DataTable';
+import DataTable from '@/components/partner/shared/DataTable';
 
 export default function ManagePromotions() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -139,7 +139,10 @@ export default function ManagePromotions() {
                                         <h3 className="text-lg font-medium opacity-90">โปรโมชันส่วนลด</h3>
                                         <HomeOutlined className='text-3xl' />
                                     </div>
-                                    <p className="text-5xl" style={{ marginBottom: '0.5rem' }}>5</p>
+                                    <div className="flex">
+                                        <p className="text-5xl mx-2" style={{ marginBottom: '0.5rem' }}>5</p>
+                                        <p className="text-5xl mx-2" style={{ marginBottom: '0rem' }}>รายการ</p>
+                                    </div>
                                     <p className="text-sm" style={{ marginBottom: '0rem' }}>รายการที่คุณเข้าร่วม</p>
                                 </div>
                             </div>
@@ -152,7 +155,10 @@ export default function ManagePromotions() {
                                         <h3 className="text-lg font-medium opacity-90">โปรโมชันพิเศษ</h3>
                                         <CheckCircleOutlined className='text-3xl' />
                                     </div>
-                                    <p className="text-5xl" style={{ marginBottom: '0.5rem' }}>0</p>
+                                    <div className="flex">
+                                        <p className="text-5xl mx-2" style={{ marginBottom: '0.5rem' }}>0</p>
+                                        <p className="text-5xl mx-2" style={{ marginBottom: '0rem' }}>รายการ</p>
+                                    </div>
                                     <p className="text-sm" style={{ marginBottom: '0rem' }}>ยังไม่มีโปรโมชันพิเศษ</p>
                                 </div>
                             </div>

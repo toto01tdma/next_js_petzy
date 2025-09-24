@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import LogoFirstPage from "@/component/first_page/logo";
+import LogoFirstPage from "@/components/first_page/logo";
 import { MailOutlined, PhoneOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone, ArrowRightOutlined } from "@ant-design/icons";
 import { Switch } from "antd";
 
@@ -18,7 +18,7 @@ export default function Login() {
         e.preventDefault();
         // Here you would normally validate credentials
         // For now, we'll redirect to data entry page first
-        router.push('/data-entry');
+        router.push('/partner/data-entry');
     };
 
     const togglePasswordVisibility = () => {
@@ -135,7 +135,7 @@ export default function Login() {
                     {/* Sign Up Link */}
                     <div className="mt-6 text-center">
                         <span className="text-gray-600">ยังไม่มีบัญชีผู้ใช้งาน? </span>
-                        <Link href="/register" className="text-blue-600 hover:underline">
+                        <Link href="/partner/register" className="text-blue-600 hover:underline">
                             ลงทะเบียน
                         </Link>
                     </div>

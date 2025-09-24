@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import LogoFirstPage from "@/component/first_page/logo";
+import LogoFirstPage from "@/components/first_page/logo";
 import { Button, Input, Select, Checkbox } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
 
@@ -148,7 +148,7 @@ export default function DataEntry2() {
 
     const handleSubmit = () => {
         // Navigate to data-entry-3 after submission
-        router.push('/data-entry-3');
+        router.push('/partner/data-entry-3');
     };
 
     return (

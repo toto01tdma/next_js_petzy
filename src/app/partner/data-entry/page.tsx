@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import LogoFirstPage from "@/component/first_page/logo";
+import LogoFirstPage from "@/components/first_page/logo";
 import { Button, Input, Modal } from 'antd';
 import type { UploadFile } from 'antd';
-import SingleFileAttachment from '@/components/shared/SingleFileAttachment';
+import SingleFileAttachment from '@/components/partner/shared/SingleFileAttachment';
 
 const { TextArea } = Input;
 
@@ -78,7 +78,7 @@ export default function DataEntry() {
         // After 2 seconds, close dialog and navigate to policy page
         setTimeout(() => {
             setIsSuccessDialogOpen(false);
-            router.push('/policy');
+            router.push('/partner/policy');
         }, 2000);
     };
 
@@ -653,7 +653,7 @@ export default function DataEntry() {
                         className="bg-[#0D263B] hover:bg-[#1a3a52] border-[#0D263B] px-8 py-2 h-auto mt-10 rounded-md"
                         onClick={() => {
                             setIsSuccessDialogOpen(false);
-                            router.push('/policy');
+                            router.push('/partner/policy');
                         }}
                     >
                         <span className="text-white">เข้าสู่การเพิ่มข้อมูลของคุณ</span>

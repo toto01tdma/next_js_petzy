@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Kanit } from "next/font/google";
 import "./globals.css";
 import "antd/dist/reset.css";
-import WarningSupressor from "./components/WarningSupressor";
+import WarningSupressor from "./WarningSupressor";
 
 const kanit = Kanit({
   weight: ['200', '300', '400', '500', '600', '700', '800'],

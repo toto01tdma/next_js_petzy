@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
+import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, SmileOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { Input, Avatar, Badge } from 'antd';
 

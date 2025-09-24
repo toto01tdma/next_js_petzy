@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
+import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, UploadOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 

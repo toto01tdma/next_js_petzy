@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
-import LogoFirstPage from '@/component/first_page/logo';
+import LogoFirstPage from '@/components/first_page/logo';
 
 export default function PolicyPage() {
     const router = useRouter();
@@ -167,7 +167,7 @@ export default function PolicyPage() {
                                 <Button 
                                     type="primary"
                                     size="large"
-                                    onClick={() => router.push('/data-entry-2')}
+                                    onClick={() => router.push('/partner/data-entry-2')}
                                     className="bg-blue-500 hover:bg-blue-600 border-blue-500 px-8"
                                 >
                                     ยอมรับ

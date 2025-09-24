@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import LogoFirstPage from "@/component/first_page/logo";
+import LogoFirstPage from "@/components/first_page/logo";
 
 export default function Home() {
   return (

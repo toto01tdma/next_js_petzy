@@ -23,14 +23,14 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     const pathname = usePathname();
 
     const menuItems = [
-        { icon: <HomeOutlined />, label: 'Home', path: '/dashboard', active: pathname === '/dashboard' },
-        { icon: <UserOutlined />, label: 'หน้าจองเข้าพัก', path: '/promotions', active: pathname === '/promotions' },
-        { icon: <SettingOutlined />, label: 'จัดการห้องพัก', path: '/manage-rooms', active: pathname === '/manage-rooms' },
-        { icon: <FileTextOutlined />, label: 'จัดการโปรโมชั่น', path: '/promotions', active: pathname === '/promotions' },
-        { icon: <TeamOutlined />, label: 'ดูประวัติการจ่ายเงิน', path: '/payment-history', active: pathname === '/payment-history' },
-        { icon: <DollarOutlined />, label: 'การแชทของคุณ', path: '/chat', active: pathname === '/chat' },
-        { icon: <FileTextOutlined />, label: 'สัญญาและเงื่อนไขคู่ค้า', path: '/terms', active: pathname === '/terms' },
-        { icon: <SettingOutlined />, label: 'ตั้งค่าโปรไฟล์ผู้ใช้', path: '/profile', active: pathname === '/profile' },
+        { icon: <HomeOutlined />, label: 'Home', path: '/partner/dashboard', active: pathname === '/partner/dashboard' },
+        { icon: <UserOutlined />, label: 'หน้าจองเข้าพัก', path: '/partner/promotions', active: pathname === '/partner/promotions' },
+        { icon: <SettingOutlined />, label: 'จัดการห้องพัก', path: '/partner/manage-rooms', active: pathname === '/partner/manage-rooms' },
+        { icon: <FileTextOutlined />, label: 'จัดการโปรโมชั่น', path: '/partner/promotions', active: pathname === '/partner/promotions' },
+        { icon: <TeamOutlined />, label: 'ดูประวัติการจ่ายเงิน', path: '/partner/payment-history', active: pathname === '/partner/payment-history' },
+        { icon: <DollarOutlined />, label: 'การแชทของคุณ', path: '/partner/chat', active: pathname === '/partner/chat' },
+        { icon: <FileTextOutlined />, label: 'สัญญาและเงื่อนไขคู่ค้า', path: '/partner/terms', active: pathname === '/partner/terms' },
+        { icon: <SettingOutlined />, label: 'ตั้งค่าโปรไฟล์ผู้ใช้', path: '/partner/profile', active: pathname === '/partner/profile' },
     ];
 
     const handleMenuClick = (path: string) => {

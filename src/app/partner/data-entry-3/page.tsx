@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import LogoFirstPage from "@/component/first_page/logo";
-import { Button, Select, Input, message } from 'antd';
+import LogoFirstPage from "@/components/first_page/logo";
+import { Button, Input } from 'antd';
+import Swal from 'sweetalert2';
 import { DownOutlined, UpOutlined } from '@ant-design/icons';
 
 const { TextArea } = Input;
 import type { UploadFile } from 'antd/es/upload/interface';
-import SingleFileAttachment from '@/components/shared/SingleFileAttachment';
+import SingleFileAttachment from '@/components/partner/shared/SingleFileAttachment';
 
 // Interface for room service row data
 interface RoomServiceRow {
@@ -26,12 +27,8 @@ interface RoomServiceFormProps {
     showDefaultData?: boolean;
     title?: string;
     description?: string;
-    headers?: {
-        roomType: string;
-        quantity: string;
-        openTime: string;
-        closeTime: string;
-        price: string;
+    headers: {
+        [key: string]: string;
     };
 }
 
@@ -83,23 +80,41 @@ export default function DataEntry3() {
 
 
     // Validation function
-    const validateForm = () => {
+    const validateForm = async () => {
         // Check if main image is uploaded
         if (!uploadedImages[0]) {
-            message.error('กรุณาอัพโหลดรูปหน้าปกหลัก');
+            await Swal.fire({
+                icon: 'error',
+                title: 'ข้อมูลไม่ครบถ้วน',
+                text: 'กรุณาอัพโหลดรูปหน้าปกหลัก',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#0D263B'
+            });
             return false;
         }
 
         // Check if description is filled
         if (!formData.description.trim()) {
-            message.error('กรุณากรอกรายละเอียดข้อมูลที่พัก');
+            await Swal.fire({
+                icon: 'error',
+                title: 'ข้อมูลไม่ครบถ้วน',
+                text: 'กรุณากรอกรายละเอียดข้อมูลที่พัก',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#0D263B'
+            });
             return false;
         }
 
         // Check if room service rows are properly filled
         for (const row of roomServiceRows) {
             if (!row.roomType || !row.quantity || !row.price) {
-                message.error('กรุณากรอกข้อมูลห้องพักและบริการให้ครบถ้วน');
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อมูลไม่ครบถ้วน',
+                    text: 'กรุณากรอกข้อมูลห้องพักและบริการให้ครบถ้วน',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#0D263B'
+                });
                 return false;
             }
         }
@@ -107,12 +122,26 @@ export default function DataEntry3() {
         return true;
     };
 
-    const handleSubmit = () => {
-        // if (validateForm()) {
-        //     message.success('บันทึกข้อมูลเรียบร้อยแล้ว');
-            // Navigate or perform submit action
-            router.push('/dashboard');
-        // }
+    const handleSubmit = async () => {
+        const isValid = await validateForm();
+        if (isValid) {
+            // Show success dialog
+            await Swal.fire({
+                icon: 'success',
+                title: 'ยืนยันข้อมูลสำเร็จ',
+                text: '',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                background: '#fff',
+                customClass: {
+                    popup: 'rounded-lg'
+                }
+            });
+            
+            // Navigate to data-entry-4
+            router.push('/partner/data-entry-4');
+        }
     };
 
     // Room Service Component
@@ -121,13 +150,7 @@ export default function DataEntry3() {
         showDefaultData = true,
         title = "เลือกรูปแบบบริการห้องพัก",
         description = "รหัสห้องพักจะรันตามจำนวนห้องที่มี",
-        headers = {
-            roomType: "รูปแบบห้องพักที่คุณเลือก",
-            quantity: "จำนวนห้องพัก",
-            openTime: "เวลาเปิด",
-            closeTime: "เวลาปิด",
-            price: "ราคาที่กำหนด"
-        }
+        headers
     }: RoomServiceFormProps) => {
         const [localRoomServiceRows, setLocalRoomServiceRows] = useState<RoomServiceRow[]>(
             showDefaultData ? data : []
@@ -187,80 +210,56 @@ export default function DataEntry3() {
                 >
                     <div className="space-y-4 pt-4">
                         {/* Header Row */}
-                        <div className="grid grid-cols-5 gap-4">
-                            <div className="bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-between">
-                                <span>{headers.roomType}</span>
-                                <button
-                                    className="border border-white rounded-lg px-2 py-0.5"
-                                    onClick={addLocalRoomServiceRow}
-                                >
-                                    +
-                                </button>
-                            </div>
-                            <div className="bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-center">
-                                {headers.quantity}
-                            </div>
-                            <div className="bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-center">
-                                {headers.openTime}
-                            </div>
-                            <div className="bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-center">
-                                {headers.closeTime}
-                            </div>
-                            <div className="bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-center">
-                                {headers.price}
-                            </div>
+                        <div className={`grid gap-4`} style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
+                            {Object.entries(headers).map(([key, value], index) => (
+                                <div key={key} className="bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-between">
+                                    <span>{value}</span>
+                                    {index === 0 && (
+                                        <button
+                                            className="border border-white rounded-lg px-2 py-0.5"
+                                            onClick={addLocalRoomServiceRow}
+                                        >
+                                            +
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
                         </div>
 
                         {/* Data Rows */}
                         {localRoomServiceRows.map((row) => (
-                            <div key={row.id} className="grid grid-cols-5 gap-4 items-center">
-                                <div className="border rounded-lg px-4 py-2 flex justify-between items-center">
-                                    <Input
-                                        value={row.roomType}
-                                        onChange={(e) => updateLocalRoomServiceRow(row.id, 'roomType', e.target.value)}
-                                        placeholder="ประเภทห้อง"
-                                        className="border-0 p-0"
-                                    />
-                                    <button
-                                        className="text-red-500 ml-2"
-                                        onClick={() => deleteLocalRoomServiceRow(row.id)}
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-                                <div className="border rounded-lg px-2 py-2 text-center">
-                                    <Input
-                                        value={row.quantity}
-                                        onChange={(e) => updateLocalRoomServiceRow(row.id, 'quantity', e.target.value)}
-                                        className="border-0 p-0 text-center"
-                                        placeholder="จำนวน"
-                                    />
-                                </div>
-                                <div className="border rounded-lg px-2 py-2 text-center">
-                                    <Input
-                                        type="time"
-                                        value={row.openTime}
-                                        onChange={(e) => updateLocalRoomServiceRow(row.id, 'openTime', e.target.value)}
-                                        className="border-0 p-0 text-center"
-                                    />
-                                </div>
-                                <div className="border rounded-lg px-2 py-2 text-center">
-                                    <Input
-                                        type="time"
-                                        value={row.closeTime}
-                                        onChange={(e) => updateLocalRoomServiceRow(row.id, 'closeTime', e.target.value)}
-                                        className="border-0 p-0 text-center"
-                                    />
-                                </div>
-                                <div className="border rounded-lg px-2 py-2 text-center">
-                                    <Input
-                                        value={row.price}
-                                        onChange={(e) => updateLocalRoomServiceRow(row.id, 'price', e.target.value)}
-                                        className="border-0 p-0 text-center"
-                                        placeholder="ราคา"
-                                        suffix="บาท"
-                                    />
-                                </div>
+                            <div key={row.id} className={`grid gap-4 items-center`} style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
+                                {Object.keys(headers).map((fieldKey, index) => (
+                                    <div key={fieldKey} className="border rounded-lg px-2 py-2 text-center">
+                                        {index === 0 ? (
+                                            // First column with delete button
+                                            <div className="flex justify-between items-center px-2">
+                                                <Input
+                                                    value={row[fieldKey as keyof RoomServiceRow] as string}
+                                                    onChange={(e) => updateLocalRoomServiceRow(row.id, fieldKey as keyof RoomServiceRow, e.target.value)}
+                                                    placeholder="ประเภท"
+                                                    className="border-0 p-0"
+                                                />
+                                                <button
+                                                    className="text-red-500 ml-2"
+                                                    onClick={() => deleteLocalRoomServiceRow(row.id)}
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            // Other columns
+                                            <Input
+                                                type={fieldKey.includes('Time') ? 'time' : 'text'}
+                                                value={row[fieldKey as keyof RoomServiceRow] as string}
+                                                onChange={(e) => updateLocalRoomServiceRow(row.id, fieldKey as keyof RoomServiceRow, e.target.value)}
+                                                className="border-0 p-0 text-center"
+                                                placeholder={fieldKey.includes('price') ? 'ราคา' : ''}
+                                                suffix={fieldKey.includes('price') ? 'บาท' : undefined}
+                                            />
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         ))}
 
@@ -280,17 +279,13 @@ export default function DataEntry3() {
     };
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen pb-20 pt-10">
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
                 <div className="bg-white">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <div className="flex items-center space-x-4">
-                            <div className="flex items-center space-x-2">
-                                <LogoFirstPage subtext='' />
-                                <span className="text-lg font-semibold text-gray-900">Pet-Friendly Hotel</span>
-                            </div>
-                        </div>
+                    <div className="text-center mb-4">
+                        <LogoFirstPage />
+                        <h1 className="text-5xl font-bold text-[#0D263B] mt-4">Pet-Friendly Hotel</h1>
                     </div>
 
                     {/* Form Container */}
@@ -357,6 +352,7 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[1] ? "mt-0" : "h-[100px]"}
+                                            imageHeight={120}
                                         />
                                     </div>
                                     <div className="p-0">
@@ -384,6 +380,7 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[2] ? "mt-0" : "h-[100px]"}
+                                            imageHeight={120}
                                         />
                                     </div>
                                     <div className="p-0">
@@ -411,6 +408,7 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[3] ? "mt-0" : "h-[100px]"}
+                                            imageHeight={120}
                                         />
                                     </div>
                                     <div className="p-0">
@@ -438,6 +436,7 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[4] ? "mt-0" : "h-[100px]"}
+                                            imageHeight={120}
                                         />
                                     </div>
                                     <div className="p-0">
@@ -465,6 +464,7 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[5] ? "mt-0" : "h-[100px]"}
+                                            imageHeight={120}
                                         />
                                     </div>
                                     <div className="p-0">
@@ -492,6 +492,7 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[6] ? "mt-0" : "h-[100px]"}
+                                            imageHeight={120}
                                         />
                                     </div>
                                 </div>
@@ -525,6 +526,13 @@ export default function DataEntry3() {
                             <RoomServiceForm
                                 data={defaultRoomServiceData}
                                 showDefaultData={true}
+                                headers={{
+                                    roomType: "รูปแบบห้องพักที่คุณเลือก",
+                                    quantity: "จำนวนห้องพัก",
+                                    openTime: "เวลาเปิด",
+                                    closeTime: "เวลาปิด",
+                                    price: "ราคาที่กำหนด"
+                                }}
                             />
 
                             <div className="border border-black mt-15 mb-8"></div>
@@ -557,8 +565,6 @@ export default function DataEntry3() {
                                     headers={{
                                         roomType: "รูปแบบบริการ",
                                         quantity: "ประเภทบริการ",
-                                        openTime: "เวลาเปิด",
-                                        closeTime: "เวลาปิด",
                                         price: "ราคาที่กำหนด"
                                     }}
                                 />

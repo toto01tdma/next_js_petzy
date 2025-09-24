@@ -14,6 +14,7 @@ interface SingleFileAttachmentProps {
     childHeight?: string;
     labelClass?: string;
     descriptionClass?: string;
+    imageHeight?: number;
 }
 
 export default function SingleFileAttachment({
@@ -24,6 +25,7 @@ export default function SingleFileAttachment({
     description,
     slotHeight = "h-[300px]",
     childHeight = "h-[190px]",
+    imageHeight = 190,
     labelClass = "",
     descriptionClass = ""
 }: SingleFileAttachmentProps) {
@@ -48,7 +50,7 @@ export default function SingleFileAttachment({
                                 alt={label}
                                 className="w-full h-full object-cover rounded"
                                 width={300}
-                                height={190}
+                                height={imageHeight}
                                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                             />
                             <div 

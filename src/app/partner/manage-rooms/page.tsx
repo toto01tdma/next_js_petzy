@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
+import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, PlusOutlined, EyeOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
-import DataTable from '@/components/shared/DataTable';
+import DataTable from '@/components/partner/shared/DataTable';
 
 export default function ManageRooms() {
     const [sidebarOpen, setSidebarOpen] = useState(false);

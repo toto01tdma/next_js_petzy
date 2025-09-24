@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
+import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, CalendarOutlined, SearchOutlined, CheckCircleOutlined, HomeOutlined } from '@ant-design/icons';
 import { Input, Select, Button } from 'antd';
-import DataTable from '@/components/shared/DataTable';
+import DataTable from '@/components/partner/shared/DataTable';
 
 const { Option } = Select;
 
