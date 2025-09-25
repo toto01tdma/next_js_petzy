@@ -17,6 +17,29 @@ interface ServiceRow {
     price: string;
 }
 
+interface DataEntry3Data {
+    roomServices: RoomServiceRow[];
+    specialServices: RoomServiceRow[];
+    petCareServices: RoomServiceRow[];
+    description: string;
+    uploadedImages: unknown[];
+}
+
+interface RoomServiceRow {
+    id: number;
+    roomType: string;
+    quantity: string;
+    openTime: string;
+    closeTime: string;
+    price: string;
+}
+
+interface DynamicServiceForm {
+    id: string;
+    title: string;
+    data: ServiceRow[];
+}
+
 // Interface for ServiceForm props
 interface ServiceFormProps {
     data?: ServiceRow[];
@@ -53,59 +76,78 @@ export default function DataEntry4() {
         };
     }, []);
 
-    // Default room service data
-    const defaultRoomServiceData: ServiceRow[] = [
-        { id: 1, code: 'SR-001', name: 'ห้องเดี่ยว (Single Room)', openTime: '00:00', closeTime: '23:59', price: '900' },
-        { id: 2, code: 'SR-002', name: 'ห้องเดี่ยว (Single Room)', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 3, code: 'SR-003', name: 'ห้องเดี่ยว (Single Room)', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 4, code: 'SR-004', name: 'ห้องเดี่ยว (Single Room)', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 5, code: 'SR-005', name: 'ห้องเดี่ยว (Single Room)', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 6, code: 'SR-006', name: 'ห้องเดี่ยว (Single Room)', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 7, code: 'SR-007', name: 'ห้องเดี่ยว (Single Room)', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 8, code: 'SR-008', name: 'ห้องเดี่ยว (Single Room)', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 9, code: 'SR-009', name: 'ห้องเดี่ยว (Single Room)', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 10, code: 'SR-010', name: 'ห้องเดี่ยว (Single Room)', openTime: '00:00', closeTime: '00:00', price: '900' }
-    ];
 
-    // Twin room service data
-    const twinRoomServiceData: ServiceRow[] = [
-        { id: 1, code: 'TR-001', name: 'ห้องเตียงคู่ (Twin Room)', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 2, code: 'TR-002', name: 'ห้องเตียงคู่ (Twin Room)', openTime: '00:00', closeTime: '00:00', price: '900' }
-    ];
+    
+    // State for data from data-entry-3
+    const [dynamicRoomServices, setDynamicRoomServices] = useState<DynamicServiceForm[]>([]);
+    const [dynamicSpecialServices, setDynamicSpecialServices] = useState<DynamicServiceForm[]>([]);
+    const [dynamicPetCareServices, setDynamicPetCareServices] = useState<DynamicServiceForm[]>([]);
 
-    // Special services data
-    const specialServicesData: ServiceRow[] = [
-        { id: 1, code: 'PS-001', name: 'ดื่มน้ำ', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 2, code: 'PS-002', name: 'อาหารสำหรับสัตว์เลี้ยง', openTime: '00:00', closeTime: '00:00', price: '900' }
-    ];
-
-    // Pet grooming services
-    const petGroomingData: ServiceRow[] = [
-        { id: 1, code: 'PG-001', name: 'ดื่มน้ำ', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 2, code: 'PG-002', name: 'ดื่มน้ำ', openTime: '00:00', closeTime: '00:00', price: '900' }
-    ];
-
-    // Pet care services
-    const petCareData: ServiceRow[] = [
-        { id: 1, code: 'PC-001', name: 'ดูแลสัตว์', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 2, code: 'PC-002', name: 'ดูแลสัตว์', openTime: '00:00', closeTime: '00:00', price: '900' }
-    ];
-
-    // Pet training services
-    const petTrainingData: ServiceRow[] = [
-        { id: 1, code: 'PT-001', name: 'ดื่มน้ำ', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 2, code: 'PT-002', name: 'ดื่มน้ำ', openTime: '00:00', closeTime: '00:00', price: '900' }
-    ];
-
-    // Pet boarding services
-    const petBoardingData: ServiceRow[] = [
-        { id: 1, code: 'PB-001', name: 'รับฝากสัตว์เลี้ยงขนาดเล็ก', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 2, code: 'PB-002', name: 'รับฝากสัตว์เลี้ยงขนาดใหญ่', openTime: '00:00', closeTime: '00:00', price: '900' },
-        { id: 3, code: 'PB-003', name: 'รับฝากสัตว์เลี้ยงขนาดกลาง', openTime: '00:00', closeTime: '00:00', price: '900' }
-    ];
-
-    // State for validation
-    const [allServiceRows, setAllServiceRows] = useState<ServiceRow[]>([]);
+    // Load data from sessionStorage on component mount
+    useEffect(() => {
+        const storedData = sessionStorage.getItem('dataEntry3Data');
+        console.log('Data-entry-4: Stored data from sessionStorage:', storedData);
+        if (storedData) {
+            const parsedData: DataEntry3Data = JSON.parse(storedData);
+            console.log('Data-entry-4: Parsed data:', parsedData);
+            
+            // Process room services - create forms based on number of rooms
+            if (parsedData.roomServices && parsedData.roomServices.length > 0) {
+                const roomServiceForms: DynamicServiceForm[] = parsedData.roomServices.map((service: RoomServiceRow, index: number) => ({
+                    id: `room-service-${index}`,
+                    title: `${service.roomType} (${service.quantity} ห้อง)`,
+                    data: Array.from({ length: parseInt(service.quantity) || 1 }, (_, i) => ({
+                        id: i + 1,
+                        code: `${service.roomType.substring(0, 2).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
+                        name: service.roomType,
+                        openTime: service.openTime || '00:00',
+                        closeTime: service.closeTime || '00:00',
+                        price: service.price || '0'
+                    }))
+                }));
+                setDynamicRoomServices(roomServiceForms);
+                console.log('Generated room service forms:', roomServiceForms);
+            }
+            
+            // Process special services - create separate forms for each type
+            if (parsedData.specialServices && parsedData.specialServices.length > 0) {
+                const specialServiceForms: DynamicServiceForm[] = parsedData.specialServices.map((service: RoomServiceRow, index: number) => ({
+                    id: `special-service-${index}`,
+                    title: service.roomType,
+                    data: [{
+                        id: 1,
+                        code: `SP-${String(index + 1).padStart(3, '0')}`,
+                        name: service.roomType,
+                        openTime: service.openTime || '00:00',
+                        closeTime: service.closeTime || '00:00',
+                        price: service.price || '0'
+                    }]
+                }));
+                setDynamicSpecialServices(specialServiceForms);
+                console.log('Generated special service forms:', specialServiceForms);
+            }
+            
+            // Process pet care services - create separate forms for each type
+            if (parsedData.petCareServices && parsedData.petCareServices.length > 0) {
+                const petCareServiceForms: DynamicServiceForm[] = parsedData.petCareServices.map((service: RoomServiceRow, index: number) => ({
+                    id: `pet-care-service-${index}`,
+                    title: service.roomType,
+                    data: [{
+                        id: 1,
+                        code: `PC-${String(index + 1).padStart(3, '0')}`,
+                        name: service.roomType,
+                        openTime: service.openTime || '00:00',
+                        closeTime: service.closeTime || '00:00',
+                        price: service.price || '0'
+                    }]
+                }));
+                setDynamicPetCareServices(petCareServiceForms);
+                console.log('Generated pet care service forms:', petCareServiceForms);
+            }
+        } else {
+            console.log('No data found in sessionStorage');
+        }
+    }, []);
 
     // Validation function
     const validateForm = async () => {
@@ -186,8 +228,7 @@ export default function DataEntry4() {
         };
 
         const handleLocalSubmit = () => {
-            // Update the parent state with local data
-            setAllServiceRows(prev => [...prev, ...localServiceRows]);
+            // Submit the form
             handleSubmit();
         };
 
@@ -305,125 +346,113 @@ export default function DataEntry4() {
 
                     {/* Form Container */}
                     <div className="py-6 px-6">
-                        <div className="flex justify-center items-center bg-[#00B6AA] rounded-lg py-1.5 mb-5 w-[220px]">
-                            <span className="text-white text-lg">รูปแบบห้องพักของคุณ</span>
-                        </div>
-                        {/* Room Services Section */}
-                        <ServiceForm
-                            data={defaultRoomServiceData}
-                            showDefaultData={true}
-                            title={["รูปแบบบริการห้องพัก", "จำนวน 10 ห้อง"]}
-                            headers={{
-                                code: "รหัสห้องพัก",
-                                name: "รูปแบบห้องพักที่คุณเลือก",
-                                openTime: "เวลาเปิด",
-                                closeTime: "เวลาปิด",
-                                price: "ราคาที่กำหนด"
-                            }}
-                            titleColor="bg-[#1F4173]"
-                        />
+                        {/* Dynamic Room Services Section */}
+                        {dynamicRoomServices.length > 0 && (
+                            <>
+                                <div className="flex justify-center items-center bg-[#00B6AA] rounded-lg py-1.5 mb-5 w-[220px]">
+                                    <span className="text-white text-lg">รูปแบบห้องพักของคุณ</span>
+                                </div>
+                                {dynamicRoomServices.map((roomService, index) => (
+                                    <div key={roomService.id}>
+                                        <ServiceForm
+                                            data={roomService.data}
+                                            showDefaultData={true}
+                                            title={[roomService.title]}
+                                            headers={{
+                                                code: "รหัสห้องพัก",
+                                                name: "รูปแบบห้องพักที่คุณเลือก",
+                                                openTime: "เวลาเปิด",
+                                                closeTime: "เวลาปิด",
+                                                price: "ราคาที่กำหนด"
+                                            }}
+                                            titleColor="bg-[#1F4173]"
+                                        />
+                                        {index < dynamicRoomServices.length - 1 && (
+                                            <div className="border border-black mt-15 mb-8"></div>
+                                        )}
+                                    </div>
+                                ))}
+                                <div className="border border-black mt-15 mb-8"></div>
+                            </>
+                        )}
 
-                        <div className="border border-black mt-15 mb-8"></div>
+                        {/* Dynamic Special Services Section */}
+                        {dynamicSpecialServices.length > 0 && (
+                            <>
+                                <div className="flex justify-start items-center">
+                                    <div className="flex justify-center items-center bg-[#00B6AA] rounded-lg py-1.5 mb-5 w-[220px]">
+                                        <span className="text-white text-lg">รูปแบบบริการพิเศษ</span>
+                                    </div>
+                                </div>
+                                {dynamicSpecialServices.map((specialService, index) => (
+                                    <div key={specialService.id}>
+                                        <ServiceForm
+                                            data={specialService.data}
+                                            showDefaultData={true}
+                                            title={[specialService.title]}
+                                            headers={{
+                                                code: "รหัสบริการ",
+                                                name: "ประเภทบริการ",
+                                                openTime: "เวลาเปิด",
+                                                closeTime: "เวลาปิด",
+                                                price: "ราคาที่กำหนด"
+                                            }}
+                                            titleColor="bg-[#1F4173]"
+                                        />
+                                        {index < dynamicSpecialServices.length - 1 && (
+                                            <div className="border border-black mt-15 mb-8"></div>
+                                        )}
+                                    </div>
+                                ))}
+                                <div className="border border-black mt-15 mb-8"></div>
+                            </>
+                        )}
 
-                        {/* Twin Room Services Section */}
-                        <ServiceForm
-                            data={twinRoomServiceData}
-                            showDefaultData={true}
-                            title={["ประเภท - ห้องเตียงคู่ (Twin Room)", "จำนวน 2 ห้อง"]}
-                            headers={{
-                                code: "ประเภท - ห้องเตียงคู่ (Twin Room)",
-                                name: "จำนวน 2 ห้อง",
-                                openTime: "เวลาเปิด",
-                                closeTime: "เวลาปิด",
-                                price: "ราคาที่กำหนด"
-                            }}
-                            titleColor="bg-[#1F4173]"
-                        />
+                        {/* Dynamic Pet Care Services Section */}
+                        {dynamicPetCareServices.length > 0 && (
+                            <>
+                                <div className="flex justify-start items-center">
+                                    <div className="flex justify-center items-center bg-[#00B6AA] rounded-lg py-1.5 mb-5 w-[300px]">
+                                        <span className="text-white text-lg">รูปแบบบริการรับฝากสัตว์เลี้ยง</span>
+                                    </div>
+                                </div>
+                                {dynamicPetCareServices.map((petCareService, index) => (
+                                    <div key={petCareService.id}>
+                                        <ServiceForm
+                                            data={petCareService.data}
+                                            showDefaultData={true}
+                                            title={[petCareService.title]}
+                                            headers={{
+                                                code: "รหัสบริการ",
+                                                name: "ประเภทบริการ",
+                                                openTime: "เวลาเปิด",
+                                                closeTime: "เวลาปิด",
+                                                price: "ราคาที่กำหนด"
+                                            }}
+                                            titleColor="bg-[#1F4173]"
+                                        />
+                                        {index < dynamicPetCareServices.length - 1 && (
+                                            <div className="border border-black mt-15 mb-8"></div>
+                                        )}
+                                    </div>
+                                ))}
+                                <div className="border border-black mt-15 mb-8"></div>
+                            </>
+                        )}
 
-                        <div className="border border-black mt-15 mb-8"></div>
-
-                        <div className="flex justify-start items-center">
-                            <div className="flex justify-center items-center bg-[#00B6AA] rounded-lg py-1.5 mb-5 w-[220px]">
-                                <span className="text-white text-lg">รูปแบบบริการพิเศษ</span>
+                        {/* Fallback: Show message if no data from data-entry-3 */}
+                        {dynamicRoomServices.length === 0 && dynamicSpecialServices.length === 0 && dynamicPetCareServices.length === 0 && (
+                            <div className="text-center py-8">
+                                <p className="text-gray-600 text-lg">ไม่พบข้อมูลจากหน้าก่อนหน้า</p>
+                                <p className="text-gray-500 text-sm mt-2">กรุณากลับไปกรอกข้อมูลในหน้า data-entry-3 ก่อน</p>
+                                <button 
+                                    onClick={() => router.push('/partner/data-entry-3')}
+                                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                >
+                                    กลับไปหน้า data-entry-3
+                                </button>
                             </div>
-                        </div>
-
-                        {/* Special Services Section */}
-                        <ServiceForm
-                            data={specialServicesData}
-                            showDefaultData={true}
-                            title={["ประเภท - ตัดขนแมว"]}
-                            headers={{
-                                code: "ประเภท - ตัดขนแมว",
-                                name: "จำนวน 2 ห้อง",
-                                openTime: "เวลาเปิด",
-                                closeTime: "เวลาปิด",
-                                price: "ราคาที่กำหนด"
-                            }}
-                            titleColor="bg-[#1F4173]"
-                        />
-
-                        <div className="border border-black mt-15 mb-8"></div>
-
-                        {/* Pet Grooming Section */}
-                        <ServiceForm
-                            data={petGroomingData}
-                            showDefaultData={true}
-                            title={["ประเภท - ตัดขนสุนัข"]}
-                            description=""
-                            headers={{
-                                code: "ประเภท - ตัดขนสุนัข",
-                                name: "จำนวน 2 ห้อง",
-                                openTime: "เวลาเปิด",
-                                closeTime: "เวลาปิด",
-                                price: "ราคาที่กำหนด"
-                            }}
-                            titleColor="bg-[#1F4173]"
-                        />
-
-                        <div className="border border-black mt-15 mb-8"></div>
-
-                        {/* Pet Care Section */}
-                        <ServiceForm
-                            data={petCareData}
-                            showDefaultData={true}
-                            title={["ประเภท - อาบน้ำสุนัข"]}
-                            description=""
-                            headers={{
-                                code: "ประเภท - อาบน้ำสุนัข",
-                                name: "จำนวน 2 ห้อง",
-                                openTime: "เวลาเปิด",
-                                closeTime: "เวลาปิด",
-                                price: "ราคาที่กำหนด"
-                            }}
-                            titleColor="bg-[#1F4173]"
-                        />
-
-                        <div className="border border-black mt-15 mb-8"></div>
-
-                        <div className="flex justify-start items-center">
-                            <div className="flex justify-center items-center bg-[#00B6AA] rounded-lg py-1.5 mb-5 w-[300px]">
-                                <span className="text-white text-lg">รูปแบบบริการรับฝากสัตว์เลี้ยง</span>
-                            </div>
-                        </div>
-
-                        {/* Pet Training Section */}
-                        <ServiceForm
-                            data={petTrainingData}
-                            showDefaultData={true}
-                            title={["ประเภท - ตัดขนสุนัข"]}
-                            description=""
-                            headers={{
-                                code: "ประเภท - ตัดขนสุนัข",
-                                name: "จำนวน 2 ห้อง",
-                                openTime: "เวลาเปิด",
-                                closeTime: "เวลาปิด",
-                                price: "ราคาที่กำหนด"
-                            }}
-                            titleColor="bg-[#1F4173]"
-                        />
-
-                        <div className="border border-black mt-15 mb-8"></div>
+                        )}
                     </div>
 
                     {/* Submit Button */}

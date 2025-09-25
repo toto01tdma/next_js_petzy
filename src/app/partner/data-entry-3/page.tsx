@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import LogoFirstPage from "@/components/first_page/logo";
 import { Button, Input } from 'antd';
@@ -30,6 +30,7 @@ interface RoomServiceFormProps {
     headers: {
         [key: string]: string;
     };
+    onDataChange?: (data: RoomServiceRow[]) => void;
 }
 
 
@@ -75,8 +76,49 @@ export default function DataEntry3() {
         { id: 3, roomType: 'รับฝากสัตว์เลี้ยงขนาดกลาง', quantity: '24 ชม.', openTime: '00:00', closeTime: '00:00', price: '900' }
     ];
 
-    // Room service form state (for validation)
+    // Room service form state (for validation and data collection)
     const [roomServiceRows, setRoomServiceRows] = useState<RoomServiceRow[]>(defaultRoomServiceData);
+    
+    // Refs to store the current data from each form
+    const roomServiceRef = useRef<RoomServiceRow[]>(defaultRoomServiceData);
+    const specialServiceRef = useRef<RoomServiceRow[]>([]);
+    const petCareServiceRef = useRef<RoomServiceRow[]>([]);
+
+    // Memoized callback functions to prevent unnecessary re-renders of RoomServiceForm
+    const handleRoomServiceChange = useCallback((data: RoomServiceRow[]) => {
+        roomServiceRef.current = data;
+    }, []);
+
+    const handleSpecialServiceChange = useCallback((data: RoomServiceRow[]) => {
+        specialServiceRef.current = data;
+    }, []);
+
+    const handlePetCareServiceChange = useCallback((data: RoomServiceRow[]) => {
+        petCareServiceRef.current = data;
+    }, []);
+
+    // Memoized headers objects to prevent unnecessary re-renders of RoomServiceForm
+    const roomServiceHeaders = useMemo(() => ({
+        roomType: "รูปแบบห้องพักที่คุณเลือก",
+        quantity: "จำนวนห้องพัก",
+        openTime: "เวลาเปิด",
+        closeTime: "เวลาปิด",
+        price: "ราคาที่กำหนด"
+    }), []);
+
+    const specialServiceHeaders = useMemo(() => ({
+        roomType: "รูปแบบบริการ",
+        quantity: "ประเภทบริการ",
+        openTime: "เวลาเปิด",
+        closeTime: "เวลาปิด",
+        price: "ราคาที่กำหนด"
+    }), []);
+
+    const petCareServiceHeaders = useMemo(() => ({
+        roomType: "รูปแบบบริการ",
+        quantity: "ประเภทบริการ",
+        price: "ราคาที่กำหนด"
+    }), []);
 
 
     // Validation function
@@ -125,6 +167,18 @@ export default function DataEntry3() {
     const handleSubmit = async () => {
         const isValid = await validateForm();
         if (isValid) {
+            // Prepare data to pass to data-entry-4
+            const dataToPass = {
+                roomServices: roomServiceRef.current,
+                specialServices: specialServiceRef.current,
+                petCareServices: petCareServiceRef.current,
+                description: formData.description,
+                uploadedImages: uploadedImages
+            };
+
+            // Store data in sessionStorage for data-entry-4
+            sessionStorage.setItem('dataEntry3Data', JSON.stringify(dataToPass));
+
             // Show success dialog
             await Swal.fire({
                 icon: 'success',
@@ -150,36 +204,60 @@ export default function DataEntry3() {
         showDefaultData = true,
         title = "เลือกรูปแบบบริการห้องพัก",
         description = "รหัสห้องพักจะรันตามจำนวนห้องที่มี",
-        headers
+        headers,
+        onDataChange
     }: RoomServiceFormProps) => {
         const [localRoomServiceRows, setLocalRoomServiceRows] = useState<RoomServiceRow[]>(
             showDefaultData ? data : []
         );
         const [isLocalExpanded, setIsLocalExpanded] = useState(showDefaultData);
 
+        // Initialize the parent ref with default data
+        useEffect(() => {
+            if (onDataChange && showDefaultData && data && data.length > 0) {
+                onDataChange(data);
+            }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, []); // Empty dependency array - only run once on mount
+
         // Local functions for the component
         const addLocalRoomServiceRow = () => {
             const newId = localRoomServiceRows.length > 0
                 ? Math.max(...localRoomServiceRows.map(row => row.id)) + 1
                 : 1;
-            setLocalRoomServiceRows([...localRoomServiceRows, {
+            const newRows = [...localRoomServiceRows, {
                 id: newId,
                 roomType: '',
                 quantity: '',
                 openTime: '00:00',
                 closeTime: '00:00',
                 price: ''
-            }]);
+            }];
+            setLocalRoomServiceRows(newRows);
+            // Update the ref immediately
+            if (onDataChange) {
+                onDataChange(newRows);
+            }
         };
 
         const updateLocalRoomServiceRow = (id: number, field: keyof RoomServiceRow, value: string) => {
-            setLocalRoomServiceRows(localRoomServiceRows.map(row =>
+            const updatedRows = localRoomServiceRows.map(row =>
                 row.id === id ? { ...row, [field]: value } : row
-            ));
+            );
+            setLocalRoomServiceRows(updatedRows);
+            // Update the ref immediately
+            if (onDataChange) {
+                onDataChange(updatedRows);
+            }
         };
 
         const deleteLocalRoomServiceRow = (id: number) => {
-            setLocalRoomServiceRows(localRoomServiceRows.filter(row => row.id !== id));
+            const filteredRows = localRoomServiceRows.filter(row => row.id !== id);
+            setLocalRoomServiceRows(filteredRows);
+            // Update the ref immediately
+            if (onDataChange) {
+                onDataChange(filteredRows);
+            }
         };
 
         const handleLocalSubmit = () => {
@@ -526,13 +604,8 @@ export default function DataEntry3() {
                             <RoomServiceForm
                                 data={defaultRoomServiceData}
                                 showDefaultData={true}
-                                headers={{
-                                    roomType: "รูปแบบห้องพักที่คุณเลือก",
-                                    quantity: "จำนวนห้องพัก",
-                                    openTime: "เวลาเปิด",
-                                    closeTime: "เวลาปิด",
-                                    price: "ราคาที่กำหนด"
-                                }}
+                                headers={roomServiceHeaders}
+                                onDataChange={handleRoomServiceChange}
                             />
 
                             <div className="border border-black mt-15 mb-8"></div>
@@ -543,13 +616,8 @@ export default function DataEntry3() {
                                     showDefaultData={true}
                                     title="เลือกรูปแบบบริการพิเศษ"
                                     description="รหัสบริการพิเศษจะรันตามจำนวนบริการที่มี"
-                                    headers={{
-                                        roomType: "รูปแบบบริการ",
-                                        quantity: "ประเภทบริการ",
-                                        openTime: "เวลาเปิด",
-                                        closeTime: "เวลาปิด",
-                                        price: "ราคาที่กำหนด"
-                                    }}
+                                    headers={specialServiceHeaders}
+                                    onDataChange={handleSpecialServiceChange}
                                 />
                             </div>
 
@@ -562,11 +630,8 @@ export default function DataEntry3() {
                                     showDefaultData={true}
                                     title="รูปแบบบริการรับฝาก"
                                     description="รหัสบริการรับฝากจะรันตามจำนวนบริการที่มี"
-                                    headers={{
-                                        roomType: "รูปแบบบริการ",
-                                        quantity: "ประเภทบริการ",
-                                        price: "ราคาที่กำหนด"
-                                    }}
+                                    headers={petCareServiceHeaders}
+                                    onDataChange={handlePetCareServiceChange}
                                 />
                             </div>
                         </div>
