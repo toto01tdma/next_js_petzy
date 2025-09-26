@@ -6,21 +6,34 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
   --font-kanit: 'Kanit', sans-serif;
 }
 
+/* Force white background and black text regardless of browser color scheme */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #000000;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--background) !important;
+  color: var(--foreground) !important;
   font-family: var(--font-kanit), 'Kanit', sans-serif;
+}
+
+/* Force all elements to have white background and black text */
+* {
+  background-color: inherit;
+  color: inherit;
+}
+
+/* Override any potential dark mode styles */
+html {
+  background-color: #ffffff !important;
+  color: #000000 !important;
 }
 
 /* Apply Kanit font to all elements */
@@ -34,7 +47,7 @@ body {
   The compatibility warning is suppressed via WarningSupressor component
 */
 
-/* Ensure Ant Design components use Kanit font */
+/* Ensure Ant Design components use Kanit font and follow color scheme */
 .ant-typography,
 .ant-btn,
 .ant-input,
@@ -47,17 +60,95 @@ body {
   font-family: var(--font-kanit), 'Kanit', sans-serif !important;
 }
 
+/* Force Ant Design components to use white background and black text */
+.ant-input,
+.ant-select-selector,
+.ant-table,
+.ant-menu,
+.ant-dropdown-menu,
+.ant-modal,
+.ant-drawer,
+.ant-card,
+.ant-form-item,
+.ant-typography {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Ensure input placeholders are visible */
+.ant-input::placeholder,
+.ant-select-selection-placeholder {
+  color: #666666 !important;
+}
+
+/* Override any dark theme styles that might be applied */
+.ant-app,
+.ant-layout,
+.ant-layout-content,
+.ant-layout-header,
+.ant-layout-footer,
+.ant-layout-sider {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
 /* Custom Upload Styles */
 .ant-upload-select-picture-card {
   width: 100% !important;
   height: 120px !important;
+  background-color: #ffffff !important;
 }
 
 .ant-upload-list-picture-card .ant-upload-list-item {
   width: 100% !important;
   height: 120px !important;
+  background-color: #ffffff !important;
 }
 
 .ant-upload-list-picture-card-container {
   width: 100% !important;
+}
+
+/* Additional overrides for consistent white background and black text */
+div, span, p, h1, h2, h3, h4, h5, h6, 
+section, article, main, aside, header, footer,
+form, fieldset, legend, label {
+  color: inherit;
+}
+
+/* Ensure text inputs and textareas have proper styling */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+input[type="search"],
+input[type="url"],
+textarea,
+select {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #d9d9d9;
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+input[type="tel"]::placeholder,
+input[type="number"]::placeholder,
+input[type="search"]::placeholder,
+input[type="url"]::placeholder,
+textarea::placeholder {
+  color: #666666 !important;
+}
+
+/* Override any potential system dark mode preferences */
+@media (prefers-color-scheme: dark) {
+  * {
+    color-scheme: light !important;
+  }
+  
+  input, textarea, select {
+    color-scheme: light !important;
+  }
 }

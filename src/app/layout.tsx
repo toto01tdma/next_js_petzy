@@ -26,7 +26,8 @@ export default function RootLayout({
         <script src="/suppress-warnings.js" async />
       </head>
       <body
-        className={`${kanit.variable} font-kanit antialiased`}
+        className={`${kanit.variable} font-kanit antialiased bg-white text-black`}
+        style={{ backgroundColor: '#ffffff', color: '#000000' }}
       >
         <WarningSupressor />
         {children}
