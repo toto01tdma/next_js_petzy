@@ -41,7 +41,12 @@ export default function SingleFileAttachment({
             className="h-full"
             style={{ width: '100%' }}
         >
-            <div className={`w-full ${slotHeight} bg-[#E0E2E6] rounded-md px-3 py-3 hover:bg-[#D0D2D6] transition-colors cursor-pointer`}>
+            <div
+                className={`w-full ${slotHeight} rounded-md px-3 py-3 transition-colors cursor-pointer`}
+                style={{ backgroundColor: '#E0E2E6' }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#D0D2D6')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#E0E2E6')}
+            >
                 <div className={`${childHeight} flex justify-center items-center relative`} style={{ width: '100%' }}>
                     {uploadedImage ? (
                         <>
@@ -53,7 +58,7 @@ export default function SingleFileAttachment({
                                 height={imageHeight}
                                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                             />
-                            <div 
+                            <div
                                 className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm cursor-pointer hover:bg-red-600"
                                 onClick={(e) => {
                                     e.stopPropagation();

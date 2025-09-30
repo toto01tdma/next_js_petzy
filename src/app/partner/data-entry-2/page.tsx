@@ -1,12 +1,44 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import LogoFirstPage from "@/components/first_page/logo";
-import { Button, Input, Select, Checkbox } from 'antd';
+import { Button, Input, Select, Checkbox, Spin } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
+import Swal from 'sweetalert2';
+import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 
 const { Option } = Select;
+
+// TypeScript Types
+type HotelDataResponse = {
+    success: boolean;
+    message: string;
+    data: {
+        hotelName: string;
+        hotelNameEng: string;
+        rooms: string;
+        roomTypes: string;
+        serviceTypes: string;
+        specialServiceTypes: string;
+        latitude: string;
+        longitude: string;
+        roomService: boolean;
+        specialService: boolean;
+        petCareService: boolean;
+        services: string[];
+        approvalStatus: string;
+    };
+};
+
+type SaveDataResponse = {
+    success: boolean;
+    message: string;
+    data: {
+        status: string;
+        approvalStatus: string;
+    };
+};
 
 // Custom Service Checkbox Component
 interface ServiceCheckboxProps {
@@ -19,18 +51,19 @@ const ServiceCheckbox: React.FC<ServiceCheckboxProps> = ({ label, checked, onCha
     return (
         <div className="space-y-2">
             <div
-                className="bg-[#00B6AA] w-full py-2 px-4 rounded-lg flex items-center text-white font-medium cursor-pointer transition-colors"
+                className="w-full py-2 px-4 rounded-lg flex items-center font-medium cursor-pointer transition-colors"
                 onClick={() => onChange(!checked)}
+                style={{ backgroundColor: '#00B6AA' }}
             >
-                <span className="flex-1 text-center">{label}</span>
+                <span className="flex-1 text-center" style={{ color: '#FFFFFF' }}>{label}</span>
                 <div className="ml-auto">
                     {checked ? (
-                        <div className="border px-0.5 py-0.2 rounded-sm border-white bg-transparent text-white">
-                            <CheckOutlined className="text-sm" />
+                        <div className="border px-0.5 py-0.2 rounded-sm border-white bg-transparent" style={{ color: '#FFFFFF' }}>
+                            <CheckOutlined className="text-sm" style={{ color: '#FFFFFF' }}/>
                         </div>
                     ) : (
-                        <div className="border px-0.5 py-0.2 rounded-sm border-white bg-transparent text-[#00B6AA]">
-                            <CheckOutlined className="text-sm" />
+                        <div className="border px-0.5 py-0.2 rounded-sm border-white bg-transparent" style={{ color: '#00B6AA' }}>
+                            <CheckOutlined className="text-sm" style={{ color: '#00B6AA' }}/>
                         </div>
                     )}
                 </div>
@@ -41,6 +74,10 @@ const ServiceCheckbox: React.FC<ServiceCheckboxProps> = ({ label, checked, onCha
 
 export default function DataEntry2() {
     const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
+    const [approvalStatus, setApprovalStatus] = useState('DRAFT');
+    const hasFetched = useRef(false);
 
     // Suppress Ant Design React 19 compatibility warning for this page
     useEffect(() => {
@@ -62,6 +99,108 @@ export default function DataEntry2() {
             console.warn = originalWarn;
         };
     }, []);
+
+    // Fetch hotel data on component mount
+    useEffect(() => {
+        const fetchHotelData = async () => {
+            if (hasFetched.current) return;
+            hasFetched.current = true;
+            
+            try {
+                // Preview mode: Skip API call and use mock data
+                if (!USE_API_MODE) {
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+                    
+                    // Set mock data
+                    setFormData({
+                        hotelName: 'Fahfon Resort',
+                        hotelNameEng: 'Fahfon Resort',
+                        rooms: '10',
+                        customRoomCount: '',
+                        province: 'ห้องขนาด 2เตียง',
+                        customRoomType: '',
+                        district: 'pet-hotel',
+                        customServiceType: '',
+                        subdistrict: 'สุนัขและแมว',
+                        specialServiceType: '',
+                        postalCode: '',
+                        latitude: '18.7953',
+                        longitude: '98.9986',
+                        services: ['aircon', 'tv', 'pool'],
+                        description: '',
+                        roomService: true,
+                        specialService: false,
+                        petCareService: true
+                    });
+                    setApprovalStatus('DRAFT');
+                    setIsFetching(false);
+                    return;
+                }
+
+                // API mode: Make actual API call
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'ไม่พบข้อมูลการเข้าสู่ระบบ',
+                        text: 'กรุณาเข้าสู่ระบบอีกครั้ง',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#28A7CB'
+                    });
+                    router.push('/login');
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE_URL}/api/partner/data-entry-2`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data: HotelDataResponse = await response.json();
+
+                if (data.success && data.data) {
+                    // Map API response to form data
+                    setFormData({
+                        hotelName: data.data.hotelName || '',
+                        hotelNameEng: data.data.hotelNameEng || '',
+                        rooms: data.data.rooms || '',
+                        customRoomCount: '',
+                        province: data.data.roomTypes || '',
+                        customRoomType: '',
+                        district: data.data.serviceTypes || '',
+                        customServiceType: '',
+                        subdistrict: data.data.specialServiceTypes || '',
+                        specialServiceType: '',
+                        postalCode: '',
+                        latitude: data.data.latitude || '',
+                        longitude: data.data.longitude || '',
+                        services: data.data.services || [],
+                        description: '',
+                        roomService: data.data.roomService || false,
+                        specialService: data.data.specialService || false,
+                        petCareService: data.data.petCareService || false
+                    });
+                    setApprovalStatus(data.data.approvalStatus || 'DRAFT');
+                }
+            } catch (error) {
+                console.error('Error fetching hotel data:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#28A7CB'
+                });
+            } finally {
+                setIsFetching(false);
+            }
+        };
+
+        fetchHotelData();
+    }, [router]);
 
     const [formData, setFormData] = useState({
         hotelName: '',
@@ -146,9 +285,122 @@ export default function DataEntry2() {
         handleInputChange('services', newServices);
     };
 
-    const handleSubmit = () => {
-        // Navigate to data-entry-3 after submission
-        router.push('/partner/data-entry-3');
+    const handleSubmit = async () => {
+        setIsLoading(true);
+
+        try {
+            // Preview mode: Skip API call and simulate success
+            if (!USE_API_MODE) {
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+                
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกข้อมูลสำเร็จ (Preview Mode)',
+                    text: 'Data saved successfully. Please wait for admin approval.',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#28A7CB'
+                });
+
+                router.push('/partner/data-entry-3');
+                setIsLoading(false);
+                return;
+            }
+
+            // API mode: Make actual API call
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่พบข้อมูลการเข้าสู่ระบบ',
+                    text: 'กรุณาเข้าสู่ระบบอีกครั้ง',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#28A7CB'
+                });
+                router.push('/login');
+                return;
+            }
+
+            // Get user data from localStorage
+            const userDataStr = localStorage.getItem('user');
+            const userData = userDataStr ? JSON.parse(userDataStr) : {};
+
+            // Build the payload according to API requirements
+            const payload = {
+                first_name: userData.profile?.firstName || '',
+                last_name: userData.profile?.lastName || '',
+                id_number: '',
+                passport_number: '',
+                hotel_name: formData.hotelName,
+                hotelName: formData.hotelName,
+                hotelNameEng: formData.hotelNameEng,
+                registration_number: '',
+                address: '',
+                phone: '',
+                email: '',
+                primary_phone: '',
+                accommodation_name: formData.hotelName,
+                rooms: showCustomRoomInput ? formData.customRoomCount : formData.rooms,
+                roomTypes: showCustomRoomTypeInput ? formData.customRoomType : formData.province,
+                serviceTypes: formData.district,
+                specialServiceTypes: showSpecialServiceTypeInput ? formData.specialServiceType : formData.subdistrict,
+                latitude: formData.latitude,
+                longitude: formData.longitude,
+                roomService: formData.roomService,
+                specialService: formData.specialService,
+                petCareService: formData.petCareService,
+                services: formData.services,
+                documents: {
+                    id_card_url: '',
+                    certificate_url: '',
+                    photo_urls: []
+                },
+                approval_status: 'pending'
+            };
+
+            const response = await fetch(`${API_BASE_URL}/api/partner/data-entry-2`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data: SaveDataResponse = await response.json();
+
+            if (data.success) {
+                // Show success message
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกข้อมูลสำเร็จ',
+                    text: 'Data saved successfully. Please wait for admin approval.',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#28A7CB'
+                });
+
+                // Navigate to data-entry-3 after submission
+                router.push('/partner/data-entry-3');
+            } else {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่สามารถบันทึกข้อมูลได้',
+                    text: data.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#28A7CB'
+                });
+            }
+        } catch (error) {
+            console.error('Error saving data:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#28A7CB'
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -177,7 +429,15 @@ export default function DataEntry2() {
                         <h1 className="text-2xl font-bold text-[#484848] mt-4">สร้างหมวดหมู่หลักบริการของคุณ</h1>
                     </div>
 
+                    {/* Loading Spinner */}
+                    {isFetching && (
+                        <div className="flex justify-center items-center py-20">
+                            <Spin size="large" tip="กำลังโหลดข้อมูล..." />
+                        </div>
+                    )}
+
                     {/* Form Container */}
+                    {!isFetching && (
                     <div className="py-6 px-12 border border-black rounded-lg">
                         <div className="space-y-4">
                             <p className="text-[#484848]" style={{ marginBottom: '0.75rem' }}><span className="text-xl font-bold me-4">กรุณาเลือกบริการที่คุณมี</span> <span className="text-md">สามารถเลือกได้หลายบริการตามความจริงที่คุณให้บริการ</span></p>
@@ -203,7 +463,7 @@ export default function DataEntry2() {
                                 {/* Left Column */}
                                 <div className="space-y-2">
                                     <div>
-                                        <label className="block text-base font-medium text-gray-800 mb-2">
+                                        <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
                                             ชื่อ โรงแรม หรือ สถานที่พัก
                                         </label>
                                         <Input
@@ -212,12 +472,13 @@ export default function DataEntry2() {
                                             placeholder="สุขสม โรงแรมสวัสดี"
                                             className="w-full h-12 text-base"
                                             style={{ height: '48px', fontSize: '16px' }}
+                                            disabled={isFetching || approvalStatus !== 'DRAFT'}
                                         />
-                                        <p className="text-sm text-white mt-1" style={{ marginBottom: 0, marginTop: '0.2rem' }}>...</p>
+                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.2rem', color: '#FFFFFF' }}>...</p>
                                     </div>
 
                                     <div>
-                                        <label className="block text-base font-medium text-gray-800 mb-2">
+                                        <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
                                             ชื่อ โรงแรม หรือ สถานที่พัก
                                         </label>
                                         <Input
@@ -227,14 +488,14 @@ export default function DataEntry2() {
                                             className="w-full h-12 text-base"
                                             style={{ height: '48px', fontSize: '16px' }}
                                         />
-                                        <p className="text-sm text-gray-500 mt-1" style={{ marginBottom: 0, marginTop: '0.2rem' }}>*กรุณากรอกชื่อจริงครั้งเพื่อยืนยันความถูกต้อง</p>
+                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.2rem', color: '#6B7280' }}>*กรุณากรอกชื่อจริงครั้งเพื่อยืนยันความถูกต้อง</p>
                                     </div>
                                 </div>
 
                                 {/* Right Column */}
                                 <div className="space-y-2">
                                     <div>
-                                        <label className="block text-base font-medium text-gray-800 mb-2">
+                                        <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
                                             ชื่อ โรงแรม หรือ สถานที่พัก (ภาษาอังกฤษ)
                                         </label>
                                         <Input
@@ -244,11 +505,11 @@ export default function DataEntry2() {
                                             className="w-full h-12 text-base"
                                             style={{ height: '48px', fontSize: '16px' }}
                                         />
-                                        <p className="text-sm text-gray-500 mt-1 text-white" style={{ marginBottom: 0, marginTop: '0.2rem' }}>...</p>
+                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.2rem', color: '#FFFFFF' }}>...</p>
                                     </div>
 
                                     <div>
-                                        <label className="block text-base font-medium text-gray-800 mb-2">
+                                        <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
                                             ชื่อ โรงแรม หรือ สถานที่พัก (ภาษาอังกฤษ)
                                         </label>
                                         <Input
@@ -258,7 +519,7 @@ export default function DataEntry2() {
                                             className="w-full h-12 text-base"
                                             style={{ height: '48px', fontSize: '16px' }}
                                         />
-                                        <p className="text-sm text-gray-500 mt-1 text-white" style={{ marginBottom: 0, marginTop: '0.2rem' }}>...</p>
+                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.2rem', color: '#FFFFFF' }}>...</p>
                                     </div>
                                 </div>
                             </div>
@@ -266,7 +527,7 @@ export default function DataEntry2() {
                             {/* Full-width field: Total number of rooms */}
                             <div className="space-y-2">
                                 <div>
-                                    <label className="block text-base font-medium text-gray-800 mb-2">
+                                    <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
                                         ระบุจำนวนห้องพักทั้งหมดของคุณ
                                     </label>
                                     <Select
@@ -292,14 +553,14 @@ export default function DataEntry2() {
                                             type="number"
                                         />
                                     )}
-                                    <p className="text-sm text-gray-500 mt-1 text-white" style={{ marginBottom: 0, marginTop: '0.2rem' }}>...</p>
+                                    <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.2rem', color: '#FFFFFF' }}>...</p>
                                 </div>
                             </div>
 
                             {/* Full-width field: All room types */}
                             <div className="space-y-2">
                                 <div>
-                                    <label className="block text-base font-medium text-gray-800 mb-2">
+                                    <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
                                         ประเภทห้องพักทั้งหมดของคุณ
                                     </label>
                                     <Select
@@ -326,14 +587,14 @@ export default function DataEntry2() {
                                             style={{ height: '48px', fontSize: '16px' }}
                                         />
                                     )}
-                                    <p className="text-sm text-gray-500 mt-1 text-white" style={{ marginBottom: 0, marginTop: '0.2rem' }}>...</p>
+                                    <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.2rem', color: '#FFFFFF' }}>...</p>
                                 </div>
                             </div>
 
                             {/* Two-column grid for remaining fields */}
                             <div className="space-y-2">
                                 <div>
-                                    <label className="block text-base font-medium text-gray-800 mb-2">
+                                    <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
                                         ประเภทห้องพักทั้งหมดของคุณ
                                     </label>
                                     <Select
@@ -348,13 +609,13 @@ export default function DataEntry2() {
                                         <Option value="pet-spa">สปา สัตว์เลี้ยง</Option>
                                         <Option value="pet-boarding">สถานที่รับฝากสัตว์เลี้ยง</Option>
                                     </Select>
-                                    <p className="text-sm text-gray-500 mt-1 text-white" style={{ marginBottom: 0, marginTop: '0.2rem' }}>...</p>
+                                    <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.2rem', color: '#FFFFFF' }}>...</p>
                                 </div>
                             </div>
 
                             <div className="space-y-2">
                                 <div>
-                                    <label className="block text-base font-medium text-gray-800 mb-2">
+                                    <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
                                         ประเภทรับบริการพิเศษของคุณ
                                     </label>
                                     <Select
@@ -382,7 +643,7 @@ export default function DataEntry2() {
                                             style={{ height: '48px', fontSize: '16px' }}
                                         />
                                     )}
-                                    <p className="text-sm text-gray-500 mt-1 text-white" style={{ marginBottom: 0, marginTop: '0.2rem' }}>...</p>
+                                    <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.2rem', color: '#FFFFFF' }}>...</p>
                                 </div>
                             </div>
                         </div>
@@ -396,7 +657,7 @@ export default function DataEntry2() {
                             {/* Latitude and Longitude Inputs */}
                             {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label className="block text-base font-medium text-gray-800 mb-2">
+                                    <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
                                         Latitude (ละติจูด)
                                     </label>
                                     <Input
@@ -410,7 +671,7 @@ export default function DataEntry2() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-base font-medium text-gray-800 mb-2">
+                                    <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
                                         Longitude (ลองจิจูด)
                                     </label>
                                     <Input
@@ -535,14 +796,22 @@ export default function DataEntry2() {
                             <Button
                                 size="large"
                                 onClick={handleSubmit}
+                                disabled={isLoading || isFetching || approvalStatus !== 'DRAFT'}
+                                loading={isLoading}
                                 className="px-12 py-3 h-auto font-medium w-[90%] rounded-md text-center"
-                                style={{ backgroundColor: '#0D263B' }}
+                                style={{ 
+                                    backgroundColor: approvalStatus !== 'DRAFT' ? '#6B7280' : '#0D263B',
+                                    opacity: approvalStatus !== 'DRAFT' ? 0.6 : 1
+                                }}
                             >
-                                <span className="text-white text-xl">กรุณากดยืนยัน</span>
+                                <span className="text-xl" style={{ color: '#FFFFFF' }}>
+                                    {approvalStatus !== 'DRAFT' ? 'Waiting for review' : (isLoading ? 'กำลังบันทึก...' : 'กรุณากดยืนยัน')}
+                                </span>
                             </Button>
                         </div>
 
                     </div>
+                    )}
                 </div>
             </div>
         </div>

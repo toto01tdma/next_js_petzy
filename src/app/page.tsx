@@ -58,9 +58,9 @@ export default function Home() {
         {/* Welcome Button */}
         <Link
           href="/login"
-          className="bg-[#28A7CB] text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-blue-600 transition-colors shadow-lg w-full text-center"
+          className="text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-blue-600 transition-colors shadow-lg w-full text-center" style={{backgroundColor: '#28A7CB'}}
         >
-          ยินดีต้อนรับสู่บริการของเรา
+          <span style={{color: "#FFFFFF"}}>  ยินดีต้อนรับสู่บริการของเรา</span>
         </Link>
 
       </div>
