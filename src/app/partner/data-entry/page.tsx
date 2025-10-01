@@ -398,10 +398,10 @@ export default function DataEntry() {
                     {/* Logo */}
                     <div className="text-center mb-4">
                         <LogoFirstPage />
-                        <h1 className="text-5xl font-bold text-[#0D263B] mt-4">Pet-Friendly Hotel</h1>
+                        <h1 className="text-5xl font-bold mt-4" style={{ color: '#0D263B' }}>Pet-Friendly Hotel</h1>
                     </div>
 
-                    <div className="text-center mb-4 bg-[#28A7CB] w-full py-2.5">
+                    <div className="text-center mb-4 w-full py-2.5" style={{ backgroundColor: '#28A7CB' }}>
                         <span className="text-2xl" style={{ color: '#FFFFFF' }}>กรุณากรอกรายละเอียดข้อมูลส่วนตัวเพื่อเริ่มต้นทำงานกับเรา</span>
                     </div>
 
@@ -565,7 +565,7 @@ export default function DataEntry() {
                         </div>
 
                         {/* Section 2: Location Information */}
-                        <div className="text-center mb-4 bg-[#28A7CB] w-full py-2.5">
+                        <div className="text-center mb-4 w-full py-2.5" style={{ backgroundColor: '#28A7CB' }}>
                             <span className="text-2xl" style={{ color: '#FFFFFF' }}>กรุณากรอกข้อมูลเกี่ยวกับสถานที่ตั้งของโรงแรมหรือที่พักของคุณ</span>
                         </div>
 
@@ -898,7 +898,7 @@ export default function DataEntry() {
                                                 <div className="text-sm" style={{ color: '#4B5563' }}>Pet-Friendly Hotel</div>
                                             </div>
                                         </div>
-                                        <div className="text-md text-center text-[#484848] mt-1" style={{ fontWeight: '500' }}>
+                                        <div className="text-md text-center mt-1" style={{ fontWeight: '500', color: '#484848' }}>
                                             กรุณาคลิก อ่านเอกสาร
                                             ข้อตกลงในสัญญาและนโยบายคู่ค้า
                                         </div>
@@ -952,13 +952,14 @@ export default function DataEntry() {
                         ข้อมูลที่คุณลงทะเบียนผ่านการอนุมัติแล้ว
                     </h3>
                     <div
-                        className="bg-[#0D263B] hover:bg-[#1a3a52] border-[#0D263B] px-8 py-2 h-auto mt-10 rounded-md"
+                        className="px-8 py-2 h-auto mt-10 rounded-md"
+                        style={{ backgroundColor: '#0D263B', borderColor: '#0D263B' }}
                         onClick={() => {
                             setIsSuccessDialogOpen(false);
                             router.push('/partner/policy');
                         }}
                     >
-                        <span className="text-white">เข้าสู่การเพิ่มข้อมูลของคุณ</span>
+                        <span style={{ color: '#FFFFFF' }}>เข้าสู่การเพิ่มข้อมูลของคุณ</span>
                     </div>
                 </div>
             </Modal>

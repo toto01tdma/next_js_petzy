@@ -53,11 +53,12 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
             {/* Sidebar */}
             <div className={`
-                fixed left-0 top-0 h-full bg-[#100D40] text-white z-50 transition-transform duration-300 ease-in-out
+                fixed left-0 top-0 h-full z-50 transition-transform duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
                 lg:translate-x-0 lg:relative lg:z-auto
                 ${isOpen ? 'w-64' : 'w-0 lg:w-64'}
-            `}>
+            `}
+            style={{ backgroundColor: '#100D40', color: '#FFFFFF' }}>
                 <div className="flex flex-col h-full">
                     {/* Header */}
                     <div className="p-4 border-b border-gray-700">
@@ -71,7 +72,8 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                             </div>
                             <button 
                                 onClick={onToggle}
-                                className="lg:hidden text-white hover:text-gray-300"
+                                className="lg:hidden hover:text-gray-300"
+                                style={{ color: '#FFFFFF' }}
                             >
                                 <CloseOutlined />
                             </button>
@@ -87,10 +89,11 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                 className={`
                                     flex items-center gap-3 px-4 py-3 mx-2 rounded-lg cursor-pointer transition-colors
                                     ${item.active 
-                                        ? 'bg-red-600 text-white' 
-                                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                        ? 'bg-red-600' 
+                                        : 'text-gray-300 hover:bg-gray-700'
                                     }
                                 `}
+                                style={item.active ? { color: '#FFFFFF' } : {}}
                             >
                                 <span className="text-sm">{item.label}</span>
                             </div>
@@ -99,7 +102,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
                     {/* Footer */}
                     <div className="p-4 border-t border-gray-700">
-                        <div className="flex items-center gap-3 text-gray-300 hover:text-white cursor-pointer">
+                        <div className="flex items-center gap-3 text-gray-300 cursor-pointer">
                             <QuestionCircleOutlined className="text-lg" />
                             <span className="text-sm">Get Help</span>
                         </div>

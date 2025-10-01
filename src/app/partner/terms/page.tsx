@@ -19,7 +19,7 @@ export default function PartnerContracts() {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                <header className="shadow-sm border-b border-gray-200 px-6 py-4" style={{ backgroundColor: '#FFFFFF' }}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
@@ -37,7 +37,7 @@ export default function PartnerContracts() {
                 <main className="flex-1 overflow-auto p-6">
                     <div className="max-w-4xl mx-auto">
                         {/* Contract Content */}
-                        <div className="bg-white rounded-lg shadow-sm p-8">
+                        <div className="rounded-lg shadow-sm p-8" style={{ backgroundColor: '#FFFFFF' }}>
                             <div className="border border-gray-300 rounded-lg p-8 min-h-96">
                                 <h2 className="text-xl font-semibold text-gray-800 mb-6">
                                     สัญญาและนโยบายคู่ค้า

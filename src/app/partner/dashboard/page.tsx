@@ -177,10 +177,10 @@ export default function Dashboard() {
                 </header>
 
                 {/* Dashboard Content */}
-                <main className="flex-1 overflow-auto p-6 bg-white">
+                <main className="flex-1 overflow-auto p-6" style={{ backgroundColor: '#FFFFFF' }}>
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div className="bg-gradient-to-r from-[#0097EC] to-[#003AD2] rounded-2xl p-6 text-white">
+                        <div className="bg-gradient-to-r from-[#0097EC] to-[#003AD2] rounded-2xl p-6" style={{ color: '#FFFFFF' }}>
                             <div className="">
                                 <div>
                                     <div className="flex items-center justify-between w-full">
@@ -192,7 +192,7 @@ export default function Dashboard() {
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-gradient-to-r from-[#1FD071] to-[#00A843] rounded-2xl p-6 text-white">
+                        <div className="bg-gradient-to-r from-[#1FD071] to-[#00A843] rounded-2xl p-6" style={{ color: '#FFFFFF' }}>
                             <div className="">
                                 <div>
                                     <div className="flex items-center justify-between w-full">

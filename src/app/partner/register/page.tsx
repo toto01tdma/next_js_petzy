@@ -339,7 +339,7 @@ export default function Register() {
                                 เมื่อคุณลงทะเบียนแล้วจึงว่าคุณยอมรับ
                             </p>
                             <Link href="#" className="text-sm">
-                                <span className="text-[#28A7CB]">ข้อกำหนด</span>และ<span className="text-[#28A7CB]">เงื่อนไขการใช้งาน</span>ของเรา
+                                <span style={{ color: '#28A7CB' }}>ข้อกำหนด</span>และ<span style={{ color: '#28A7CB' }}>เงื่อนไขการใช้งาน</span>ของเรา
                             </Link>
                         </div>
                     </div>

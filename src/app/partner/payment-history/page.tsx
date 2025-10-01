@@ -35,14 +35,14 @@ export default function PaymentHistory() {
                 </header>
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-auto p-6 bg-white">
+                <main className="flex-1 overflow-auto p-6" style={{ backgroundColor: '#FFFFFF' }}>
                     <div className="flex mb-3">
                         <h2 className="text-xl font-semibold text-black me-3" style={{ marginBottom: '0px' }}>สร้างบัญชีการรับชำระเงิน</h2>
-                        <div className="bg-[#0D263B] rounded-md flex items-center justify-center py-2 px-6 mx-1">
-                            <span className="text-white">ติดต่อฝ่ายสนับสนุน</span>
+                        <div className="rounded-md flex items-center justify-center py-2 px-6 mx-1" style={{ backgroundColor: '#0D263B' }}>
+                            <span style={{ color: '#FFFFFF' }}>ติดต่อฝ่ายสนับสนุน</span>
                         </div>
-                        <div className="bg-[#0D263B] rounded-md flex items-center justify-center py-2 px-6 mx-1">
-                            <span className="text-white">อ่านนโยบายการชำระเงิน</span>
+                        <div className="rounded-md flex items-center justify-center py-2 px-6 mx-1" style={{ backgroundColor: '#0D263B' }}>
+                            <span style={{ color: '#FFFFFF' }}>อ่านนโยบายการชำระเงิน</span>
                         </div>
                     </div>
                     <div className="flex mb-6">
@@ -51,9 +51,9 @@ export default function PaymentHistory() {
                     <div className="flex px-10 mb-16">
                         {/* ด้านซ้าย 1 ส่วน */}
                         <div className="w-2/5">
-                            <div className="bg-[#E0E2E6] rounded-lg p-4 w-full flex flex-col items-center justify-center h-[300px]">
-                                <UploadOutlined className="text-6xl text-[#484848] mb-5" />
-                                <p className="text-[#484848] mt-2 text-center">
+                            <div className="rounded-lg p-4 w-full flex flex-col items-center justify-center h-[300px]" style={{ backgroundColor: '#E0E2E6' }}>
+                                <UploadOutlined className="text-6xl mb-5" style={{ color: '#484848' }} />
+                                <p className="mt-2 text-center" style={{ color: '#484848' }}>
                                     อัพโหลดรูปหน้าสมุดบัญชีธนาคารของคุณ
                                 </p>
                             </div>
@@ -97,8 +97,8 @@ export default function PaymentHistory() {
                     </div>
 
                     <div className="flex justify-center">
-                        <div className="bg-[#0D263B] rounded-md flex items-center justify-center py-2 px-6 mx-1 w-[80%] cursor-pointer">
-                            <span className="text-white text-xl">กรุณากดยืนยัน</span>
+                        <div className="rounded-md flex items-center justify-center py-2 px-6 mx-1 w-[80%] cursor-pointer" style={{ backgroundColor: '#0D263B' }}>
+                            <span className="text-xl" style={{ color: '#FFFFFF' }}>กรุณากดยืนยัน</span>
                         </div>
                     </div>
                 </main>

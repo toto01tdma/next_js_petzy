@@ -20,7 +20,7 @@ export default function UserProfile() {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                <header className="shadow-sm border-b border-gray-200 px-6 py-4" style={{ backgroundColor: '#FFFFFF' }}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
@@ -40,7 +40,7 @@ export default function UserProfile() {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             {/* Left Column - Profile Picture */}
                             <div className="lg:col-span-1">
-                                <div className="bg-white rounded-lg shadow-sm p-6">
+                                <div className="rounded-lg shadow-sm p-6" style={{ backgroundColor: '#FFFFFF' }}>
                                     <div className="text-center">
                                         <h3 className="text-lg font-semibold text-gray-800 mb-4">รูปโปรไฟล์</h3>
                                         <div className="mb-4">
@@ -53,12 +53,12 @@ export default function UserProfile() {
 
                             {/* Right Column - Profile Information */}
                             <div className="lg:col-span-2">
-                                <div className="bg-white rounded-lg shadow-sm p-6">
+                                <div className="rounded-lg shadow-sm p-6" style={{ backgroundColor: '#FFFFFF' }}>
                                     <div className="flex gap-4 mb-6">
-                                        <Button className="bg-teal-500 text-white border-teal-500 hover:bg-teal-600">
+                                        <Button className="bg-teal-500 border-teal-500 hover:bg-teal-600" style={{ color: '#FFFFFF' }}>
                                             โรงแรม สุขสม โรงแรมสัตว์เลี้ยง
                                         </Button>
-                                        <Button className="bg-green-500 text-white border-green-500 hover:bg-green-600">
+                                        <Button className="bg-green-500 border-green-500 hover:bg-green-600" style={{ color: '#FFFFFF' }}>
                                             บริการของคุณได้รับการยืนยันแล้ว
                                         </Button>
                                     </div>
@@ -122,7 +122,7 @@ export default function UserProfile() {
 
                         {/* Additional Photos Section */}
                         <div className="mt-8">
-                            <div className="bg-white rounded-lg shadow-sm p-6">
+                            <div className="rounded-lg shadow-sm p-6" style={{ backgroundColor: '#FFFFFF' }}>
                                 <h3 className="text-lg font-semibold text-gray-800 mb-6">อัพรูปภาพหน้าปก</h3>
                                 
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -160,7 +160,7 @@ export default function UserProfile() {
 
                         {/* Terms and Conditions Section */}
                         <div className="mt-8">
-                            <div className="bg-white rounded-lg shadow-sm p-6">
+                            <div className="rounded-lg shadow-sm p-6" style={{ backgroundColor: '#FFFFFF' }}>
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">กรอกรายละเอียดข้อมูลสิทธิ์</h3>
                                 
                                 <div className="bg-gray-100 rounded-lg p-8 mb-6 min-h-48">
@@ -168,10 +168,10 @@ export default function UserProfile() {
                                 </div>
 
                                 <div className="flex gap-4">
-                                    <Button className="bg-gray-800 text-white border-gray-800 hover:bg-gray-900">
+                                    <Button className="bg-gray-800 border-gray-800 hover:bg-gray-900" style={{ color: '#FFFFFF' }}>
                                         ติดต่อฝ่ายลูกค้าสัมพันธ์
                                     </Button>
-                                    <Button className="bg-gray-600 text-white border-gray-600 hover:bg-gray-700">
+                                    <Button className="bg-gray-600 border-gray-600 hover:bg-gray-700" style={{ color: '#FFFFFF' }}>
                                         ออกจากระบบ
                                     </Button>
                                 </div>

@@ -36,7 +36,7 @@ export default function DataTable({ columns, data }: DataTableProps) {
                         ))}
                     </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200" style={{ backgroundColor: '#FFFFFF' }}>
                     {data.map((record, index) => (
                         <tr key={String(record.key) || index}>
                             {columns.map((column) => (

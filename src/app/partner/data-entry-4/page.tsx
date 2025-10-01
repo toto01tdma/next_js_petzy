@@ -195,7 +195,7 @@ export default function DataEntry4() {
         title = ["บริการ"],
         description = "",
         headers,
-        titleColor = "bg-[#1F4173]"
+        titleColor = "#1F4173"
     }: ServiceFormProps) => {
         const [localServiceRows, setLocalServiceRows] = useState<ServiceRow[]>(
             showDefaultData ? data : []
@@ -236,10 +236,11 @@ export default function DataEntry4() {
             <div className="mb-8">
                 <div className="flex">
                     <div
-                        className={`${titleColor} px-4 py-2 rounded-lg w-[300px] flex items-center justify-between mb-2 me-2 cursor-pointer`}
+                        className="px-4 py-2 rounded-lg w-[300px] flex items-center justify-between mb-2 me-2 cursor-pointer"
+                        style={{ backgroundColor: titleColor }}
                         onClick={() => setIsLocalExpanded(!isLocalExpanded)}
                     >
-                        <span className="text-white">{title[0]}</span>
+                        <span style={{ color: '#FFFFFF' }}>{title[0]}</span>
                         <div className="border-white border-2 rounded-lg pt-0.5 pb-0.25 px-1">
                             {isLocalExpanded ?
                                 <UpOutlined style={{ fontSize: '14px', color: 'white' }} /> :
@@ -252,7 +253,7 @@ export default function DataEntry4() {
                             key={index}
                             className={`${titleColor} px-4 py-2 rounded-lg w-[300px] flex items-center justify-center mb-2 me-2`}
                         >
-                            <span className="text-white">{t}</span>
+                            <span style={{ color: '#FFFFFF' }}>{t}</span>
                         </div>
                     ))}
                 </div>
@@ -266,7 +267,7 @@ export default function DataEntry4() {
                         {/* Header Row */}
                         <div className={`grid gap-4`} style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
                             {Object.entries(headers).map(([key, value], index) => (
-                                <div key={key} className="bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-between">
+                                <div key={key} className="bg-teal-500 px-4 py-2 rounded-lg flex items-center justify-between" style={{ color: '#FFFFFF' }}>
                                     <span className="text-sm">{value}</span>
                                     {index === 0 && (
                                         <button
@@ -320,10 +321,11 @@ export default function DataEntry4() {
                         {/* Confirm Button - Inside the expandable section */}
                         <div className="flex justify-end mt-4">
                             <div
-                                className="bg-[#FCBC00] px-4 py-2 rounded-lg cursor-pointer"
+                                className="px-4 py-2 rounded-lg cursor-pointer"
+                                style={{ backgroundColor: '#FCBC00' }}
                                 onClick={handleLocalSubmit}
                             >
-                                <span className="text-white text-sm">ยืนยันข้อมูล</span>
+                                <span className="text-sm" style={{ color: '#FFFFFF' }}>ยืนยันข้อมูล</span>
                             </div>
                         </div>
                     </div>
@@ -336,10 +338,10 @@ export default function DataEntry4() {
         <div className="min-h-screen pb-20 pt-10">
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
-                <div className="bg-white">
+                <div style={{ backgroundColor: '#FFFFFF' }}>
                     <div className="text-center mb-4">
                         <LogoFirstPage />
-                        <h1 className="text-5xl font-bold text-[#0D263B] mt-4">Pet-Friendly Hotel</h1>
+                        <h1 className="text-5xl font-bold mt-4" style={{ color: '#0D263B' }}>Pet-Friendly Hotel</h1>
                     </div>
 
                     <div className="border border-black mt-8 mb-20"></div>
@@ -349,8 +351,8 @@ export default function DataEntry4() {
                         {/* Dynamic Room Services Section */}
                         {dynamicRoomServices.length > 0 && (
                             <>
-                                <div className="flex justify-center items-center bg-[#00B6AA] rounded-lg py-1.5 mb-5 w-[220px]">
-                                    <span className="text-white text-lg">รูปแบบห้องพักของคุณ</span>
+                                <div className="flex justify-center items-center rounded-lg py-1.5 mb-5 w-[220px]" style={{ backgroundColor: '#00B6AA' }}>
+                                    <span className="text-lg" style={{ color: '#FFFFFF' }}>รูปแบบห้องพักของคุณ</span>
                                 </div>
                                 {dynamicRoomServices.map((roomService, index) => (
                                     <div key={roomService.id}>
@@ -365,7 +367,7 @@ export default function DataEntry4() {
                                                 closeTime: "เวลาปิด",
                                                 price: "ราคาที่กำหนด"
                                             }}
-                                            titleColor="bg-[#1F4173]"
+                                            titleColor="#1F4173"
                                         />
                                         {index < dynamicRoomServices.length - 1 && (
                                             <div className="border border-black mt-15 mb-8"></div>
@@ -380,8 +382,8 @@ export default function DataEntry4() {
                         {dynamicSpecialServices.length > 0 && (
                             <>
                                 <div className="flex justify-start items-center">
-                                    <div className="flex justify-center items-center bg-[#00B6AA] rounded-lg py-1.5 mb-5 w-[220px]">
-                                        <span className="text-white text-lg">รูปแบบบริการพิเศษ</span>
+                                    <div className="flex justify-center items-center rounded-lg py-1.5 mb-5 w-[220px]" style={{ backgroundColor: '#00B6AA' }}>
+                                        <span className="text-lg" style={{ color: '#FFFFFF' }}>รูปแบบบริการพิเศษ</span>
                                     </div>
                                 </div>
                                 {dynamicSpecialServices.map((specialService, index) => (
@@ -397,7 +399,7 @@ export default function DataEntry4() {
                                                 closeTime: "เวลาปิด",
                                                 price: "ราคาที่กำหนด"
                                             }}
-                                            titleColor="bg-[#1F4173]"
+                                            titleColor="#1F4173"
                                         />
                                         {index < dynamicSpecialServices.length - 1 && (
                                             <div className="border border-black mt-15 mb-8"></div>
@@ -412,8 +414,8 @@ export default function DataEntry4() {
                         {dynamicPetCareServices.length > 0 && (
                             <>
                                 <div className="flex justify-start items-center">
-                                    <div className="flex justify-center items-center bg-[#00B6AA] rounded-lg py-1.5 mb-5 w-[300px]">
-                                        <span className="text-white text-lg">รูปแบบบริการรับฝากสัตว์เลี้ยง</span>
+                                    <div className="flex justify-center items-center rounded-lg py-1.5 mb-5 w-[300px]" style={{ backgroundColor: '#00B6AA' }}>
+                                        <span className="text-lg" style={{ color: '#FFFFFF' }}>รูปแบบบริการรับฝากสัตว์เลี้ยง</span>
                                     </div>
                                 </div>
                                 {dynamicPetCareServices.map((petCareService, index) => (
@@ -429,7 +431,7 @@ export default function DataEntry4() {
                                                 closeTime: "เวลาปิด",
                                                 price: "ราคาที่กำหนด"
                                             }}
-                                            titleColor="bg-[#1F4173]"
+                                            titleColor="#1F4173"
                                         />
                                         {index < dynamicPetCareServices.length - 1 && (
                                             <div className="border border-black mt-15 mb-8"></div>
@@ -447,7 +449,8 @@ export default function DataEntry4() {
                                 <p className="text-gray-500 text-sm mt-2">กรุณากลับไปกรอกข้อมูลในหน้า data-entry-3 ก่อน</p>
                                 <button 
                                     onClick={() => router.push('/partner/data-entry-3')}
-                                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    className="mt-4 px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                                    style={{ color: '#FFFFFF' }}
                                 >
                                     กลับไปหน้า data-entry-3
                                 </button>
@@ -463,7 +466,7 @@ export default function DataEntry4() {
                             className="px-12 py-3 h-auto font-medium w-[90%] rounded-md text-center"
                             style={{ backgroundColor: '#0D263B' }}
                         >
-                            <span className="text-white text-xl">กรุณากดยืนยัน</span>
+                            <span className="text-xl" style={{ color: '#FFFFFF' }}>กรุณากดยืนยัน</span>
                         </Button>
                     </div>
                 </div>

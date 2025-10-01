@@ -76,18 +76,15 @@ const Sidebar = () => {
             }}
         >
             {/* Logo Section */}
-            <div className="p-6 text-center" style={{ backgroundColor: '#000000' }}>
-                <div className="flex items-center justify-center mb-2">
-                    <span className="text-3xl font-bold" style={{ color: '#00D4FF' }}>PetZy</span>
-                    <span className="text-2xl ml-1">🐾</span>
-                </div>
-                <div className="text-sm" style={{ color: '#FFFFFF' }}>
-                    {user?.profile?.fullName || 'PETZY ADMIN'}
-                </div>
-                <div className="text-xs mt-1" style={{ color: '#CCCCCC' }}>
-                    {user?.profile?.role || 'Administrator'}
-                </div>
+            <div className="px-5 py-4 rounded-md m-4 flex items-center justify-center" style={{ backgroundColor: '#000000' }}>
+                <Image src="/assets/images/logo/logo.png" alt="logo" width={100} height={100} />
             </div>
+            <p className="text-center text-md" style={{ color: '#FFFFFF' }}>
+                PETZY ADMIN
+            </p>
+            <p className="text-center text-sm" style={{ color: '#FFFFFF' }}>
+                Administrator
+            </p>
 
             {/* Menu Items */}
             <div className="flex-1 overflow-y-auto py-4">

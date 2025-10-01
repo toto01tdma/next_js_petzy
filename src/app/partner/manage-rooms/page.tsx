@@ -22,21 +22,21 @@ export default function ManageRooms() {
             id: 'PZ1',
             title: 'รายการห้องพักทั้งหมดของคุณ',
             subtitle: '10 ห้อง',
-            color: 'bg-[#1F4173]',
+            color: '#1F4173',
             icon: '👁️'
         },
         {
             id: 'PZ2',
             title: 'บริการรับฝากสัตว์เลี้ยงของคุณ',
             subtitle: '3 บริการ',
-            color: 'bg-[#484848]',
+            color: '#484848',
             icon: '👁️'
         },
         {
             id: 'PZ3',
             title: 'บริการสปาสัตว์เลี้ยง',
             subtitle: '3 บริการ',
-            color: 'bg-[#484848]',
+            color: '#484848',
             icon: '👁️'
         }
     ];
@@ -141,7 +141,7 @@ export default function ManageRooms() {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="bg-white shadow-sm border-gray-200 px-6 py-4">
+                <header className="shadow-sm border-gray-200 px-6 py-4" style={{ backgroundColor: '#FFFFFF' }}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
@@ -156,7 +156,7 @@ export default function ManageRooms() {
                 </header>
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-auto p-6 bg-white">
+                <main className="flex-1 overflow-auto p-6" style={{ backgroundColor: '#FFFFFF' }}>
                     {/* Section Title */}
                     <div className="mb-6">
                         <div className="flex justify-between items-center">
@@ -168,7 +168,7 @@ export default function ManageRooms() {
                                 className="bg-teal-500 hover:bg-teal-600 border-teal-500"
                                 style={{ backgroundColor: '#00B6AA' }}
                             >
-                                <span className="text-white font-bold text-lg">สร้างบริการของคุณเพิ่มเติม</span>
+                                <span className="font-bold text-lg" style={{ color: '#FFFFFF' }}>สร้างบริการของคุณเพิ่มเติม</span>
                                 <PlusOutlined style={{ color: 'white' }} />
                             </Button>
                         </div>
@@ -179,7 +179,8 @@ export default function ManageRooms() {
                             {rooms.map((room) => (
                                 <div
                                     key={room.id}
-                                    className={`${room.color} rounded-2xl px-6 pt-6 pb-0 text-white relative flex items-center justify-center`}
+                                    className="rounded-2xl px-6 pt-6 pb-0 relative flex items-center justify-center"
+                                    style={{ backgroundColor: room.color, color: '#FFFFFF' }}
                                 >
                                     {/* ไอคอนขวาบน */}
                                     <div className="absolute top-4 right-4">
@@ -197,7 +198,7 @@ export default function ManageRooms() {
                     </div>
 
                     {/* Room Details Section */}
-                    <div className="bg-white rounded-xl shadow-md mb-8 border-1 border-gray-200">
+                    <div className="rounded-xl shadow-md mb-8 border-1 border-gray-200" style={{ backgroundColor: '#FFFFFF' }}>
                         <div className="p-6">
                             <h3 className="text-lg font-semibold text-gray-800">
                                 รายการห้องพักทั้งหมดของคุณ 10 ห้อง
@@ -216,12 +217,12 @@ export default function ManageRooms() {
                     {/* Bottom Section with Room Management and Calendar - Only show when editing a specific row */}
                     {editMode && editingRowId && (
                         <div className="flex justify-between w-full border-b">
-                            <div className="flex-[1] min-h-screen bg-white flex flex-col items-center justify-start py-6 px-0">
+                            <div className="flex-[1] min-h-screen flex flex-col items-center justify-start py-6 px-0" style={{ backgroundColor: '#FFFFFF' }}>
                                 {/* Header */}
                                 <div className="flex flex-col gap-4 w-full max-w-md">
                                     {/* Room Code */}
                                     <div className="flex justify-between items-center">
-                                        <div className="px-4 py-2 bg-yellow-400 rounded-md font-bold text-white">
+                                        <div className="px-4 py-2 bg-yellow-400 rounded-md font-bold" style={{ color: '#FFFFFF' }}>
                                             <span>รหัสห้องพัก</span> <span className="text-black">{roomDetails.find(room => room.key === editingRowId)?.roomCode || 'SBI-001'}</span>
                                         </div>
                                         {/* Toggle */}
@@ -233,8 +234,9 @@ export default function ManageRooms() {
                                                 onClick={() => setIsOpen(!isOpen)}
                                             >
                                                 <div
-                                                    className={`bg-white w-6 h-6 rounded-full shadow-md transform transition ${isOpen ? "translate-x-6" : "translate-x-0"
+                                                    className={`w-6 h-6 rounded-full shadow-md transform transition ${isOpen ? "translate-x-6" : "translate-x-0"
                                                         }`}
+                                                    style={{ backgroundColor: '#FFFFFF' }}
                                                 />
                                             </div>
                                             <span className={`${isOpen ? "text-black" : "text-gray-400"}`}>เปิด</span>
@@ -243,7 +245,7 @@ export default function ManageRooms() {
 
                                     {/* Set Time Button */}
                                     <button className="bg-teal-500 py-2 rounded-md font-bold">
-                                        <span className="text-white">กำหนด วันเวลา ให้บริการ</span>
+                                        <span style={{ color: '#FFFFFF' }}>กำหนด วันเวลา ให้บริการ</span>
                                     </button>
                                 </div>
 
@@ -283,12 +285,12 @@ export default function ManageRooms() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex-[1] min-h-screen bg-white flex flex-col items-center justify-start p-6 space-y-10">
+                            <div className="flex-[1] min-h-screen flex flex-col items-center justify-start p-6 space-y-10" style={{ backgroundColor: '#FFFFFF' }}>
                                 {/* Grid Form */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
                                     {/* ราคาที่กำหนด */}
                                     <div>
-                                        <div className="bg-teal-500 text-white text-center font-bold rounded-md py-2 mb-3">
+                                        <div className="bg-teal-500 text-center font-bold rounded-md py-2 mb-3" style={{ color: '#FFFFFF' }}>
                                             ราคาที่กำหนด
                                         </div>
                                         <input
@@ -301,7 +303,7 @@ export default function ManageRooms() {
 
                                     {/* กำหนดราคาใหม่ */}
                                     <div>
-                                        <div className="bg-teal-500 text-white text-center font-bold rounded-md py-2 mb-3">
+                                        <div className="bg-teal-500 text-center font-bold rounded-md py-2 mb-3" style={{ color: '#FFFFFF' }}>
                                             กำหนดราคาใหม่
                                         </div>
                                         <div className="relative mt-2">
@@ -317,7 +319,7 @@ export default function ManageRooms() {
 
                                     {/* รหัสห้องพัก */}
                                     <div>
-                                        <div className="bg-teal-500 text-white text-center font-bold rounded-md py-2 mb-3">
+                                        <div className="bg-teal-500 text-center font-bold rounded-md py-2 mb-3" style={{ color: '#FFFFFF' }}>
                                             รหัสห้องพัก
                                         </div>
                                         <input
@@ -330,7 +332,7 @@ export default function ManageRooms() {
 
                                     {/* เปลี่ยนรหัสห้องพัก */}
                                     <div>
-                                        <div className="bg-teal-500 text-white text-center font-bold rounded-md py-2 mb-3">
+                                        <div className="bg-teal-500 text-center font-bold rounded-md py-2 mb-3" style={{ color: '#FFFFFF' }}>
                                             เปลี่ยนรหัสห้องพัก
                                         </div>
                                         <div className="relative mt-2">
@@ -351,7 +353,7 @@ export default function ManageRooms() {
                                         onClick={handleUpdate}
                                         className="bg-yellow-400 font-bold px-6 py-3 rounded-xl shadow"
                                     >
-                                        <span className="text-white">อัพเดทข้อมูล</span>
+                                        <span style={{ color: '#FFFFFF' }}>อัพเดทข้อมูล</span>
                                     </button>
                                     <button
                                         onClick={() => {
@@ -360,7 +362,7 @@ export default function ManageRooms() {
                                         }}
                                         className="bg-gray-800 font-bold px-6 py-3 rounded-xl shadow"
                                     >
-                                        <span className="text-white">ปิดหน้าต่างนี้</span>
+                                        <span style={{ color: '#FFFFFF' }}>ปิดหน้าต่างนี้</span>
                                     </button>
                                 </div>
                             </div>

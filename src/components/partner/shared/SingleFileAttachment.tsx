@@ -59,7 +59,8 @@ export default function SingleFileAttachment({
                                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                             />
                             <div
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm cursor-pointer hover:bg-red-600"
+                                className="absolute top-1 right-1 bg-red-500 rounded-full w-6 h-6 flex items-center justify-center text-sm cursor-pointer hover:bg-red-600"
+                                style={{ color: '#FFFFFF' }}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onImageRemove();
@@ -72,10 +73,10 @@ export default function SingleFileAttachment({
                         <DownloadOutlined className="text-6xl text-gray-400 mb-2" />
                     )}
                 </div>
-                <div className={`text-md text-[#484848] mt-1 ${labelClass}`} style={{ fontWeight: '500' }}>
+                <div className={`text-md mt-1 ${labelClass}`} style={{ fontWeight: '500', color: '#484848' }}>
                     {label}
                 </div>
-                <div className={`text-xs text-[#9A9A9A] mt-1 ${descriptionClass}`}>
+                <div className={`text-xs mt-1 ${descriptionClass}`} style={{ color: '#9A9A9A' }}>
                     {description}
                 </div>
             </div>

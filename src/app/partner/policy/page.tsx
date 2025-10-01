@@ -38,7 +38,7 @@ export default function PolicyPage() {
             }}
         >
             {/* Background Overlay */}
-            <div className="min-h-screen bg-white bg-opacity-90">
+            <div className="min-h-screen" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
                 <div className="container mx-auto px-4 py-8">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-8">
@@ -52,7 +52,7 @@ export default function PolicyPage() {
                     </div>
 
                     {/* Main Content */}
-                    <div className="max-w-4xl mx-auto bg-white rounded-lg overflow-hidden">
+                    <div className="max-w-4xl mx-auto rounded-lg overflow-hidden" style={{ backgroundColor: '#FFFFFF' }}>
                         {/* Logo Section */}
                         <div className="pb-8 pt-3 text-center">
                             <LogoFirstPage subtext='Find Your Perfect Stay, Anytime, Anywhere' />

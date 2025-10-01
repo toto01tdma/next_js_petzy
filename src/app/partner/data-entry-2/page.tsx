@@ -411,7 +411,7 @@ export default function DataEntry2() {
             }}
         >
             {/* Background Overlay */}
-            <div className="absolute inset-0 bg-white/90"></div>
+            <div className="absolute inset-0" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}></div>
 
             {/* Content Container */}
             <div className="relative z-10 min-h-screen py-8 px-4">
@@ -419,14 +419,14 @@ export default function DataEntry2() {
                     {/* Logo */}
                     <div className="text-center mb-3">
                         <LogoFirstPage subtext='Find Your Perfect Stay, Anytime, Anywhere' />
-                        <h1 className="text-5xl font-bold text-[#0D263B] mt-4">Pet-Friendly Hotel</h1>
+                        <h1 className="text-5xl font-bold mt-4" style={{ color: '#0D263B' }}>Pet-Friendly Hotel</h1>
                     </div>
 
                     <div className="text-center mb-4">
-                        <h1 className="text-2xl font-bold text-[#484848] mt-4">เริ่มสร้างบริการของคุณ เพื่อเริ่มต้นทำงานกับเรา</h1>
+                        <h1 className="text-2xl font-bold mt-4" style={{ color: '#484848' }}>เริ่มสร้างบริการของคุณ เพื่อเริ่มต้นทำงานกับเรา</h1>
                     </div>
                     <div className="text-center mb-4">
-                        <h1 className="text-2xl font-bold text-[#484848] mt-4">สร้างหมวดหมู่หลักบริการของคุณ</h1>
+                        <h1 className="text-2xl font-bold mt-4" style={{ color: '#484848' }}>สร้างหมวดหมู่หลักบริการของคุณ</h1>
                     </div>
 
                     {/* Loading Spinner */}
@@ -440,7 +440,7 @@ export default function DataEntry2() {
                     {!isFetching && (
                     <div className="py-6 px-12 border border-black rounded-lg">
                         <div className="space-y-4">
-                            <p className="text-[#484848]" style={{ marginBottom: '0.75rem' }}><span className="text-xl font-bold me-4">กรุณาเลือกบริการที่คุณมี</span> <span className="text-md">สามารถเลือกได้หลายบริการตามความจริงที่คุณให้บริการ</span></p>
+                            <p style={{ marginBottom: '0.75rem', color: '#484848' }}><span className="text-xl font-bold me-4">กรุณาเลือกบริการที่คุณมี</span> <span className="text-md">สามารถเลือกได้หลายบริการตามความจริงที่คุณให้บริการ</span></p>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <ServiceCheckbox
                                     label="รูปแบบบริการห้องพัก"
@@ -686,7 +686,7 @@ export default function DataEntry2() {
                                 </div>
                             </div> */}
 
-                            <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#F3F4F6' }}>
                                 <div className="text-center">
                                     <div className="text-4xl mb-2">🗺️</div>
                                     <p className="text-gray-600">Google Maps Integration</p>
@@ -709,14 +709,14 @@ export default function DataEntry2() {
                                 {/* คอลัมน์ 1 */}
                                 <div className="flex flex-col space-y-2 p-4">
                                     <label className="flex items-center justify-between">
-                                        <span>เครื่องปรับอากาศ</span>
+                                        <span style={{ color: '#1F2937' }}>เครื่องปรับอากาศ</span>
                                         <Checkbox
                                             checked={formData.services.includes("aircon")}
                                             onChange={(e) => handleServiceChange("aircon", e.target.checked)}
                                         />
                                     </label>
                                     <label className="flex items-center justify-between">
-                                        <span>เครื่องทำน้ำอุ่น</span>
+                                        <span style={{ color: '#1F2937' }}>เครื่องทำน้ำอุ่น</span>
                                         <Checkbox
                                             checked={formData.services.includes("heater")}
                                             onChange={(e) => handleServiceChange("heater", e.target.checked)}
@@ -727,14 +727,14 @@ export default function DataEntry2() {
                                 {/* คอลัมน์ 2 */}
                                 <div className="flex flex-col space-y-2 p-4">
                                     <label className="flex items-center justify-between">
-                                        <span>โทรทัศน์</span>
+                                        <span style={{ color: '#1F2937' }}>โทรทัศน์</span>
                                         <Checkbox
                                             checked={formData.services.includes("tv")}
                                             onChange={(e) => handleServiceChange("tv", e.target.checked)}
                                         />
                                     </label>
                                     <label className="flex items-center justify-between">
-                                        <span>อ่างอาบน้ำ</span>
+                                        <span style={{ color: '#1F2937' }}>อ่างอาบน้ำ</span>
                                         <Checkbox
                                             checked={formData.services.includes("bathtub")}
                                             onChange={(e) => handleServiceChange("bathtub", e.target.checked)}
@@ -745,14 +745,14 @@ export default function DataEntry2() {
                                 {/* คอลัมน์ 3 */}
                                 <div className="flex flex-col space-y-2 p-4">
                                     <label className="flex items-center justify-between">
-                                        <span>สระว่ายน้ำ</span>
+                                        <span style={{ color: '#1F2937' }}>สระว่ายน้ำ</span>
                                         <Checkbox
                                             checked={formData.services.includes("pool")}
                                             onChange={(e) => handleServiceChange("pool", e.target.checked)}
                                         />
                                     </label>
                                     <label className="flex items-center justify-between">
-                                        <span>ร้านอาหาร</span>
+                                        <span style={{ color: '#1F2937' }}>ร้านอาหาร</span>
                                         <Checkbox
                                             checked={formData.services.includes("restaurant")}
                                             onChange={(e) => handleServiceChange("restaurant", e.target.checked)}
@@ -763,14 +763,14 @@ export default function DataEntry2() {
                                 {/* คอลัมน์ 4 */}
                                 <div className="flex flex-col space-y-2 p-4">
                                     <label className="flex items-center justify-between">
-                                        <span>สปา</span>
+                                        <span style={{ color: '#1F2937' }}>สปา</span>
                                         <Checkbox
                                             checked={formData.services.includes("spa")}
                                             onChange={(e) => handleServiceChange("spa", e.target.checked)}
                                         />
                                     </label>
                                     <label className="flex items-center justify-between">
-                                        <span>บริการซักรีด</span>
+                                        <span style={{ color: '#1F2937' }}>บริการซักรีด</span>
                                         <Checkbox
                                             checked={formData.services.includes("laundry")}
                                             onChange={(e) => handleServiceChange("laundry", e.target.checked)}
@@ -781,7 +781,7 @@ export default function DataEntry2() {
                                 {/* คอลัมน์ 5 */}
                                 <div className="flex flex-col space-y-2 p-4">
                                     <label className="flex items-center justify-between">
-                                        <span>สนามหญ้า</span>
+                                        <span style={{ color: '#1F2937' }}>สนามหญ้า</span>
                                         <Checkbox
                                             checked={formData.services.includes("garden")}
                                             onChange={(e) => handleServiceChange("garden", e.target.checked)}

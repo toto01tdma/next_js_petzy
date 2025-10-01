@@ -267,12 +267,13 @@ export default function DataEntry3() {
         };
 
         return (
-            <div>
+            <div style={{ backgroundColor: '#FFFFFF' }}>
                 <div
-                    className="bg-[#1F4173] px-4 py-2 rounded-lg w-[300px] flex items-center justify-between mb-2 cursor-pointer"
+                    className="px-4 py-2 rounded-lg w-[300px] flex items-center justify-between mb-2 cursor-pointer"
+                    style={{ backgroundColor: '#1F4173' }}
                     onClick={() => setIsLocalExpanded(!isLocalExpanded)}
                 >
-                    <span className="text-white">{title}</span>
+                    <span style={{ color: '#FFFFFF' }}>{title}</span>
                     <div className="border-white border-2 rounded-lg pt-0.5 pb-0.25 px-1">
                         {isLocalExpanded ?
                             <UpOutlined style={{ fontSize: '14px', color: 'white' }} /> :
@@ -290,7 +291,7 @@ export default function DataEntry3() {
                         {/* Header Row */}
                         <div className={`grid gap-4`} style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
                             {Object.entries(headers).map(([key, value], index) => (
-                                <div key={key} className="bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-between">
+                                <div key={key} className="bg-teal-500 px-4 py-2 rounded-lg flex items-center justify-between" style={{ color: '#FFFFFF' }}>
                                     <span>{value}</span>
                                     {index === 0 && (
                                         <button
@@ -344,10 +345,11 @@ export default function DataEntry3() {
                         {/* Confirm Button - Now inside the expandable section */}
                         <div className="flex justify-end mt-4">
                             <div
-                                className="bg-[#FCBC00] px-4 py-2 rounded-lg cursor-pointer"
+                                className="px-4 py-2 rounded-lg cursor-pointer"
+                                style={{ backgroundColor: '#FCBC00' }}
                                 onClick={handleLocalSubmit}
                             >
-                                <span className="text-white">ยืนยันข้อมูล</span>
+                                <span style={{ color: '#FFFFFF' }}>ยืนยันข้อมูล</span>
                             </div>
                         </div>
                     </div>
@@ -360,10 +362,10 @@ export default function DataEntry3() {
         <div className="min-h-screen pb-20 pt-10">
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
-                <div className="bg-white">
+                <div style={{ backgroundColor: '#FFFFFF' }}>
                     <div className="text-center mb-4">
                         <LogoFirstPage />
-                        <h1 className="text-5xl font-bold text-[#0D263B] mt-4">Pet-Friendly Hotel</h1>
+                        <h1 className="text-5xl font-bold mt-4" style={{ color: '#0D263B' }}>Pet-Friendly Hotel</h1>
                     </div>
 
                     {/* Form Container */}
@@ -645,7 +647,7 @@ export default function DataEntry3() {
                             className="px-12 py-3 h-auto font-medium w-[90%] rounded-md text-center"
                             style={{ backgroundColor: '#0D263B' }}
                         >
-                            <span className="text-white text-xl">กรุณากดยืนยัน</span>
+                            <span className="text-xl" style={{ color: '#FFFFFF' }}>กรุณากดยืนยัน</span>
                         </Button>
                     </div>
                 </div>

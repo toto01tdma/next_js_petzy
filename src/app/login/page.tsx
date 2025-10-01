@@ -159,8 +159,12 @@ export default function Login() {
                     timerProgressBar: true
                 });
 
-                // Redirect to data entry page
-                router.push('/partner/data-entry');
+                // Redirect based on user role
+                if (data.data.user.role === 'ADMIN') {
+                    router.push('/admin/dashboard');
+                } else {
+                    router.push('/partner/data-entry');
+                }
             } else {
                 // Handle error
                 await Swal.fire({
