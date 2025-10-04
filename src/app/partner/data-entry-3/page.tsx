@@ -59,9 +59,7 @@ export default function DataEntry3() {
     }, []);
 
     const [uploadedImages, setUploadedImages] = useState<{ [key: number]: UploadFile }>({});
-    const [formData, setFormData] = useState({
-        description: ''
-    });
+    const [description, setDescription] = useState('');
 
     // Default room service data
     const defaultRoomServiceData: RoomServiceRow[] = [
@@ -136,7 +134,7 @@ export default function DataEntry3() {
         }
 
         // Check if description is filled
-        if (!formData.description.trim()) {
+        if (!description.trim()) {
             await Swal.fire({
                 icon: 'error',
                 title: 'ข้อมูลไม่ครบถ้วน',
@@ -172,7 +170,7 @@ export default function DataEntry3() {
                 roomServices: roomServiceRef.current,
                 specialServices: specialServiceRef.current,
                 petCareServices: petCareServiceRef.current,
-                description: formData.description,
+                description: description,
                 uploadedImages: uploadedImages
             };
 
@@ -281,7 +279,7 @@ export default function DataEntry3() {
                         }
                     </div>
                 </div>
-                <p className="text-sm">{description}</p>
+                <p className="text-sm" style={{ color: '#1F2937' }}>{description}</p>
 
                 <div
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${isLocalExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
@@ -312,12 +310,13 @@ export default function DataEntry3() {
                                     <div key={fieldKey} className="border rounded-lg px-2 py-2 text-center">
                                         {index === 0 ? (
                                             // First column with delete button
-                                            <div className="flex justify-between items-center px-2">
-                                                <Input
+                                            <div className="flex justify-between items-start px-2">
+                                                <TextArea
                                                     value={row[fieldKey as keyof RoomServiceRow] as string}
                                                     onChange={(e) => updateLocalRoomServiceRow(row.id, fieldKey as keyof RoomServiceRow, e.target.value)}
                                                     placeholder="ประเภท"
                                                     className="border-0 p-0"
+                                                    autoSize={{ minRows: 2, maxRows: 6 }}
                                                 />
                                                 <button
                                                     className="text-red-500 ml-2"
@@ -589,8 +588,8 @@ export default function DataEntry3() {
                             <TextArea
                                 rows={6}
                                 placeholder="กรอกรายละเอียดข้อมูลที่พัก..."
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
                                 className="w-full rounded-lg"
                             />
                         </div>

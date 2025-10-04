@@ -156,7 +156,7 @@ export default function PolicyPage() {
 
                         {/* Footer Actions */}
                         <div className="bg-gray-50 px-8 py-6">
-                            <div className="flex justify-center space-x-5">
+                            <div className="flex justify-center space-x-5 gap-5">
                                 <Button 
                                     size="large"
                                     onClick={() => router.back()}

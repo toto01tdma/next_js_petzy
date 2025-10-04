@@ -8,13 +8,6 @@ import Image from 'next/image';
 const Sidebar = () => {
     const pathname = usePathname();
     const router = useRouter();
-    const [user] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const userStr = localStorage.getItem('user');
-            return userStr ? JSON.parse(userStr) : null;
-        }
-        return null;
-    });
 
     const menuItems = [
         {
@@ -71,7 +64,7 @@ const Sidebar = () => {
             className="fixed left-0 top-0 h-screen flex flex-col"
             style={{ 
                 width: '250px',
-                background: 'linear-gradient(180deg, #0066FF 0%, #0052CC 100%)',
+                background: '#2C62D8',
                 zIndex: 1000
             }}
         >
@@ -79,10 +72,10 @@ const Sidebar = () => {
             <div className="px-5 py-4 rounded-md m-4 flex items-center justify-center" style={{ backgroundColor: '#000000' }}>
                 <Image src="/assets/images/logo/logo.png" alt="logo" width={100} height={100} />
             </div>
-            <p className="text-center text-md" style={{ color: '#FFFFFF' }}>
+            <p className="text-center text-md" style={{ color: '#FFFFFF', marginBottom: '0.25rem' }}>
                 PETZY ADMIN
             </p>
-            <p className="text-center text-sm" style={{ color: '#FFFFFF' }}>
+            <p className="text-center text-sm" style={{ color: '#FFFFFF', marginBottom: '0.25rem' }}>
                 Administrator
             </p>
 
@@ -94,7 +87,7 @@ const Sidebar = () => {
                         href={item.path}
                         className="block px-6 py-3 transition-all cursor-pointer"
                         style={{
-                            backgroundColor: isActive(item.path) ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                            backgroundColor: isActive(item.path) ? '#3D50DF' : 'transparent',
                             color: '#FFFFFF',
                             borderLeft: isActive(item.path) ? '4px solid #FFFFFF' : '4px solid transparent',
                             fontWeight: isActive(item.path) ? '600' : '400'

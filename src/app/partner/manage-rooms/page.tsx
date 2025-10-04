@@ -1,67 +1,327 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, PlusOutlined, EyeOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import DataTable from '@/components/partner/shared/DataTable';
+import Swal from 'sweetalert2';
+import { API_BASE_URL, USE_API_MODE } from '@/config/api';
+
+interface RoomSummary {
+    id: string;
+    type: string;
+    title: string;
+    count: number;
+    countLabel: string;
+    color: string;
+    icon: string;
+}
+
+interface RoomDetail {
+    [key: string]: unknown;
+    key: string;
+    id: string;
+    roomCode: string;
+    roomType: string;
+    pricing: {
+        dailyRate: number;
+        monthlyRate?: number;
+        deposit?: number;
+        discountRate?: number;
+        actualReceived: number;
+        currency: string;
+    };
+    status: string;
+    statusLabel: string;
+    isOpen: boolean;
+    schedule?: {
+        availableDays: number[];
+        openTime: string;
+        closeTime: string;
+        unavailableDates?: string[];
+        timezone?: string;
+    };
+}
 
 export default function ManageRooms() {
+    const router = useRouter();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [editMode, setEditMode] = useState(false);
-    const [editingRowId, setEditingRowId] = useState<string | null>(null);
+    const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
+    
+    // API Data
+    const [roomSummary, setRoomSummary] = useState<RoomSummary[]>([]);
+    const [roomDetails, setRoomDetails] = useState<RoomDetail[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetchingDetails, setIsFetchingDetails] = useState(false);
+    
+    // Edit Form State
+    const [selectedRoom, setSelectedRoom] = useState<RoomDetail | null>(null);
+    const [newPrice, setNewPrice] = useState('');
+    const [newRoomCode, setNewRoomCode] = useState('');
+    const [isOpen, setIsOpen] = useState(true);
+    const [selectedDate, setSelectedDate] = useState(7);
+    const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
+
+    const daysInMonth = Array.from({ length: 30 }, (_, i) => i + 1);
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
     };
 
-    // Room data
-    const rooms = [
-        {
-            id: 'PZ1',
-            title: 'รายการห้องพักทั้งหมดของคุณ',
-            subtitle: '10 ห้อง',
-            color: '#1F4173',
-            icon: '👁️'
-        },
-        {
-            id: 'PZ2',
-            title: 'บริการรับฝากสัตว์เลี้ยงของคุณ',
-            subtitle: '3 บริการ',
-            color: '#484848',
-            icon: '👁️'
-        },
-        {
-            id: 'PZ3',
-            title: 'บริการสปาสัตว์เลี้ยง',
-            subtitle: '3 บริการ',
-            color: '#484848',
-            icon: '👁️'
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            router.push('/login');
+            return;
         }
-    ];
+        
+        fetchRoomSummary();
+        fetchRoomDetails();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [router]);
 
-    // Sample room details
-    const roomDetails = [
-        {
-            key: '1',
-            id: 1,
-            roomCode: 'PZ01-001',
-            roomType: 'ห้องเดี่ยวเตียง',
-            dailyRate: '100.- บาท',
-            monthlyRate: '1,000.-บาท',
-            deposit: '900.-บาท',
-            status: 'ว่าง'
+    const fetchRoomSummary = async () => {
+        try {
+            if (!USE_API_MODE) {
+                // Mock data
+                setRoomSummary([
+                    { id: 'PZ1', type: 'ROOM', title: 'รายการห้องพักทั้งหมดของคุณ', count: 10, countLabel: 'ห้อง', color: '#1F4173', icon: 'eye' },
+                    { id: 'PZ2', type: 'BOARDING', title: 'บริการรับฝากสัตว์เลี้ยงของคุณ', count: 3, countLabel: 'บริการ', color: '#484848', icon: 'eye' },
+                    { id: 'PZ3', type: 'SPA', title: 'บริการสปาสัตว์เลี้ยง', count: 3, countLabel: 'บริการ', color: '#484848', icon: 'eye' }
+                ]);
+                return;
+            }
+
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`${API_BASE_URL}/api/partner/rooms/summary`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                setRoomSummary(result.data.accommodation || []);
+            }
+        } catch (error) {
+            console.error('Error fetching room summary:', error);
         }
-    ];
+    };
 
-    // Table columns configuration
+    const fetchRoomDetails = async () => {
+        setIsFetchingDetails(true);
+        try {
+            if (!USE_API_MODE) {
+                // Mock data
+                setRoomDetails([
+                    {
+                        key: '1',
+                        id: 'room-1',
+                        roomCode: 'PZ01-001',
+                        roomType: 'ห้องเดี่ยวเตียง',
+                        pricing: {
+                            dailyRate: 100,
+                            monthlyRate: 1000,
+                            deposit: 900,
+                            discountRate: 10,
+                            actualReceived: 90,
+                            currency: 'THB'
+                        },
+                        status: 'AVAILABLE',
+                        statusLabel: 'ว่าง',
+                        isOpen: true
+                    }
+                ]);
+                setIsFetchingDetails(false);
+                return;
+            }
+
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`${API_BASE_URL}/api/partner/rooms`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                const formatted = result.data.map((room: RoomDetail, index: number) => ({
+                    ...room,
+                    key: room.id || `${index + 1}`
+                }));
+                setRoomDetails(formatted);
+            }
+        } catch (error) {
+            console.error('Error fetching room details:', error);
+        } finally {
+            setIsFetchingDetails(false);
+        }
+    };
+
+    const handleEditRoom = async (roomId: string) => {
+        setEditingRoomId(roomId);
+        
+        try {
+            if (!USE_API_MODE) {
+                const room = roomDetails.find(r => r.key === roomId);
+                if (room) {
+                    setSelectedRoom(room);
+                    setNewPrice(room.pricing.dailyRate.toString());
+                    setNewRoomCode(room.roomCode);
+                    setIsOpen(room.isOpen);
+                    setEditMode(true);
+                }
+                return;
+            }
+
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`${API_BASE_URL}/api/partner/rooms/${roomId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                setSelectedRoom(result.data);
+                setNewPrice(result.data.pricing.dailyRate.toString());
+                setNewRoomCode(result.data.roomCode);
+                setIsOpen(result.data.isOpen);
+                setUnavailableDates(result.data.schedule?.unavailableDates || []);
+                setEditMode(true);
+            }
+        } catch (error) {
+            console.error('Error fetching room:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถโหลดข้อมูลห้องได้',
+                confirmButtonColor: '#0D263B'
+            });
+        }
+    };
+
+    const handleUpdate = async () => {
+        if (!selectedRoom) return;
+
+        setIsLoading(true);
+        try {
+            if (!USE_API_MODE) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'อัปเดตสำเร็จ',
+                    text: `ราคาใหม่: ${newPrice} บาท\nรหัสห้องพัก: ${newRoomCode}`,
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+                setEditMode(false);
+                fetchRoomDetails();
+                return;
+            }
+
+            const token = localStorage.getItem('accessToken');
+            const updatePayload: Record<string, unknown> = {};
+            
+            if (newRoomCode !== selectedRoom.roomCode) {
+                updatePayload.roomCode = newRoomCode;
+            }
+            if (parseFloat(newPrice) !== selectedRoom.pricing.dailyRate) {
+                updatePayload.pricing = {
+                    dailyRate: parseFloat(newPrice)
+                };
+            }
+            if (isOpen !== selectedRoom.isOpen) {
+                updatePayload.isOpen = isOpen;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/api/partner/rooms/${selectedRoom.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatePayload)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || 'Failed to update room');
+            }
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'อัปเดตสำเร็จ',
+                text: 'อัปเดตข้อมูลห้องพักสำเร็จ',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
+            });
+
+            setEditMode(false);
+            fetchRoomDetails();
+            fetchRoomSummary();
+        } catch (error) {
+            console.error('Error updating room:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: error instanceof Error ? error.message : 'ไม่สามารถอัปเดตข้อมูลได้',
+                confirmButtonColor: '#0D263B'
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleToggleDateAvailability = async (date: number) => {
+        if (!selectedRoom) return;
+
+        const dateStr = `2025-06-${date.toString().padStart(2, '0')}`;
+        const newUnavailable = unavailableDates.includes(dateStr)
+            ? unavailableDates.filter(d => d !== dateStr)
+            : [...unavailableDates, dateStr];
+
+        setUnavailableDates(newUnavailable);
+
+        // Update schedule on API
+        if (USE_API_MODE) {
+            try {
+                const token = localStorage.getItem('accessToken');
+                await fetch(`${API_BASE_URL}/api/partner/rooms/${selectedRoom.id}/schedule`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        unavailableDates: newUnavailable
+                    })
+                });
+            } catch (error) {
+                console.error('Error updating schedule:', error);
+            }
+        }
+    };
+
     const roomTableColumns = [
         {
             key: 'itemOrder',
             title: 'ลำดับรายการ',
             dataIndex: 'id',
-            render: (value: number) => `${value}.`
+            render: (value: unknown, record: RoomDetail) => {
+                const index = roomDetails.findIndex(r => r.key === record.key);
+                return `${index + 1}.`;
+            }
         },
         {
             key: 'roomCode',
@@ -76,25 +336,37 @@ export default function ManageRooms() {
         {
             key: 'discountPrice',
             title: 'ราคาส่วนลด',
-            dataIndex: 'dailyRate'
+            dataIndex: 'pricing',
+            render: (pricing: unknown) => {
+                const p = pricing as RoomDetail['pricing'];
+                return `${p.dailyRate}.- บาท`;
+            }
         },
         {
             key: 'yourOfferedPrice',
             title: 'ราคาที่คุณเสนอ',
-            dataIndex: 'monthlyRate'
+            dataIndex: 'pricing',
+            render: (pricing: unknown) => {
+                const p = pricing as RoomDetail['pricing'];
+                return `${p.monthlyRate || p.dailyRate}.-บาท`;
+            }
         },
         {
             key: 'actualReceived',
             title: 'ยอดรับเงินจริง',
-            dataIndex: 'deposit'
+            dataIndex: 'pricing',
+            render: (pricing: unknown) => {
+                const p = pricing as RoomDetail['pricing'];
+                return `${p.actualReceived}.-บาท`;
+            }
         },
         {
             key: 'status',
             title: 'สถานะ',
-            dataIndex: 'status',
-            render: (value: string) => (
+            dataIndex: 'statusLabel',
+            render: (value: unknown) => (
                 <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                    {value}
+                    {value as string}
                 </span>
             )
         },
@@ -102,36 +374,19 @@ export default function ManageRooms() {
             key: 'edit',
             title: 'แก้ไข',
             dataIndex: 'action',
-            render: (value: string, record: { key: string; [key: string]: unknown }) => (
-                <div className="flex items-center justify-center">
-                    <Pencil
-                        className="w-5 h-5 text-blue-600 cursor-pointer hover:text-blue-800"
-                        onClick={() => {
-                            setEditingRowId(record.key);
-                            setEditMode(true);
-                        }}
-                    />
-                </div>
-            )
+            render: (_value: unknown, record: unknown) => {
+                const room = record as RoomDetail;
+                return (
+                    <div className="flex items-center justify-center">
+                        <Pencil
+                            className="w-5 h-5 text-blue-600 cursor-pointer hover:text-blue-800"
+                            onClick={() => handleEditRoom(room.id)}
+                        />
+                    </div>
+                );
+            }
         }
     ];
-
-
-    const [isOpen, setIsOpen] = useState(true);
-    const [selectedDate, setSelectedDate] = useState(7);
-
-    const daysInMonth = Array.from({ length: 30 }, (_, i) => i + 1);
-
-    const [price] = useState("900");
-    const [newPrice, setNewPrice] = useState("900");
-    const [roomCode] = useState("SBI-001");
-    const [newRoomCode, setNewRoomCode] = useState("SBI-001");
-
-    const handleUpdate = () => {
-        alert(`✅ อัปเดตข้อมูลแล้ว!
-  ราคาใหม่: ${newPrice}
-  รหัสห้องพักใหม่: ${newRoomCode}`);
-    };
 
     return (
         <div className="flex h-screen bg-gray-100">
@@ -176,21 +431,18 @@ export default function ManageRooms() {
 
                         {/* Room Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            {rooms.map((room) => (
+                            {roomSummary.map((room) => (
                                 <div
                                     key={room.id}
                                     className="rounded-2xl px-6 pt-6 pb-0 relative flex items-center justify-center"
                                     style={{ backgroundColor: room.color, color: '#FFFFFF' }}
                                 >
-                                    {/* ไอคอนขวาบน */}
                                     <div className="absolute top-4 right-4">
                                         <EyeOutlined className="text-2xl" />
                                     </div>
-
-                                    {/* เนื้อหาตรงกลาง */}
                                     <div className="text-center mt-4">
                                         <p className="text-lg font-medium mb-2" style={{ marginBottom: '0.25rem' }}>{room.title}</p>
-                                        <p className="text-2xl">{room.subtitle}</p>
+                                        <p className="text-2xl">{room.count} {room.countLabel}</p>
                                     </div>
                                 </div>
                             ))}
@@ -201,21 +453,27 @@ export default function ManageRooms() {
                     <div className="rounded-xl shadow-md mb-8 border-1 border-gray-200" style={{ backgroundColor: '#FFFFFF' }}>
                         <div className="p-6">
                             <h3 className="text-lg font-semibold text-gray-800">
-                                รายการห้องพักทั้งหมดของคุณ 10 ห้อง
+                                รายการห้องพักทั้งหมดของคุณ {roomDetails.length} ห้อง
                             </h3>
                         </div>
 
                         {/* Room Details Table */}
                         <div className="">
-                            <DataTable
-                                columns={roomTableColumns}
-                                data={roomDetails}
-                            />
+                            {isFetchingDetails ? (
+                                <div className="flex justify-center items-center py-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                                </div>
+                            ) : (
+                                <DataTable
+                                    columns={roomTableColumns}
+                                    data={roomDetails}
+                                />
+                            )}
                         </div>
                     </div>
 
-                    {/* Bottom Section with Room Management and Calendar - Only show when editing a specific row */}
-                    {editMode && editingRowId && (
+                    {/* Bottom Section with Room Management and Calendar */}
+                    {editMode && editingRoomId && selectedRoom && (
                         <div className="flex justify-between w-full border-b">
                             <div className="flex-[1] min-h-screen flex flex-col items-center justify-start py-6 px-0" style={{ backgroundColor: '#FFFFFF' }}>
                                 {/* Header */}
@@ -223,19 +481,17 @@ export default function ManageRooms() {
                                     {/* Room Code */}
                                     <div className="flex justify-between items-center">
                                         <div className="px-4 py-2 bg-yellow-400 rounded-md font-bold" style={{ color: '#FFFFFF' }}>
-                                            <span>รหัสห้องพัก</span> <span className="text-black">{roomDetails.find(room => room.key === editingRowId)?.roomCode || 'SBI-001'}</span>
+                                            <span>รหัสห้องพัก</span> <span className="text-black">{selectedRoom.roomCode}</span>
                                         </div>
                                         {/* Toggle */}
                                         <div className="flex items-center gap-2">
                                             <span className={`${!isOpen ? "text-black" : "text-gray-400"}`}>ปิด</span>
                                             <div
-                                                className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition ${isOpen ? "bg-green-500" : "bg-gray-300"
-                                                    }`}
+                                                className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition ${isOpen ? "bg-green-500" : "bg-gray-300"}`}
                                                 onClick={() => setIsOpen(!isOpen)}
                                             >
                                                 <div
-                                                    className={`w-6 h-6 rounded-full shadow-md transform transition ${isOpen ? "translate-x-6" : "translate-x-0"
-                                                        }`}
+                                                    className={`w-6 h-6 rounded-full shadow-md transform transition ${isOpen ? "translate-x-6" : "translate-x-0"}`}
                                                     style={{ backgroundColor: '#FFFFFF' }}
                                                 />
                                             </div>
@@ -272,16 +528,26 @@ export default function ManageRooms() {
                                     <div className="grid grid-cols-7 gap-2 mt-2 text-center">
                                         {/* Blank before 1st June */}
                                         <span></span><span></span>
-                                        {daysInMonth.map((day) => (
-                                            <button
-                                                key={day}
-                                                className={`py-2 rounded-full ${selectedDate === day ? "bg-green-200 text-green-800 font-bold" : "hover:bg-gray-100"
+                                        {daysInMonth.map((day) => {
+                                            const dateStr = `2025-06-${day.toString().padStart(2, '0')}`;
+                                            const isUnavailable = unavailableDates.includes(dateStr);
+                                            return (
+                                                <button
+                                                    key={day}
+                                                    className={`py-2 rounded-full ${
+                                                        selectedDate === day ? "bg-green-200 text-green-800 font-bold" : 
+                                                        isUnavailable ? "bg-red-200 text-red-800 line-through" :
+                                                        "hover:bg-gray-100"
                                                     }`}
-                                                onClick={() => setSelectedDate(day)}
-                                            >
-                                                {day}
-                                            </button>
-                                        ))}
+                                                    onClick={() => {
+                                                        setSelectedDate(day);
+                                                        handleToggleDateAvailability(day);
+                                                    }}
+                                                >
+                                                    {day}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
@@ -295,7 +561,7 @@ export default function ManageRooms() {
                                         </div>
                                         <input
                                             type="text"
-                                            value={price}
+                                            value={selectedRoom.pricing.dailyRate}
                                             readOnly
                                             className="w-full border border-gray-400 rounded-md px-3 py-2 mt-2 text-center"
                                         />
@@ -324,7 +590,7 @@ export default function ManageRooms() {
                                         </div>
                                         <input
                                             type="text"
-                                            value={roomCode}
+                                            value={selectedRoom.roomCode}
                                             readOnly
                                             className="w-full border border-gray-400 rounded-md px-3 py-2 mt-2 text-center"
                                         />
@@ -351,14 +617,17 @@ export default function ManageRooms() {
                                 <div className="flex gap-4 mt-10 justify-end">
                                     <button
                                         onClick={handleUpdate}
-                                        className="bg-yellow-400 font-bold px-6 py-3 rounded-xl shadow"
+                                        disabled={isLoading}
+                                        className="bg-yellow-400 font-bold px-6 py-3 rounded-xl shadow disabled:opacity-50"
                                     >
-                                        <span style={{ color: '#FFFFFF' }}>อัพเดทข้อมูล</span>
+                                        <span style={{ color: '#FFFFFF' }}>
+                                            {isLoading ? 'กำลังอัปเดท...' : 'อัพเดทข้อมูล'}
+                                        </span>
                                     </button>
                                     <button
                                         onClick={() => {
                                             setEditMode(false);
-                                            setEditingRowId(null);
+                                            setEditingRoomId(null);
                                         }}
                                         className="bg-gray-800 font-bold px-6 py-3 rounded-xl shadow"
                                     >

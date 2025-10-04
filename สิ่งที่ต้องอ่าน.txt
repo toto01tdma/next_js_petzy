@@ -1,0 +1,8 @@
+ถ้าต้องการเข้าระบบของ Admin ให้ปรับ 
+
+ในไฟล์ .env.local ให้ปรับ
+NEXT_PUBLIC_USE_API_MODE=false
+
+ตอนเข้าสู่ระบบก็กรอก
+Email : admin_to@gmail.com
+Password : 1234567890

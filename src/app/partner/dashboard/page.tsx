@@ -159,7 +159,7 @@ export default function Dashboard() {
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
                 <header className="bg-gradient-to-r from-[#C6CEDE] to-[#FFFFFF] shadow-sm border-b border-gray-200 px-6 py-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between" style={{backgroundColor: "inherit"}}>
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={toggleSidebar}
