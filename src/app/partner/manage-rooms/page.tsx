@@ -9,6 +9,8 @@ import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import DataTable from '@/components/partner/shared/DataTable';
 import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
+import { useApprovalStatus } from '@/hooks/useApprovalStatus';
+import ApprovalModal from '@/components/partner/shared/ApprovalModal';
 
 interface RoomSummary {
     id: string;
@@ -51,6 +53,9 @@ export default function ManageRooms() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
+    
+    // Approval status check
+    const { isApproved, isLoading: isLoadingApproval } = useApprovalStatus();
     
     // API Data
     const [roomSummary, setRoomSummary] = useState<RoomSummary[]>([]);
@@ -639,6 +644,9 @@ export default function ManageRooms() {
                     )}
                 </main>
             </div>
+            
+            {/* Approval Status Modal */}
+            <ApprovalModal isOpen={!isLoadingApproval && !isApproved} />
         </div>
     );
 }

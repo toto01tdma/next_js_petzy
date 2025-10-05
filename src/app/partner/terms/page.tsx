@@ -3,9 +3,14 @@
 import { useState } from 'react';
 import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined } from '@ant-design/icons';
+import { useApprovalStatus } from '@/hooks/useApprovalStatus';
+import ApprovalModal from '@/components/partner/shared/ApprovalModal';
 
 export default function PartnerContracts() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    
+    // Approval status check
+    const { isApproved, isLoading: isLoadingApproval } = useApprovalStatus();
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -77,6 +82,9 @@ export default function PartnerContracts() {
                     </div>
                 </main>
             </div>
+            
+            {/* Approval Status Modal */}
+            <ApprovalModal isOpen={!isLoadingApproval && !isApproved} />
         </div>
     );
 }

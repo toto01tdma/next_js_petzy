@@ -5,9 +5,14 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import LogoFirstPage from '@/components/first_page/logo';
+import { useApprovalStatus } from '@/hooks/useApprovalStatus';
+import ApprovalModal from '@/components/partner/shared/ApprovalModal';
 
 export default function PolicyPage() {
     const router = useRouter();
+    
+    // Approval status check
+    const { isApproved, isLoading: isLoadingApproval } = useApprovalStatus();
 
     // Suppress Ant Design React 19 compatibility warning for this page
     useEffect(() => {
@@ -177,6 +182,9 @@ export default function PolicyPage() {
                     </div>
                 </div>
             </div>
+            
+            {/* Approval Status Modal */}
+            <ApprovalModal isOpen={!isLoadingApproval && !isApproved} />
         </div>
     );
 }

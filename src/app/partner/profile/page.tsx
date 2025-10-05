@@ -7,6 +7,8 @@ import { MenuOutlined, UploadOutlined } from '@ant-design/icons';
 import { Button, Input } from 'antd';
 import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
+import { useApprovalStatus } from '@/hooks/useApprovalStatus';
+import ApprovalModal from '@/components/partner/shared/ApprovalModal';
 
 interface ProfileData {
     fullName: string;
@@ -20,6 +22,11 @@ interface ProfileData {
     coverImages: (string | null)[];
 }
 
+interface UploadedFiles {
+    profileImageFile: File | null;
+    coverImageFiles: (File | null)[];
+}
+
 export default function UserProfile() {
     const router = useRouter();
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,6 +34,9 @@ export default function UserProfile() {
     const [isFetching, setIsFetching] = useState(true);
     const [accommodationType, setAccommodationType] = useState('โรงแรมสัตว์เลี้ยง');
     const [approvalStatus, setApprovalStatus] = useState('APPROVED');
+    
+    // Approval status check
+    const { isApproved, isLoading: isLoadingApproval } = useApprovalStatus();
     
     const [profileData, setProfileData] = useState<ProfileData>({
         fullName: '',
@@ -38,6 +48,11 @@ export default function UserProfile() {
         newPassword: '',
         profileImage: null,
         coverImages: Array(7).fill(null)
+    });
+
+    const [uploadedFiles, setUploadedFiles] = useState<UploadedFiles>({
+        profileImageFile: null,
+        coverImageFiles: Array(7).fill(null)
     });
 
     useEffect(() => {
@@ -121,6 +136,13 @@ export default function UserProfile() {
     const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            // Store the file object for upload later
+            setUploadedFiles(prev => ({
+                ...prev,
+                profileImageFile: file
+            }));
+
+            // Create preview
             const reader = new FileReader();
             reader.onloadend = () => {
                 setProfileData(prev => ({
@@ -135,6 +157,17 @@ export default function UserProfile() {
     const handleCoverImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            // Store the file object for upload later
+            setUploadedFiles(prev => {
+                const newCoverImageFiles = [...prev.coverImageFiles];
+                newCoverImageFiles[index] = file;
+                return {
+                    ...prev,
+                    coverImageFiles: newCoverImageFiles
+                };
+            });
+
+            // Create preview
             const reader = new FileReader();
             reader.onloadend = () => {
                 setProfileData(prev => {
@@ -148,6 +181,52 @@ export default function UserProfile() {
             };
             reader.readAsDataURL(file);
         }
+    };
+
+    // Upload profile images to server
+    const uploadProfileImages = async () => {
+        const token = localStorage.getItem('accessToken');
+        const formDataUpload = new FormData();
+        let hasFiles = false;
+
+        // Add profile image if exists
+        if (uploadedFiles.profileImageFile) {
+            formDataUpload.append('profileImage', uploadedFiles.profileImageFile);
+            hasFiles = true;
+        }
+
+        // Add cover images if they exist
+        uploadedFiles.coverImageFiles.forEach((file) => {
+            if (file) {
+                formDataUpload.append('coverImages', file);
+                hasFiles = true;
+            }
+        });
+
+        // If no new files to upload, return existing URLs
+        if (!hasFiles) {
+            return {
+                profileImage: profileData.profileImage,
+                coverImages: profileData.coverImages.filter(img => img !== null)
+            };
+        }
+
+        // Upload files to server
+        const uploadResponse = await fetch(`${API_BASE_URL}/api/upload/profile`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formDataUpload
+        });
+
+        const uploadResult = await uploadResponse.json();
+
+        if (!uploadResult.success) {
+            throw new Error(uploadResult.error || 'Failed to upload images');
+        }
+
+        return uploadResult.data;
     };
 
     const handleSubmit = async () => {
@@ -172,6 +251,9 @@ export default function UserProfile() {
                     throw new Error('User ID not found. Please login again.');
                 }
 
+                // Step 1: Upload images first if there are any new files
+                const uploadedUrls = await uploadProfileImages();
+
                 // Prepare the payload - only include fields that have values
                 const payload: Record<string, unknown> = {
                     userId: userData.id, // Use the actual UUID from localStorage
@@ -189,13 +271,13 @@ export default function UserProfile() {
                     payload.newPassword = profileData.newPassword;
                 }
                 
-                // Only include images if they have been uploaded/changed
-                if (profileData.profileImage) payload.profileImage = profileData.profileImage;
+                // Include uploaded image URLs
+                if (uploadedUrls.profileImage) {
+                    payload.profileImage = uploadedUrls.profileImage;
+                }
                 
-                // Only include coverImages if at least one has been uploaded
-                const hasAnyCovers = profileData.coverImages.some(img => img !== null);
-                if (hasAnyCovers) {
-                    payload.coverImages = profileData.coverImages;
+                if (uploadedUrls.coverImages && uploadedUrls.coverImages.length > 0) {
+                    payload.coverImages = uploadedUrls.coverImages;
                 }
 
                 const response = await fetch(`${API_BASE_URL}/api/partner/profile`, {
@@ -230,12 +312,17 @@ export default function UserProfile() {
                         timerProgressBar: true
                     });
 
-                    // Clear password fields after successful update
+                    // Clear password fields and uploaded files after successful update
                     setProfileData(prev => ({
                         ...prev,
                         currentPassword: '',
                         newPassword: ''
                     }));
+                    
+                    setUploadedFiles({
+                        profileImageFile: null,
+                        coverImageFiles: Array(7).fill(null)
+                    });
 
                     // Refresh profile data
                     await fetchProfile();
@@ -639,6 +726,9 @@ export default function UserProfile() {
                     </div>
                 </main>
             </div>
+            
+            {/* Approval Status Modal */}
+            <ApprovalModal isOpen={!isLoadingApproval && !isApproved} />
         </div>
     );
 }

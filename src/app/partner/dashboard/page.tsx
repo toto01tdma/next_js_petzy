@@ -5,11 +5,16 @@ import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, CalendarOutlined, SearchOutlined, CheckCircleOutlined, HomeOutlined } from '@ant-design/icons';
 import { Input, Select, Button } from 'antd';
 import DataTable from '@/components/partner/shared/DataTable';
+import { useApprovalStatus } from '@/hooks/useApprovalStatus';
+import ApprovalModal from '@/components/partner/shared/ApprovalModal';
 
 const { Option } = Select;
 
 export default function Dashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    
+    // Approval status check
+    const { isApproved, isLoading: isLoadingApproval } = useApprovalStatus();
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -242,6 +247,9 @@ export default function Dashboard() {
                     </div>
                 </main>
             </div>
+            
+            {/* Approval Status Modal */}
+            <ApprovalModal isOpen={!isLoadingApproval && !isApproved} />
         </div>
     );
 }

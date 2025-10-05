@@ -21,6 +21,7 @@ type HotelDataResponse = {
         roomTypes: string;
         serviceTypes: string;
         specialServiceTypes: string;
+        postal_code: string;
         latitude: string;
         longitude: string;
         roomService: boolean;
@@ -174,7 +175,7 @@ export default function DataEntry2() {
                         customServiceType: '',
                         subdistrict: data.data.specialServiceTypes || '',
                         specialServiceType: '',
-                        postalCode: '',
+                        postalCode: data.data.postal_code || '',
                         latitude: data.data.latitude || '',
                         longitude: data.data.longitude || '',
                         services: data.data.services || [],
@@ -343,6 +344,7 @@ export default function DataEntry2() {
                 roomTypes: showCustomRoomTypeInput ? formData.customRoomType : formData.province,
                 serviceTypes: formData.district,
                 specialServiceTypes: showSpecialServiceTypeInput ? formData.specialServiceType : formData.subdistrict,
+                postal_code: formData.postalCode,
                 latitude: formData.latitude,
                 longitude: formData.longitude,
                 roomService: formData.roomService,
@@ -795,17 +797,16 @@ export default function DataEntry2() {
                         <div className="w-full flex justify-center mt-20">
                             <Button
                                 size="large"
-                                onClick={handleSubmit}
-                                disabled={isLoading || isFetching || approvalStatus !== 'DRAFT'}
+                                onClick={() => router.push('/partner/dashboard')}
+                                disabled={isLoading || isFetching}
                                 loading={isLoading}
                                 className="px-12 py-3 h-auto font-medium w-[90%] rounded-md text-center"
                                 style={{ 
-                                    backgroundColor: approvalStatus !== 'DRAFT' ? '#6B7280' : '#0D263B',
-                                    opacity: approvalStatus !== 'DRAFT' ? 0.6 : 1
+                                    backgroundColor: '#0D263B'
                                 }}
                             >
                                 <span className="text-xl" style={{ color: '#FFFFFF' }}>
-                                    {approvalStatus !== 'DRAFT' ? 'Waiting for review' : (isLoading ? 'กำลังบันทึก...' : 'กรุณากดยืนยัน')}
+                                    ไปสู่หน้าระบบ
                                 </span>
                             </Button>
                         </div>

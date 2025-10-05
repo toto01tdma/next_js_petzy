@@ -4,12 +4,17 @@ import { useState } from 'react';
 import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, SmileOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { Input, Avatar, Badge } from 'antd';
+import { useApprovalStatus } from '@/hooks/useApprovalStatus';
+import ApprovalModal from '@/components/partner/shared/ApprovalModal';
 
 const { TextArea } = Input;
 
 export default function Chat() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [message, setMessage] = useState('');
+    
+    // Approval status check
+    const { isApproved, isLoading: isLoadingApproval } = useApprovalStatus();
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -198,6 +203,9 @@ export default function Chat() {
                     </div>
                 </main>
             </div>
+            
+            {/* Approval Status Modal */}
+            <ApprovalModal isOpen={!isLoadingApproval && !isApproved} />
         </div>
     );
 }

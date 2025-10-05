@@ -4,9 +4,14 @@ import { useState } from 'react';
 import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, HomeOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import DataTable from '@/components/partner/shared/DataTable';
+import { useApprovalStatus } from '@/hooks/useApprovalStatus';
+import ApprovalModal from '@/components/partner/shared/ApprovalModal';
 
 export default function ManagePromotions() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    
+    // Approval status check
+    const { isApproved, isLoading: isLoadingApproval } = useApprovalStatus();
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -182,6 +187,9 @@ export default function ManagePromotions() {
                     </div>
                 </main>
             </div>
+            
+            {/* Approval Status Modal */}
+            <ApprovalModal isOpen={!isLoadingApproval && !isApproved} />
         </div>
     );
 }

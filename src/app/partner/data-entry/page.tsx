@@ -18,8 +18,11 @@ type PartnerDataResponse = {
     data: {
         first_name: string;
         last_name: string;
+        first_name_eng: string;
+        last_name_eng: string;
         national_id_number: string;
         corporate_tax_id: string;
+        email: string;
         additional_details: string;
         backup_phone: string;
         accommodation_name: string;
@@ -43,7 +46,7 @@ type PartnerDataResponse = {
 
 type SaveDataResponse = {
     success: boolean;
-    message: string;
+    error: string;
     data: {
         accommodation_id: string;
         status: string;
@@ -147,11 +150,11 @@ export default function DataEntry() {
                     setFormData({
                         firstName: data.data.first_name || '',
                         lastName: data.data.last_name || '',
-                        firstNameEng: '',
-                        lastNameEng: '',
+                        firstNameEng: data.data.first_name_eng || '',
+                        lastNameEng: data.data.last_name_eng || '',
                         nationalIdNumber: data.data.national_id_number || '',
                         corporateTaxId: data.data.corporate_tax_id || '',
-                        email: data.data.business_email || '',
+                        email: data.data.email || '',
                         phoneNumber: data.data.office_phone || '',
                         backupPhone: data.data.backup_phone || '',
                         additionalDetails: data.data.additional_details || '',
@@ -278,6 +281,73 @@ export default function DataEntry() {
     //     setFileList(newFileList);
     // };
 
+    // Upload documents to server
+    const uploadDocuments = async () => {
+        const token = localStorage.getItem('accessToken');
+        const formDataUpload = new FormData();
+        let hasFiles = false;
+
+        // Add files to FormData if they exist and are File objects
+        if (uploadedImages[0]?.originFileObj) {
+            formDataUpload.append('national_id_card', uploadedImages[0].originFileObj);
+            hasFiles = true;
+        }
+        if (uploadedImages[1]?.originFileObj) {
+            formDataUpload.append('trade_registration_cert', uploadedImages[1].originFileObj);
+            hasFiles = true;
+        }
+        if (uploadedImages[2]?.originFileObj) {
+            formDataUpload.append('tax_documents', uploadedImages[2].originFileObj);
+            hasFiles = true;
+        }
+        if (uploadedImages[3]?.originFileObj) {
+            formDataUpload.append('house_registration', uploadedImages[3].originFileObj);
+            hasFiles = true;
+        }
+        if (uploadedImages[4]?.originFileObj) {
+            formDataUpload.append('additional_documents', uploadedImages[4].originFileObj);
+            hasFiles = true;
+        }
+        if (uploadedImages[5]?.originFileObj) {
+            formDataUpload.append('bank_account_book', uploadedImages[5].originFileObj);
+            hasFiles = true;
+        }
+        if (uploadedImages[6]?.originFileObj) {
+            formDataUpload.append('service_location_photos', uploadedImages[6].originFileObj);
+            hasFiles = true;
+        }
+
+        // If no new files to upload, return existing URLs
+        if (!hasFiles) {
+            return {
+                national_id_card_url: uploadedImages[0]?.url || '',
+                trade_registration_cert_url: uploadedImages[1]?.url || '',
+                tax_documents_url: uploadedImages[2]?.url || '',
+                house_registration_url: uploadedImages[3]?.url || '',
+                additional_documents_url: uploadedImages[4]?.url ? [uploadedImages[4].url] : [],
+                bank_account_book_url: uploadedImages[5]?.url || '',
+                service_location_photos_url: uploadedImages[6]?.url ? [uploadedImages[6].url] : []
+            };
+        }
+
+        // Upload files to server
+        const uploadResponse = await fetch(`${API_BASE_URL}/api/upload/documents`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formDataUpload
+        });
+
+        const uploadResult = await uploadResponse.json();
+
+        if (!uploadResult.success) {
+            throw new Error(uploadResult.error || 'Failed to upload documents');
+        }
+
+        return uploadResult.data;
+    };
+
     const handleSubmit = async () => {
         setIsLoading(true);
 
@@ -309,26 +379,39 @@ export default function DataEntry() {
                 return;
             }
 
-            // Prepare photo URLs from uploaded images
-            const photoUrls: string[] = [];
-            if (uploadedImages[6]?.url) photoUrls.push(uploadedImages[6].url);
+            // Step 1: Upload documents first
+            const uploadedUrls = await uploadDocuments();
 
             // Build the payload according to API requirements
             const payload = {
                 first_name: formData.firstName,
                 last_name: formData.lastName,
+                first_name_eng: formData.firstNameEng,
+                last_name_eng: formData.lastNameEng,
                 id_number: formData.nationalIdNumber,
                 passport_number: '', // Not collected in current form
+                corporate_tax_id: formData.corporateTaxId,
+                email: formData.email,
+                backup_phone: formData.backupPhone,
+                additional_details: formData.additionalDetails,
                 hotel_name: formData.accommodationName,
                 registration_number: formData.tradeRegistrationNumber,
                 address: formData.address,
                 primary_phone: formData.phoneNumber,
                 accommodation_name: formData.accommodationName,
-                documents: {
-                    id_card_url: uploadedImages[0]?.url || '',
-                    certificate_url: uploadedImages[1]?.url || '',
-                    photo_urls: photoUrls
-                },
+                accommodation_name_en: formData.accommodationNameEn,
+                business_email: formData.businessEmail,
+                office_phone: formData.officePhone,
+                google_maps_link: formData.googleMapsLink,
+                mobile_phone: formData.mobilePhone,
+                business_additional_details: formData.businessAdditionalDetails,
+                national_id_card_url: uploadedUrls.national_id_card_url,
+                trade_registration_cert_url: uploadedUrls.trade_registration_cert_url,
+                tax_documents_url: uploadedUrls.tax_documents_url,
+                house_registration_url: uploadedUrls.house_registration_url,
+                additional_documents_url: uploadedUrls.additional_documents_url,
+                bank_account_book_url: uploadedUrls.bank_account_book_url,
+                service_location_photos_url: uploadedUrls.service_location_photos_url,
                 approval_status: 'pending'
             };
 
@@ -356,7 +439,7 @@ export default function DataEntry() {
                 await Swal.fire({
                     icon: 'error',
                     title: 'ไม่สามารถบันทึกข้อมูลได้',
-                    text: data.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+                    text: data.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
                     confirmButtonText: 'ตกลง',
                     confirmButtonColor: '#28A7CB'
                 });
@@ -366,7 +449,7 @@ export default function DataEntry() {
             await Swal.fire({
                 icon: 'error',
                 title: 'เกิดข้อผิดพลาด',
-                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง',
+                text: error instanceof Error ? error.message : 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง',
                 confirmButtonText: 'ตกลง',
                 confirmButtonColor: '#28A7CB'
             });
@@ -468,8 +551,8 @@ export default function DataEntry() {
                                             value={formData.email}
                                             onChange={(e) => handleInputChange('email', e.target.value)}
                                             className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
+                                            style={{ height: '48px', fontSize: '16px', backgroundColor: '#F3F4F6' }}
+                                            readOnly
                                         />
                                         <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
                                     </div>
