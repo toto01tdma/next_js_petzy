@@ -3,11 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/admin/shared/Sidebar';
-import { Input, Button, Table, Space, Select } from 'antd';
+import { Input, Button, Table, Space } from 'antd';
 import { SearchOutlined, DownloadOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import type { ColumnsType } from 'antd/es/table';
-import Image from 'next/image';
 
 interface AppPromotion {
     id: string;
@@ -144,7 +143,7 @@ export default function AdminPromotions() {
             title: '',
             key: 'image',
             width: 150,
-            render: (record: AppPromotion) => (
+            render: () => (
                 <div 
                     className="rounded-lg flex items-center justify-center"
                     style={{ 

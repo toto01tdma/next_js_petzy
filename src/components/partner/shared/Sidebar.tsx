@@ -10,7 +10,8 @@ import {
     TeamOutlined, 
     DollarOutlined,
     QuestionCircleOutlined,
-    CloseOutlined
+    CloseOutlined,
+    LogoutOutlined
 } from '@ant-design/icons';
 
 interface SidebarProps {
@@ -39,6 +40,18 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         if (window.innerWidth < 1024) {
             onToggle();
         }
+    };
+
+    const handleLogout = () => {
+        // Clear authentication data
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('savedEmail');
+        
+        // Redirect to login page
+        router.push('/login');
     };
 
     return (
@@ -101,8 +114,15 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                     </nav>
 
                     {/* Footer */}
-                    <div className="p-4 border-t border-gray-700">
-                        <div className="flex items-center gap-3 text-gray-300 cursor-pointer">
+                    <div className="p-4 border-t border-gray-700 space-y-2">
+                        <div 
+                            className="flex items-center gap-3 text-gray-300 cursor-pointer hover:text-white transition-colors"
+                            onClick={handleLogout}
+                        >
+                            <LogoutOutlined className="text-lg" />
+                            <span className="text-sm">ออกจากระบบ</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-gray-300 cursor-pointer hover:text-white transition-colors">
                             <QuestionCircleOutlined className="text-lg" />
                             <span className="text-sm">Get Help</span>
                         </div>

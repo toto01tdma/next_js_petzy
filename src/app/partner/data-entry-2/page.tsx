@@ -115,7 +115,9 @@ export default function DataEntry2() {
                     // Set mock data
                     setFormData({
                         hotelName: 'Fahfon Resort',
+                        hotelNameConfirm: '',
                         hotelNameEng: 'Fahfon Resort',
+                        hotelNameEngConfirm: '',
                         rooms: '10',
                         customRoomCount: '',
                         province: 'ห้องขนาด 2เตียง',
@@ -166,7 +168,9 @@ export default function DataEntry2() {
                     // Map API response to form data
                     setFormData({
                         hotelName: data.data.hotelName || '',
+                        hotelNameConfirm: '', // Confirmation fields are not stored
                         hotelNameEng: data.data.hotelNameEng || '',
+                        hotelNameEngConfirm: '', // Confirmation fields are not stored
                         rooms: data.data.rooms || '',
                         customRoomCount: '',
                         province: data.data.roomTypes || '',
@@ -205,7 +209,9 @@ export default function DataEntry2() {
 
     const [formData, setFormData] = useState({
         hotelName: '',
+        hotelNameConfirm: '',
         hotelNameEng: '',
+        hotelNameEngConfirm: '',
         rooms: '',
         customRoomCount: '',
         province: '',
@@ -287,6 +293,29 @@ export default function DataEntry2() {
     };
 
     const handleSubmit = async () => {
+        // Validation: Check if hotel names match confirmations
+        if (formData.hotelName !== (formData.hotelNameConfirm || formData.hotelName)) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'ข้อมูลไม่ตรงกัน',
+                text: 'ชื่อโรงแรมภาษาไทยไม่ตรงกับช่องยืนยัน กรุณาตรวจสอบอีกครั้ง',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#DC2626'
+            });
+            return;
+        }
+
+        if (formData.hotelNameEng !== (formData.hotelNameEngConfirm || formData.hotelNameEng)) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'ข้อมูลไม่ตรงกัน',
+                text: 'ชื่อโรงแรมภาษาอังกฤษไม่ตรงกับช่องยืนยัน กรุณาตรวจสอบอีกครั้ง',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#DC2626'
+            });
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -297,12 +326,12 @@ export default function DataEntry2() {
                 await Swal.fire({
                     icon: 'success',
                     title: 'บันทึกข้อมูลสำเร็จ (Preview Mode)',
-                    text: 'Data saved successfully. Please wait for admin approval.',
+                    text: 'Data saved successfully.',
                     confirmButtonText: 'ตกลง',
                     confirmButtonColor: '#28A7CB'
                 });
 
-                router.push('/partner/data-entry-3');
+                router.push('/partner/dashboard');
                 setIsLoading(false);
                 return;
             }
@@ -321,42 +350,20 @@ export default function DataEntry2() {
                 return;
             }
 
-            // Get user data from localStorage
-            const userDataStr = localStorage.getItem('user');
-            const userData = userDataStr ? JSON.parse(userDataStr) : {};
-
-            // Build the payload according to API requirements
+            // Build the payload - only include fields that have input fields on the page
             const payload = {
-                first_name: userData.profile?.firstName || '',
-                last_name: userData.profile?.lastName || '',
-                id_number: '',
-                passport_number: '',
-                hotel_name: formData.hotelName,
                 hotelName: formData.hotelName,
+                hotelNameConfirm: formData.hotelNameConfirm,
                 hotelNameEng: formData.hotelNameEng,
-                registration_number: '',
-                address: '',
-                phone: '',
-                email: '',
-                primary_phone: '',
-                accommodation_name: formData.hotelName,
+                hotelNameEngConfirm: formData.hotelNameEngConfirm,
                 rooms: showCustomRoomInput ? formData.customRoomCount : formData.rooms,
                 roomTypes: showCustomRoomTypeInput ? formData.customRoomType : formData.province,
                 serviceTypes: formData.district,
                 specialServiceTypes: showSpecialServiceTypeInput ? formData.specialServiceType : formData.subdistrict,
-                postal_code: formData.postalCode,
-                latitude: formData.latitude,
-                longitude: formData.longitude,
                 roomService: formData.roomService,
                 specialService: formData.specialService,
                 petCareService: formData.petCareService,
-                services: formData.services,
-                documents: {
-                    id_card_url: '',
-                    certificate_url: '',
-                    photo_urls: []
-                },
-                approval_status: 'pending'
+                services: formData.services
             };
 
             const response = await fetch(`${API_BASE_URL}/api/partner/data-entry-2`, {
@@ -375,13 +382,13 @@ export default function DataEntry2() {
                 await Swal.fire({
                     icon: 'success',
                     title: 'บันทึกข้อมูลสำเร็จ',
-                    text: 'Data saved successfully. Please wait for admin approval.',
+                    text: 'Data saved successfully.',
                     confirmButtonText: 'ตกลง',
                     confirmButtonColor: '#28A7CB'
                 });
 
-                // Navigate to data-entry-3 after submission
-                router.push('/partner/data-entry-3');
+                // Navigate to dashboard after submission
+                router.push('/partner/dashboard');
             } else {
                 await Swal.fire({
                     icon: 'error',
@@ -481,12 +488,12 @@ export default function DataEntry2() {
 
                                     <div>
                                         <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
-                                            ชื่อ โรงแรม หรือ สถานที่พัก
+                                            ชื่อ โรงแรม หรือ สถานที่พัก (ยืนยัน)
                                         </label>
                                         <Input
-                                            value={formData.hotelNameEng}
-                                            onChange={(e) => handleInputChange('hotelNameEng', e.target.value)}
-                                            placeholder="Adedecsws"
+                                            value={formData.hotelNameConfirm || formData.hotelName}
+                                            onChange={(e) => handleInputChange('hotelNameConfirm', e.target.value)}
+                                            placeholder="สุขสม โรงแรมสวัสดี"
                                             className="w-full h-12 text-base"
                                             style={{ height: '48px', fontSize: '16px' }}
                                         />
@@ -503,7 +510,7 @@ export default function DataEntry2() {
                                         <Input
                                             value={formData.hotelNameEng}
                                             onChange={(e) => handleInputChange('hotelNameEng', e.target.value)}
-                                            placeholder="สุขสม โรงแรมสวัสดี"
+                                            placeholder="Sooksom Hotel"
                                             className="w-full h-12 text-base"
                                             style={{ height: '48px', fontSize: '16px' }}
                                         />
@@ -512,16 +519,16 @@ export default function DataEntry2() {
 
                                     <div>
                                         <label className="block text-base font-medium mb-2" style={{ color: '#1F2937' }}>
-                                            ชื่อ โรงแรม หรือ สถานที่พัก (ภาษาอังกฤษ)
+                                            ชื่อ โรงแรม หรือ สถานที่พัก (ภาษาอังกฤษ) (ยืนยัน)
                                         </label>
                                         <Input
-                                            value={formData.hotelNameEng}
-                                            onChange={(e) => handleInputChange('hotelNameEng', e.target.value)}
-                                            placeholder="สุขสม โรงแรมสวัสดี"
+                                            value={formData.hotelNameEngConfirm || formData.hotelNameEng}
+                                            onChange={(e) => handleInputChange('hotelNameEngConfirm', e.target.value)}
+                                            placeholder="Sooksom Hotel"
                                             className="w-full h-12 text-base"
                                             style={{ height: '48px', fontSize: '16px' }}
                                         />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.2rem', color: '#FFFFFF' }}>...</p>
+                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.2rem', color: '#6B7280' }}>*กรุณากรอกชื่อจริงครั้งเพื่อยืนยันความถูกต้อง</p>
                                     </div>
                                 </div>
                             </div>
@@ -797,7 +804,7 @@ export default function DataEntry2() {
                         <div className="w-full flex justify-center mt-20">
                             <Button
                                 size="large"
-                                onClick={() => router.push('/partner/dashboard')}
+                                onClick={() => handleSubmit()}
                                 disabled={isLoading || isFetching}
                                 loading={isLoading}
                                 className="px-12 py-3 h-auto font-medium w-[90%] rounded-md text-center"

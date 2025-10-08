@@ -63,7 +63,6 @@ export default function UserProfile() {
         }
         
         fetchProfile();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router]);
 
     const fetchProfile = async () => {

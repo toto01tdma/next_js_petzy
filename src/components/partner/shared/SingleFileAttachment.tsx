@@ -3,6 +3,7 @@
 import { Upload, Image } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd';
+import { useState } from 'react';
 
 interface SingleFileAttachmentProps {
     uploadedImage?: UploadFile;
@@ -29,6 +30,15 @@ export default function SingleFileAttachment({
     labelClass = "",
     descriptionClass = ""
 }: SingleFileAttachmentProps) {
+    const [imageError, setImageError] = useState(false);
+
+    // Reset error state when image changes
+    const currentImageUrl = uploadedImage?.url;
+    const [lastUrl, setLastUrl] = useState(currentImageUrl);
+    if (currentImageUrl !== lastUrl) {
+        setImageError(false);
+        setLastUrl(currentImageUrl);
+    }
 
     return (
         <Upload
@@ -50,14 +60,29 @@ export default function SingleFileAttachment({
                 <div className={`${childHeight} flex justify-center items-center relative`} style={{ width: '100%' }}>
                     {uploadedImage ? (
                         <>
-                            <Image
-                                src={uploadedImage.url}
-                                alt={label}
-                                className="w-full h-full object-cover rounded"
-                                width={300}
-                                height={imageHeight}
-                                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                            />
+                            {!imageError ? (
+                                <Image
+                                    src={uploadedImage.url}
+                                    alt={label}
+                                    className="w-full h-full object-cover rounded"
+                                    width={300}
+                                    height={imageHeight}
+                                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                                    preview={{
+                                        src: uploadedImage.url,
+                                    }}
+                                    onError={() => {
+                                        console.error(`Failed to load image: ${uploadedImage.url}`);
+                                        setImageError(true);
+                                    }}
+                                    fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+                                />
+                            ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                                    <p className="text-sm">Failed to load image</p>
+                                    <p className="text-xs mt-1 text-gray-500 px-2 text-center break-all">{uploadedImage.url}</p>
+                                </div>
+                            )}
                             <div
                                 className="absolute top-1 right-1 bg-red-500 rounded-full w-6 h-6 flex items-center justify-center text-sm cursor-pointer hover:bg-red-600"
                                 style={{ color: '#FFFFFF' }}

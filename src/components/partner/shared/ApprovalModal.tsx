@@ -1,13 +1,26 @@
 'use client';
 
-import { Modal } from 'antd';
-import { ClockCircleOutlined } from '@ant-design/icons';
+import { Modal, Button } from 'antd';
+import { ClockCircleOutlined, LogoutOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 
 interface ApprovalModalProps {
     isOpen: boolean;
 }
 
 export default function ApprovalModal({ isOpen }: ApprovalModalProps) {
+    const router = useRouter();
+
+    const handleLogout = () => {
+        // Clear authentication data
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        
+        // Redirect to login page
+        router.push('/login');
+    };
+
     return (
         <Modal
             open={isOpen}
@@ -48,11 +61,35 @@ export default function ApprovalModal({ isOpen }: ApprovalModalProps) {
                     ระบบกำลังตรวจสอบข้อมูลของคุณ
                 </p>
                 <p 
-                    className="text-base" 
+                    className="text-base mb-6" 
                     style={{ color: '#9CA3AF' }}
                 >
                     กรุณารอการอนุมัติจากทีมงาน
                 </p>
+                
+                {/* Logout Button */}
+                <Button
+                    type="default"
+                    size="large"
+                    icon={<LogoutOutlined />}
+                    onClick={handleLogout}
+                    className="mt-4"
+                    style={{
+                        backgroundColor: '#DC2626',
+                        borderColor: '#DC2626',
+                        color: '#FFFFFF'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#B91C1C';
+                        e.currentTarget.style.borderColor = '#B91C1C';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#DC2626';
+                        e.currentTarget.style.borderColor = '#DC2626';
+                    }}
+                >
+                    ออกจากระบบ
+                </Button>
             </div>
         </Modal>
     );

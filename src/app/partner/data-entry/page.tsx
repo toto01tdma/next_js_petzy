@@ -3,13 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import LogoFirstPage from "@/components/first_page/logo";
-import { Button, Input, Modal, Spin } from 'antd';
+import { Button, Modal, Spin } from 'antd';
 import type { UploadFile } from 'antd';
-import SingleFileAttachment from '@/components/partner/shared/SingleFileAttachment';
+import PersonalInformationSection from '@/components/partner/dataEntry/PersonalInformationSection';
+import HotelLocationSection from '@/components/partner/dataEntry/HotelLocationSection';
+import BusinessDetailsSection from '@/components/partner/dataEntry/BusinessDetailsSection';
+import FileUploadSection from '@/components/partner/dataEntry/FileUploadSection';
 import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
-
-const { TextArea } = Input;
 
 // Type definitions
 type PartnerDataResponse = {
@@ -170,13 +171,24 @@ export default function DataEntry() {
                     });
 
                     // Set uploaded images if URLs exist
+                    // Helper function to get full image URL
+                    const getFullImageUrl = (path: string) => {
+                        if (!path) return '';
+                        // If path already starts with http:// or https://, return as is
+                        if (path.startsWith('http://') || path.startsWith('https://')) {
+                            return path;
+                        }
+                        // Otherwise, prepend the API base URL
+                        return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+                    };
+
                     const newUploadedImages: { [key: number]: UploadFile } = {};
                     if (data.data.national_id_card_url) {
                         newUploadedImages[0] = {
                             uid: '0',
                             name: 'national_id_card',
                             status: 'done',
-                            url: data.data.national_id_card_url
+                            url: getFullImageUrl(data.data.national_id_card_url)
                         };
                     }
                     if (data.data.trade_registration_cert_url) {
@@ -184,7 +196,7 @@ export default function DataEntry() {
                             uid: '1',
                             name: 'trade_registration_cert',
                             status: 'done',
-                            url: data.data.trade_registration_cert_url
+                            url: getFullImageUrl(data.data.trade_registration_cert_url)
                         };
                     }
                     if (data.data.tax_documents_url) {
@@ -192,7 +204,7 @@ export default function DataEntry() {
                             uid: '2',
                             name: 'tax_documents',
                             status: 'done',
-                            url: data.data.tax_documents_url
+                            url: getFullImageUrl(data.data.tax_documents_url)
                         };
                     }
                     if (data.data.house_registration_url) {
@@ -200,7 +212,7 @@ export default function DataEntry() {
                             uid: '3',
                             name: 'house_registration',
                             status: 'done',
-                            url: data.data.house_registration_url
+                            url: getFullImageUrl(data.data.house_registration_url)
                         };
                     }
                     if (data.data.additional_documents_url && data.data.additional_documents_url.length > 0) {
@@ -208,7 +220,7 @@ export default function DataEntry() {
                             uid: '4',
                             name: 'additional_documents',
                             status: 'done',
-                            url: data.data.additional_documents_url[0]
+                            url: getFullImageUrl(data.data.additional_documents_url[0])
                         };
                     }
                     if (data.data.bank_account_book_url) {
@@ -216,7 +228,7 @@ export default function DataEntry() {
                             uid: '5',
                             name: 'bank_account_book',
                             status: 'done',
-                            url: data.data.bank_account_book_url
+                            url: getFullImageUrl(data.data.bank_account_book_url)
                         };
                     }
                     if (data.data.service_location_photos_url && data.data.service_location_photos_url.length > 0) {
@@ -224,7 +236,7 @@ export default function DataEntry() {
                             uid: '6',
                             name: 'service_location_photos',
                             status: 'done',
-                            url: data.data.service_location_photos_url[0]
+                            url: getFullImageUrl(data.data.service_location_photos_url[0])
                         };
                     }
                     setUploadedImages(newUploadedImages);
@@ -388,14 +400,14 @@ export default function DataEntry() {
                 last_name: formData.lastName,
                 first_name_eng: formData.firstNameEng,
                 last_name_eng: formData.lastNameEng,
-                id_number: formData.nationalIdNumber,
+                national_id_number: formData.nationalIdNumber,
                 passport_number: '', // Not collected in current form
                 corporate_tax_id: formData.corporateTaxId,
                 email: formData.email,
                 backup_phone: formData.backupPhone,
                 additional_details: formData.additionalDetails,
                 hotel_name: formData.accommodationName,
-                registration_number: formData.tradeRegistrationNumber,
+                trade_registration_number: formData.tradeRegistrationNumber,
                 address: formData.address,
                 primary_phone: formData.phoneNumber,
                 accommodation_name: formData.accommodationName,
@@ -484,10 +496,6 @@ export default function DataEntry() {
                         <h1 className="text-5xl font-bold mt-4" style={{ color: '#0D263B' }}>Pet-Friendly Hotel</h1>
                     </div>
 
-                    <div className="text-center mb-4 w-full py-2.5" style={{ backgroundColor: '#28A7CB' }}>
-                        <span className="text-2xl" style={{ color: '#FFFFFF' }}>กรุณากรอกรายละเอียดข้อมูลส่วนตัวเพื่อเริ่มต้นทำงานกับเรา</span>
-                    </div>
-
                     {/* Loading Spinner */}
                     {isFetching && (
                         <div className="flex justify-center items-center py-20">
@@ -497,503 +505,69 @@ export default function DataEntry() {
 
                     {/* Form Container */}
                     {!isFetching && (<>
-                        <div className="py-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Left Column */}
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            ชื่อ *
-                                        </label>
-                                        <Input
-                                            value={formData.firstName}
-                                            onChange={(e) => handleInputChange('firstName', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#6B7280' }}>*กรุณากรอกชื่อจริงเพื่อยืนยันความถูกต้อง</p>
-                                    </div>
+                        {/* Personal Information Section */}
+                        <PersonalInformationSection
+                            formData={{
+                                firstName: formData.firstName,
+                                lastName: formData.lastName,
+                                nationalIdNumber: formData.nationalIdNumber,
+                                email: formData.email,
+                                phoneNumber: formData.phoneNumber,
+                                firstNameEng: formData.firstNameEng,
+                                lastNameEng: formData.lastNameEng,
+                                corporateTaxId: formData.corporateTaxId,
+                                additionalDetails: formData.additionalDetails,
+                                backupPhone: formData.backupPhone,
+                            }}
+                            onInputChange={handleInputChange}
+                            disabled={isFetching}
+                        />
 
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            นามสกุล *
-                                        </label>
-                                        <Input
-                                            value={formData.lastName}
-                                            onChange={(e) => handleInputChange('lastName', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
+                        {/* Hotel Location Section */}
+                        <HotelLocationSection
+                            formData={{
+                                accommodationName: formData.accommodationName,
+                                accommodationNameEn: formData.accommodationNameEn,
+                                tradeRegistrationNumber: formData.tradeRegistrationNumber,
+                                address: formData.address,
+                                businessEmail: formData.businessEmail,
+                                officePhone: formData.officePhone,
+                                googleMapsLink: formData.googleMapsLink,
+                                mobilePhone: formData.mobilePhone,
+                            }}
+                            onInputChange={handleInputChange}
+                            disabled={isFetching}
+                        />
 
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            รหัสประจำตัวประชาชน *
-                                        </label>
-                                        <Input
-                                            value={formData.nationalIdNumber}
-                                            onChange={(e) => handleInputChange('nationalIdNumber', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
+                        {/* Business Details Section */}
+                        <BusinessDetailsSection
+                            businessAdditionalDetails={formData.businessAdditionalDetails}
+                            onInputChange={handleInputChange}
+                            disabled={isFetching}
+                        />
 
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            อีเมล์ *
-                                        </label>
-                                        <Input
-                                            value={formData.email}
-                                            onChange={(e) => handleInputChange('email', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px', backgroundColor: '#F3F4F6' }}
-                                            readOnly
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            เบอร์โทรศัพท์ติดต่อ *
-                                        </label>
-                                        <Input
-                                            value={formData.phoneNumber}
-                                            onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-                                </div>
-
-                                {/* Right Column */}
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            ชื่อ *(ภาษาอังกฤษ)
-                                        </label>
-                                        <Input
-                                            value={formData.firstNameEng}
-                                            onChange={(e) => handleInputChange('firstNameEng', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            นามสกุล *(ภาษาอังกฤษ)
-                                        </label>
-                                        <Input
-                                            value={formData.lastNameEng}
-                                            onChange={(e) => handleInputChange('lastNameEng', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            รหัสผู้เสียภาษีองค์กร *
-                                        </label>
-                                        <Input
-                                            value={formData.corporateTaxId}
-                                            onChange={(e) => handleInputChange('corporateTaxId', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            กรอกรายละเอียดเพิ่มเติม เพื่อประกอบการพิจารณา
-                                        </label>
-                                        <Input
-                                            value={formData.additionalDetails}
-                                            onChange={(e) => handleInputChange('additionalDetails', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            เบอร์โทรศัพท์ติดต่อ(สำรอง) *
-                                        </label>
-                                        <Input
-                                            value={formData.backupPhone}
-                                            onChange={(e) => handleInputChange('backupPhone', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Section 2: Location Information */}
-                        <div className="text-center mb-4 w-full py-2.5" style={{ backgroundColor: '#28A7CB' }}>
-                            <span className="text-2xl" style={{ color: '#FFFFFF' }}>กรุณากรอกข้อมูลเกี่ยวกับสถานที่ตั้งของโรงแรมหรือที่พักของคุณ</span>
-                        </div>
-
-                        <div className="py-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Left Column */}
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            ชื่อ โรงแรม หรือ สถานที่พัก *
-                                        </label>
-                                        <Input
-                                            value={formData.accommodationName}
-                                            onChange={(e) => handleInputChange('accommodationName', e.target.value)}
-                                            placeholder="กรุณากรอกชื่อจริงครั้งเพื่อยืนยันความถูกต้อง"
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm text-gray-500 mt-1" style={{ marginBottom: 0, marginTop: '0.4rem' }}>*กรุณากรอกชื่อจริงครั้งเพื่อยืนยันความถูกต้อง</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            เลขที่ทะเบียนการค้า *
-                                        </label>
-                                        <Input
-                                            value={formData.tradeRegistrationNumber}
-                                            onChange={(e) => handleInputChange('tradeRegistrationNumber', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            สถานที่อยู่ของสถานที่ให้บริการ *
-                                        </label>
-                                        <Input
-                                            value={formData.address}
-                                            onChange={(e) => handleInputChange('address', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            อีเมล์ธุรกิจ *
-                                        </label>
-                                        <Input
-                                            value={formData.businessEmail}
-                                            onChange={(e) => handleInputChange('businessEmail', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            ใส่ลิงก์ Google map ของสถานที่ให้บริการ *
-                                        </label>
-                                        <Input
-                                            value={formData.googleMapsLink}
-                                            onChange={(e) => handleInputChange('googleMapsLink', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-                                </div>
-
-                                {/* Right Column */}
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            ชื่อ โรงแรม หรือ สถานที่พัก *(ภาษาอังกฤษ)
-                                        </label>
-                                        <Input
-                                            value={formData.accommodationNameEn}
-                                            onChange={(e) => handleInputChange('accommodationNameEn', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            เบอร์โทรศัพท์สำนักงาน *
-                                        </label>
-                                        <Input
-                                            value={formData.officePhone}
-                                            onChange={(e) => handleInputChange('officePhone', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                            เบอร์โทรศัพท์มือถือ *
-                                        </label>
-                                        <Input
-                                            value={formData.mobilePhone}
-                                            onChange={(e) => handleInputChange('mobilePhone', e.target.value)}
-                                            className="w-full h-12 text-base"
-                                            style={{ height: '48px', fontSize: '16px' }}
-                                            disabled={isFetching}
-                                        />
-                                        <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>...</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Description */}
-                            <div className="mt-8">
-                                <label className="block text-base font-medium text-gray-800 mb-3">
-                                    กรอกรายละเอียดเพิ่มเติมของธุรกิจ เพื่อประกอบการพิจารณา
-                                </label>
-                                <TextArea
-                                    value={formData.businessAdditionalDetails}
-                                    onChange={(e) => handleInputChange('businessAdditionalDetails', e.target.value)}
-                                    rows={6}
-                                    className="w-full text-base"
-                                    style={{ fontSize: '16px' }}
-                                    disabled={isFetching}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Section 3: Image Upload */}
-                        <div className="p-6">
-                            <h3 className="text-2xl font-semibold text-gray-800 mb-4">กรุณาแนบรูปถ่ายเอกสาร</h3>
-
-                            {/* 8 Upload Slots in 4x2 Grid */}
-                            <div className="grid md:grid-cols-4 gap-4 grid-cols-1">
-                                {/* Slot 1: ID Card */}
-                                <SingleFileAttachment
-                                    uploadedImage={uploadedImages[0]}
-                                    onImageUpload={(file) => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        newUploadedImages[0] = {
-                                            uid: `0-${Date.now()}`,
-                                            name: file.name,
-                                            status: 'done',
-                                            url: URL.createObjectURL(file),
-                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                            originFileObj: file as any,
-                                        };
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    onImageRemove={() => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        delete newUploadedImages[0];
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    label="อัพโหลดรูปบัตรประชาชน"
-                                    description="กรุณาถ่ายรูปบัตรประชาแบบหน้าตรง"
-                                />
-
-                                {/* Slot 2: Business License */}
-                                <SingleFileAttachment
-                                    uploadedImage={uploadedImages[1]}
-                                    onImageUpload={(file) => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        newUploadedImages[1] = {
-                                            uid: `1-${Date.now()}`,
-                                            name: file.name,
-                                            status: 'done',
-                                            url: URL.createObjectURL(file),
-                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                            originFileObj: file as any,
-                                        };
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    onImageRemove={() => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        delete newUploadedImages[1];
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    label="อัพโหลดรูปทะเบียนการค้า"
-                                    description="กรุณาถ่ายรูปทะเบียนการค้าแบบหน้าตรง"
-                                />
-
-                                {/* Slot 3: Tax Document */}
-                                <SingleFileAttachment
-                                    uploadedImage={uploadedImages[2]}
-                                    onImageUpload={(file) => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        newUploadedImages[2] = {
-                                            uid: `2-${Date.now()}`,
-                                            name: file.name,
-                                            status: 'done',
-                                            url: URL.createObjectURL(file),
-                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                            originFileObj: file as any,
-                                        };
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    onImageRemove={() => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        delete newUploadedImages[2];
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    label="อัพโหลดรูปเอกสารภาษีอากร"
-                                    description="กรุณาถ่ายรูปเอกสารใบกำกับภาษีแบบหน้าตรง"
-                                />
-
-                                {/* Slot 4: House Registration */}
-                                <SingleFileAttachment
-                                    uploadedImage={uploadedImages[3]}
-                                    onImageUpload={(file) => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        newUploadedImages[3] = {
-                                            uid: `3-${Date.now()}`,
-                                            name: file.name,
-                                            status: 'done',
-                                            url: URL.createObjectURL(file),
-                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                            originFileObj: file as any,
-                                        };
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    onImageRemove={() => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        delete newUploadedImages[3];
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    label="อัพโหลดรูปสำเนาทะเบียนบ้านของสถานที่ตั้งกิจการ"
-                                    description="กรุณาถ่ายรูปเอกสารเพิ่มเติม แบบหน้าตรง"
-                                />
-
-                                {/* Slot 5: Additional Document */}
-                                <SingleFileAttachment
-                                    uploadedImage={uploadedImages[4]}
-                                    onImageUpload={(file) => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        newUploadedImages[4] = {
-                                            uid: `4-${Date.now()}`,
-                                            name: file.name,
-                                            status: 'done',
-                                            url: URL.createObjectURL(file),
-                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                            originFileObj: file as any,
-                                        };
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    onImageRemove={() => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        delete newUploadedImages[4];
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    label="อัพโหลดรูปเอกสารเพิ่มเติม"
-                                    description="กรุณาถ่ายรูปเอกสารเพิ่มเติม อาทิ บิลชำระค่าไฟแบบหน้าตรง"
-                                />
-
-                                {/* Slot 6: Bank Account */}
-                                <SingleFileAttachment
-                                    uploadedImage={uploadedImages[5]}
-                                    onImageUpload={(file) => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        newUploadedImages[5] = {
-                                            uid: `5-${Date.now()}`,
-                                            name: file.name,
-                                            status: 'done',
-                                            url: URL.createObjectURL(file),
-                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                            originFileObj: file as any,
-                                        };
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    onImageRemove={() => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        delete newUploadedImages[5];
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    label="อัพโหลดรูปบัญชีธนาคาร"
-                                    description="กรุณาถ่ายรูปเอกสารเพิ่มเติม แบบหน้าตรง *ที่ต้องการให้ระบบโอนค่าที่พัก"
-                                />
-
-                                {/* Slot 7: Building Photo */}
-                                <SingleFileAttachment
-                                    uploadedImage={uploadedImages[6]}
-                                    onImageUpload={(file) => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        newUploadedImages[6] = {
-                                            uid: `6-${Date.now()}`,
-                                            name: file.name,
-                                            status: 'done',
-                                            url: URL.createObjectURL(file),
-                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                            originFileObj: file as any,
-                                        };
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    onImageRemove={() => {
-                                        const newUploadedImages = { ...uploadedImages };
-                                        delete newUploadedImages[6];
-                                        setUploadedImages(newUploadedImages);
-                                    }}
-                                    label="อัพโหลดรูปถ่ายหน้าสถานที่ให้บริการ"
-                                    description="กรุณาถ่ายรูปด้านหน้าอาคาร สถานที่ตั้งของบริการ"
-                                />
-
-                                {/* Slot 8: Policy Modal */}
-                                <div
-                                    className="block w-full h-[300px] cursor-pointer"
-                                    onClick={() => setIsPolicyModalOpen(true)}
-                                >
-                                    <div
-                                        className={`w-full h-[300px] rounded-md px-3 py-3 transition-colors cursor-pointer`}
-                                        style={{ backgroundColor: '#E0E2E6' }}
-                                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#D0D2D6')}
-                                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#E0E2E6')}
-                                    >
-                                        <div className="h-[190px] flex flex-col justify-center items-center">
-                                            <div className="text-center mb-4">
-                                                <LogoFirstPage subtext='' />
-                                                <div className="text-sm" style={{ color: '#4B5563' }}>Pet-Friendly Hotel</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-md text-center mt-1" style={{ fontWeight: '500', color: '#484848' }}>
-                                            กรุณาคลิก อ่านเอกสาร
-                                            ข้อตกลงในสัญญาและนโยบายคู่ค้า
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 text-sm" style={{ color: '#6B7280' }}>
-                                <p>• รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB</p>
-                                <p>• กรุณาแนบรูปภาพประจำตัวประชาชน และเอกสารที่เกี่ยวข้อง</p>
-                            </div>
-                        </div>
+                        {/* File Upload Section */}
+                        <FileUploadSection
+                            uploadedImages={uploadedImages}
+                            onImageUpload={(index, file) => {
+                                const newUploadedImages = { ...uploadedImages };
+                                newUploadedImages[index] = {
+                                    uid: `${index}-${Date.now()}`,
+                                    name: file.name,
+                                    status: 'done',
+                                    url: URL.createObjectURL(file),
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    originFileObj: file as any,
+                                };
+                                setUploadedImages(newUploadedImages);
+                            }}
+                            onImageRemove={(index) => {
+                                const newUploadedImages = { ...uploadedImages };
+                                delete newUploadedImages[index];
+                                setUploadedImages(newUploadedImages);
+                            }}
+                            onPolicyModalOpen={() => setIsPolicyModalOpen(true)}
+                        />
 
                         {/* Submit Button */}
                         <div className="w-full flex justify-center">

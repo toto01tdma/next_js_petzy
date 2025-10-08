@@ -32,10 +32,10 @@ export default function AdminPetzyApp() {
         }
     };
 
-    const handleSubmit = async () => {
-        console.log('Submitting banner:', bannerFile);
-        // API call would go here
-    };
+    // const handleSubmit = async () => {
+    //     console.log('Submitting banner:', bannerFile);
+    //     // API call would go here
+    // };
 
     return (
         <div className="flex min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>

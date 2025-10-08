@@ -159,11 +159,21 @@ export default function Login() {
                     timerProgressBar: true
                 });
 
-                // Redirect based on user role
+                // Redirect based on user role and approval status
                 if (data.data.user.role === 'ADMIN') {
                     router.push('/admin/dashboard');
                 } else {
-                    router.push('/partner/data-entry');
+                    // Partner/Owner redirect logic
+                    // Check accommodation approval status
+                    const approvalStatus = data.data.user.accommodationApproval?.status;
+                    
+                    if (approvalStatus === 'APPROVED') {
+                        // Approved partners go to dashboard
+                        router.push('/partner/dashboard');
+                    } else {
+                        // Non-approved partners (PENDING, DRAFT, REJECTED, or no approval) go to data-entry
+                        router.push('/partner/data-entry');
+                    }
                 }
             } else {
                 // Handle error

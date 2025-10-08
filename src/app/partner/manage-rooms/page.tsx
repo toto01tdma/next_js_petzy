@@ -86,7 +86,6 @@ export default function ManageRooms() {
         
         fetchRoomSummary();
         fetchRoomDetails();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router]);
 
     const fetchRoomSummary = async () => {
