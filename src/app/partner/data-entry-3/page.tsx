@@ -6,6 +6,7 @@ import LogoFirstPage from "@/components/first_page/logo";
 import { Button, Input } from 'antd';
 import Swal from 'sweetalert2';
 import { DownOutlined, UpOutlined } from '@ant-design/icons';
+import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 
 const { TextArea } = Input;
 import type { UploadFile } from 'antd/es/upload/interface';
@@ -164,35 +165,163 @@ export default function DataEntry3() {
 
     const handleSubmit = async () => {
         const isValid = await validateForm();
-        if (isValid) {
-            // Prepare data to pass to data-entry-4
-            const dataToPass = {
-                roomServices: roomServiceRef.current,
-                specialServices: specialServiceRef.current,
-                petCareServices: petCareServiceRef.current,
+        if (!isValid) {
+            return;
+        }
+
+        try {
+            // Preview mode check
+            if (!USE_API_MODE) {
+                // Store data in sessionStorage for data-entry-4 (preview mode)
+                const dataToPass = {
+                    roomServices: roomServiceRef.current,
+                    specialServices: specialServiceRef.current,
+                    petCareServices: petCareServiceRef.current,
+                    description: description,
+                    uploadedImages: uploadedImages
+                };
+                sessionStorage.setItem('dataEntry3Data', JSON.stringify(dataToPass));
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'ยืนยันข้อมูลสำเร็จ',
+                    text: '',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    background: '#fff',
+                    customClass: {
+                        popup: 'rounded-lg'
+                    }
+                });
+                
+                router.push('/partner/data-entry-4');
+                return;
+            }
+
+            // Step 1: Upload accommodation photos if they exist
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'กรุณาเข้าสู่ระบบ',
+                    text: 'ไม่พบข้อมูลการเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#DC2626'
+                });
+                router.push('/login');
+                return;
+            }
+
+            let coverImageUrl = '';
+            const roomImageUrls: string[] = [];
+
+            // Upload cover image (main image at index 0)
+            if (uploadedImages[0]?.originFileObj) {
+                const formData = new FormData();
+                formData.append('cover', uploadedImages[0].originFileObj);
+
+                const coverResponse = await fetch(`${API_BASE_URL}/api/upload/accommodation-photos`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const coverResult = await coverResponse.json();
+                if (coverResult.success && coverResult.data?.cover_url) {
+                    coverImageUrl = coverResult.data.cover_url;
+                }
+            }
+
+            // Upload room images (indexes 1-6)
+            for (let i = 1; i <= 6; i++) {
+                const image = uploadedImages[i];
+                if (image?.originFileObj) {
+                    const formData = new FormData();
+                    formData.append('room_image', image.originFileObj as Blob);
+
+                    const roomResponse = await fetch(`${API_BASE_URL}/api/upload/accommodation-photos`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+
+                    const roomResult = await roomResponse.json();
+                    if (roomResult.success && roomResult.data?.room_image_url) {
+                        roomImageUrls.push(roomResult.data.room_image_url);
+                    }
+                }
+            }
+
+            // Step 2: Prepare the main payload
+            const payload = {
                 description: description,
-                uploadedImages: uploadedImages
+                cover_image_url: coverImageUrl,
+                room_image_urls: roomImageUrls,
+                room_services: roomServiceRef.current.map(service => ({
+                    room_type: service.roomType,
+                    quantity: parseInt(service.quantity) || 0,
+                    open_time: service.openTime,
+                    close_time: service.closeTime,
+                    price: parseFloat(service.price) || 0
+                })),
+                special_services: specialServiceRef.current.map(service => ({
+                    service_type: service.roomType,
+                    quantity: service.quantity,
+                    open_time: service.openTime,
+                    close_time: service.closeTime,
+                    price: parseFloat(service.price) || 0
+                })),
+                pet_care_services: petCareServiceRef.current.map(service => ({
+                    service_type: service.roomType,
+                    quantity: service.quantity,
+                    price: parseFloat(service.price) || 0
+                }))
             };
 
-            // Store data in sessionStorage for data-entry-4
-            sessionStorage.setItem('dataEntry3Data', JSON.stringify(dataToPass));
-
-            // Show success dialog
-            await Swal.fire({
-                icon: 'success',
-                title: 'ยืนยันข้อมูลสำเร็จ',
-                text: '',
-                showConfirmButton: false,
-                timer: 2000,
-                timerProgressBar: true,
-                background: '#fff',
-                customClass: {
-                    popup: 'rounded-lg'
-                }
+            // Step 3: Submit to API
+            const response = await fetch(`${API_BASE_URL}/api/partner/data-entry-3`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
             });
-            
-            // Navigate to data-entry-4
-            router.push('/partner/data-entry-4');
+
+            const result = await response.json();
+
+            if (result.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'ยืนยันข้อมูลสำเร็จ',
+                    text: 'ข้อมูลที่พักของคุณถูกบันทึกเรียบร้อยแล้ว',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    background: '#fff',
+                    customClass: {
+                        popup: 'rounded-lg'
+                    }
+                });
+                
+                router.push('/partner/dashboard');
+            } else {
+                throw new Error(result.message || 'Failed to submit data');
+            }
+        } catch (error) {
+            console.error('Error submitting data-entry-3:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: error instanceof Error ? error.message : 'ไม่สามารถบันทึกข้อมูลได้',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#DC2626'
+            });
         }
     };
 

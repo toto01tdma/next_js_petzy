@@ -426,6 +426,7 @@ export default function ManageRooms() {
                                 size="large"
                                 className="bg-teal-500 hover:bg-teal-600 border-teal-500"
                                 style={{ backgroundColor: '#00B6AA' }}
+                                onClick={() => router.push('/partner/create-service')}
                             >
                                 <span className="font-bold text-lg" style={{ color: '#FFFFFF' }}>สร้างบริการของคุณเพิ่มเติม</span>
                                 <PlusOutlined style={{ color: 'white' }} />

@@ -9,6 +9,7 @@ import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import ApprovalModal from '@/components/partner/shared/ApprovalModal';
+import Image from 'next/image';
 
 interface ProfileData {
     fullName: string;
@@ -409,7 +410,7 @@ export default function UserProfile() {
                                         <h3 className="text-xl font-semibold mb-4" style={{ color: '#000000' }}>รูปโปรไฟล์</h3>
                                         <div className="relative">
                                             {profileData.profileImage ? (
-                                                <img 
+                                                <Image 
                                                     src={profileData.profileImage} 
                                                     alt="Profile" 
                                                     className="rounded-full mx-auto"

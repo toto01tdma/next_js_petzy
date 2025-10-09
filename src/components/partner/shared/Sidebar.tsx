@@ -79,7 +79,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                             <div className="flex items-center gap-3">
                                 <Avatar size={40} src="/api/placeholder/40/40" />
                                 <div>
-                                    <p className="font-medium">Administrator</p>
+                                    <p className="font-medium">Partner</p>
                                     <p className="text-sm text-gray-400">โรงแรมยูนิค</p>
                                 </div>
                             </div>

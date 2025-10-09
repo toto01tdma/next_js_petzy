@@ -329,7 +329,7 @@ export default function AdminCustomers() {
                 }}>
                     <div className="flex justify-between items-center">
                         <h1 className="text-3xl font-bold" style={{ color: '#333333' }}>
-                            จัดการ ลูกค้า
+                        จัดการลูกค้าแอพ
                         </h1>
                         
                         {/* Month Selector */}
@@ -370,7 +370,7 @@ export default function AdminCustomers() {
                                 color: '#FFFFFF'
                             }}
                         >
-                            จัดการ ลูกค้า ทั้งหมด
+                            จัดการลูกค้าแอพทั้งหมด
                         </button>
                         <button
                             onClick={() => setActiveTab('new')}
@@ -380,7 +380,7 @@ export default function AdminCustomers() {
                                 color: '#FFFFFF'
                             }}
                         >
-                            จัดการ ลูกค้า ใหม่
+                            จัดการลูกค้าแอพใหม่
                         </button>
                     </div>
 

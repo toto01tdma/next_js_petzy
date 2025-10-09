@@ -16,7 +16,7 @@ export default function ApprovalModal({ isOpen }: ApprovalModalProps) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
-        
+
         // Redirect to login page
         router.push('/login');
     };
@@ -36,37 +36,37 @@ export default function ApprovalModal({ isOpen }: ApprovalModalProps) {
         >
             <div className="text-center py-12 px-6">
                 <div className="mb-6">
-                    <div 
+                    <div
                         className="mx-auto w-32 h-32 rounded-full flex items-center justify-center mb-6"
                         style={{ backgroundColor: '#FEF3C7' }}
                     >
-                        <ClockCircleOutlined 
-                            style={{ 
-                                fontSize: '64px', 
-                                color: '#F59E0B' 
-                            }} 
+                        <ClockCircleOutlined
+                            style={{
+                                fontSize: '64px',
+                                color: '#F59E0B'
+                            }}
                         />
                     </div>
                 </div>
-                <h2 
-                    className="text-3xl font-bold mb-4" 
+                <h2
+                    className="text-3xl font-bold mb-4"
                     style={{ color: '#1F2937' }}
                 >
                     กรุณารอแอดมินตรวจสอบ
                 </h2>
-                <p 
-                    className="text-lg mb-2" 
+                <p
+                    className="text-lg mb-2"
                     style={{ color: '#6B7280' }}
                 >
                     ระบบกำลังตรวจสอบข้อมูลของคุณ
                 </p>
-                <p 
-                    className="text-base mb-6" 
+                <p
+                    className="text-base mb-6"
                     style={{ color: '#9CA3AF' }}
                 >
                     กรุณารอการอนุมัติจากทีมงาน
                 </p>
-                
+
                 {/* Logout Button */}
                 <Button
                     type="default"
@@ -88,7 +88,6 @@ export default function ApprovalModal({ isOpen }: ApprovalModalProps) {
                         e.currentTarget.style.borderColor = '#DC2626';
                     }}
                 >
-                    ออกจากระบบ
                 </Button>
             </div>
         </Modal>
