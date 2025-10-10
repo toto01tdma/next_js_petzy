@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/partner/shared/Sidebar';
-import { Button } from 'antd';
+import { Button, Spin } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
 import LogoFirstPage from "@/components/first_page/logo";
 import type { UploadFile } from 'antd';
+import Swal from 'sweetalert2';
+import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 
 // Import all the separated components
 import PersonalInformationSection from '@/components/partner/dataEntry/PersonalInformationSection';
@@ -14,8 +16,8 @@ import HotelLocationSection from '@/components/partner/dataEntry/HotelLocationSe
 import BusinessDetailsSection from '@/components/partner/dataEntry/BusinessDetailsSection';
 import FileUploadSection from '@/components/partner/dataEntry/FileUploadSection';
 import HotelServiceConfigSection from '@/components/partner/dataEntry/HotelServiceConfigSection';
-import AccommodationPhotosSection from '@/components/partner/dataEntry/AccommodationPhotosSection';
 import RoomServiceConfigSection from '@/components/partner/dataEntry/RoomServiceConfigSection';
+import RoomServiceManagementSection from '@/components/partner/dataEntry/RoomServiceManagementSection';
 import type { RoomServiceRow } from '@/components/partner/dataEntry/RoomServiceConfigSection';
 
 export default function CreateService() {
@@ -23,6 +25,8 @@ export default function CreateService() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
 
     // Personal Information State
     const [personalInfo, setPersonalInfo] = useState({
@@ -95,6 +99,369 @@ export default function CreateService() {
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
+    };
+
+    // Fetch existing service data if editing
+    useEffect(() => {
+        const fetchServiceData = async () => {
+            setIsFetching(true);
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    setIsFetching(false);
+                    return; // No token, this is a new service creation
+                }
+
+                if (!USE_API_MODE) {
+                    // Preview mode - skip fetch
+                    setIsFetching(false);
+                    return;
+                }
+
+                // Fetch service data from API
+                const response = await fetch(`${API_BASE_URL}/api/partner/service-data`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    // Populate personal information
+                    if (data.data.personal_info) {
+                        setPersonalInfo({
+                            firstName: data.data.personal_info.first_name || '',
+                            lastName: data.data.personal_info.last_name || '',
+                            nationalIdNumber: data.data.personal_info.national_id_number || '',
+                            email: data.data.personal_info.email || '',
+                            phoneNumber: data.data.personal_info.phone_number || '',
+                            firstNameEng: data.data.personal_info.first_name_eng || '',
+                            lastNameEng: data.data.personal_info.last_name_eng || '',
+                            corporateTaxId: data.data.personal_info.corporate_tax_id || '',
+                            additionalDetails: data.data.personal_info.additional_details || '',
+                            backupPhone: data.data.personal_info.backup_phone || '',
+                        });
+                    }
+
+                    // Populate hotel location
+                    if (data.data.hotel_location) {
+                        setHotelLocation({
+                            accommodationName: data.data.hotel_location.accommodation_name || '',
+                            accommodationNameEn: data.data.hotel_location.accommodation_name_en || '',
+                            tradeRegistrationNumber: data.data.hotel_location.trade_registration_number || '',
+                            address: data.data.hotel_location.address || '',
+                            businessEmail: data.data.hotel_location.business_email || '',
+                            officePhone: data.data.hotel_location.office_phone || '',
+                            googleMapsLink: data.data.hotel_location.google_maps_link || '',
+                            mobilePhone: data.data.hotel_location.mobile_phone || '',
+                        });
+                        setBusinessDetails(data.data.hotel_location.business_additional_details || '');
+                    }
+
+                    // Populate service configuration
+                    if (data.data.service_configuration) {
+                        setHotelServiceConfig({
+                            roomService: data.data.service_configuration.room_service || false,
+                            specialService: data.data.service_configuration.special_service || false,
+                            petCareService: data.data.service_configuration.pet_care_service || false,
+                            hotelName: data.data.service_configuration.hotel_name || '',
+                            hotelNameConfirm: data.data.service_configuration.hotel_name || '',
+                            hotelNameEng: data.data.service_configuration.hotel_name_eng || '',
+                            hotelNameEngConfirm: data.data.service_configuration.hotel_name_eng || '',
+                            rooms: data.data.service_configuration.total_rooms || '',
+                            customRoomCount: '',
+                            province: data.data.service_configuration.room_type || '',
+                            customRoomType: '',
+                            district: data.data.service_configuration.service_type || '',
+                            subdistrict: data.data.service_configuration.special_service_type || '',
+                            specialServiceType: '',
+                            services: data.data.service_configuration.additional_services || [],
+                        });
+                    }
+
+                    // Populate room services
+                    if (data.data.room_services && data.data.room_services.length > 0) {
+                        setRoomServiceData(data.data.room_services.map((service: any, index: number) => ({
+                            id: index + 1,
+                            roomType: service.room_type || '',
+                            quantity: service.quantity?.toString() || '',
+                            openTime: service.open_time || '',
+                            closeTime: service.close_time || '',
+                            price: service.price?.toString() || ''
+                        })));
+                    }
+
+                    // Populate special services
+                    if (data.data.special_services && data.data.special_services.length > 0) {
+                        setSpecialServicesData(data.data.special_services.map((service: any, index: number) => ({
+                            id: index + 1,
+                            roomType: service.service_type || '',
+                            quantity: service.quantity || '',
+                            openTime: service.open_time || '',
+                            closeTime: service.close_time || '',
+                            price: service.price?.toString() || ''
+                        })));
+                    }
+
+                    // Populate pet care services
+                    if (data.data.pet_care_services && data.data.pet_care_services.length > 0) {
+                        setPetCareServicesData(data.data.pet_care_services.map((service: any, index: number) => ({
+                            id: index + 1,
+                            roomType: service.service_type || '',
+                            quantity: service.quantity || '',
+                            openTime: service.open_time || '',
+                            closeTime: service.close_time || '',
+                            price: service.price?.toString() || ''
+                        })));
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching service data:', error);
+                // Don't show error for new service creation
+            } finally {
+                setIsFetching(false);
+            }
+        };
+
+        fetchServiceData();
+    }, [router]);
+
+    // Complete form submission handler
+    const handleCompleteSubmit = async () => {
+        setIsSubmitting(true);
+        
+        try {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'กรุณาเข้าสู่ระบบ',
+                    text: 'ไม่พบข้อมูลการเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#DC2626'
+                });
+                router.push('/login');
+                return;
+            }
+
+            // Step 1: Upload documents from Step 1
+            let documentUrls = {
+                national_id_card_url: '',
+                trade_registration_cert_url: '',
+                tax_documents_url: '',
+                house_registration_url: '',
+                additional_documents_url: [] as string[],
+                bank_account_book_url: '',
+                service_location_photos_url: [] as string[]
+            };
+
+            if (USE_API_MODE) {
+                // Upload documents
+                const formData = new FormData();
+                if (uploadedDocs[0]?.originFileObj) formData.append('national_id_card', uploadedDocs[0].originFileObj as Blob);
+                if (uploadedDocs[1]?.originFileObj) formData.append('trade_registration_cert', uploadedDocs[1].originFileObj as Blob);
+                if (uploadedDocs[2]?.originFileObj) formData.append('tax_documents', uploadedDocs[2].originFileObj as Blob);
+                if (uploadedDocs[3]?.originFileObj) formData.append('house_registration', uploadedDocs[3].originFileObj as Blob);
+                if (uploadedDocs[4]?.originFileObj) formData.append('additional_documents', uploadedDocs[4].originFileObj as Blob);
+                if (uploadedDocs[5]?.originFileObj) formData.append('bank_account_book', uploadedDocs[5].originFileObj as Blob);
+                if (uploadedDocs[6]?.originFileObj) formData.append('service_location_photo', uploadedDocs[6].originFileObj as Blob);
+
+                const docResponse = await fetch(`${API_BASE_URL}/api/upload/documents`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const docResult = await docResponse.json();
+                if (docResult.success && docResult.data) {
+                    documentUrls = { ...documentUrls, ...docResult.data };
+                }
+            }
+
+            // Step 2: Upload accommodation photos from Step 3
+            let coverImageUrl = '';
+            const roomImageUrls: string[] = [];
+
+            if (USE_API_MODE) {
+                // Upload cover image
+                if (uploadedPhotos[0]?.originFileObj) {
+                    const coverFormData = new FormData();
+                    coverFormData.append('cover', uploadedPhotos[0].originFileObj as Blob);
+
+                    const coverResponse = await fetch(`${API_BASE_URL}/api/upload/accommodation-photos`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: coverFormData
+                    });
+
+                    const coverResult = await coverResponse.json();
+                    if (coverResult.success && coverResult.data?.cover_url) {
+                        coverImageUrl = coverResult.data.cover_url;
+                    }
+                }
+
+                // Upload room images
+                for (let i = 1; i <= 6; i++) {
+                    const image = uploadedPhotos[i];
+                    if (image?.originFileObj) {
+                        const roomFormData = new FormData();
+                        roomFormData.append('room_image', image.originFileObj as Blob);
+
+                        const roomResponse = await fetch(`${API_BASE_URL}/api/upload/accommodation-photos`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: roomFormData
+                        });
+
+                        const roomResult = await roomResponse.json();
+                        if (roomResult.success && roomResult.data?.room_image_url) {
+                            roomImageUrls.push(roomResult.data.room_image_url);
+                        }
+                    }
+                }
+            }
+
+            // Step 3: Prepare complete payload
+            const completePayload = {
+                // Step 1: Personal Information
+                personal_info: {
+                    first_name: personalInfo.firstName,
+                    last_name: personalInfo.lastName,
+                    first_name_eng: personalInfo.firstNameEng,
+                    last_name_eng: personalInfo.lastNameEng,
+                    national_id_number: personalInfo.nationalIdNumber,
+                    corporate_tax_id: personalInfo.corporateTaxId,
+                    email: personalInfo.email,
+                    phone_number: personalInfo.phoneNumber,
+                    backup_phone: personalInfo.backupPhone,
+                    additional_details: personalInfo.additionalDetails
+                },
+
+                // Step 1: Hotel Location
+                hotel_location: {
+                    accommodation_name: hotelLocation.accommodationName,
+                    accommodation_name_en: hotelLocation.accommodationNameEn,
+                    trade_registration_number: hotelLocation.tradeRegistrationNumber,
+                    address: hotelLocation.address,
+                    business_email: hotelLocation.businessEmail,
+                    office_phone: hotelLocation.officePhone,
+                    google_maps_link: hotelLocation.googleMapsLink,
+                    mobile_phone: hotelLocation.mobilePhone,
+                    business_additional_details: businessDetails
+                },
+
+                // Step 1: Documents
+                documents: documentUrls,
+
+                // Step 2: Hotel Service Configuration
+                service_configuration: {
+                    room_service: hotelServiceConfig.roomService,
+                    special_service: hotelServiceConfig.specialService,
+                    pet_care_service: hotelServiceConfig.petCareService,
+                    hotel_name: hotelServiceConfig.hotelName,
+                    hotel_name_eng: hotelServiceConfig.hotelNameEng,
+                    total_rooms: showCustomRoomInput ? hotelServiceConfig.customRoomCount : hotelServiceConfig.rooms,
+                    room_type: showCustomRoomTypeInput ? hotelServiceConfig.customRoomType : hotelServiceConfig.province,
+                    service_type: hotelServiceConfig.district,
+                    special_service_type: showSpecialServiceTypeInput ? hotelServiceConfig.specialServiceType : hotelServiceConfig.subdistrict,
+                    additional_services: hotelServiceConfig.services
+                },
+
+                // Step 3: Accommodation Photos
+                accommodation_photos: {
+                    cover_image_url: coverImageUrl,
+                    room_image_urls: roomImageUrls
+                },
+
+                // Step 3: Room Services
+                room_services: roomServiceData.map(service => ({
+                    room_type: service.roomType,
+                    quantity: parseInt(service.quantity) || 0,
+                    open_time: service.openTime,
+                    close_time: service.closeTime,
+                    price: parseFloat(service.price) || 0
+                })),
+
+                // Step 3: Special Services
+                special_services: specialServicesData.map(service => ({
+                    service_type: service.roomType,
+                    quantity: service.quantity,
+                    open_time: service.openTime,
+                    close_time: service.closeTime,
+                    price: parseFloat(service.price) || 0
+                })),
+
+                // Step 3: Pet Care Services
+                pet_care_services: petCareServicesData.map(service => ({
+                    service_type: service.roomType,
+                    quantity: service.quantity,
+                    open_time: service.openTime,
+                    close_time: service.closeTime,
+                    price: parseFloat(service.price) || 0
+                }))
+            };
+
+            // Step 4: Submit to API
+            if (USE_API_MODE) {
+                const response = await fetch(`${API_BASE_URL}/api/partner/create-service`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(completePayload)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกข้อมูลสำเร็จ',
+                        text: 'ข้อมูลบริการของคุณถูกบันทึกเรียบร้อยแล้ว',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    
+                    router.push('/partner/manage-rooms');
+                } else {
+                    throw new Error(result.message || 'Failed to create service');
+                }
+            } else {
+                // Preview mode
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกข้อมูลสำเร็จ (Preview Mode)',
+                    text: 'ข้อมูลบริการของคุณถูกบันทึกเรียบร้อยแล้ว',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+                
+                router.push('/partner/manage-rooms');
+            }
+        } catch (error) {
+            console.error('Error submitting service:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: error instanceof Error ? error.message : 'ไม่สามารถบันทึกข้อมูลได้',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#DC2626'
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handlePersonalInfoChange = (field: string, value: string) => {
@@ -242,23 +609,35 @@ export default function CreateService() {
                 );
             case 3:
                 return (
-                    <>
-                        <AccommodationPhotosSection
-                            uploadedImages={uploadedPhotos}
-                            onImageUpload={handlePhotoUpload}
-                            onImageRemove={handlePhotoRemove}
-                        />
-                        <div className="mt-8">
-                            <RoomServiceConfigSection
-                                roomServiceData={roomServiceData}
-                                specialServicesData={specialServicesData}
-                                petCareServicesData={petCareServicesData}
-                                onRoomServiceChange={setRoomServiceData}
-                                onSpecialServiceChange={setSpecialServicesData}
-                                onPetCareServiceChange={setPetCareServicesData}
-                            />
-                        </div>
-                    </>
+                    <RoomServiceManagementSection
+                        defaultRoomServiceData={roomServiceData}
+                        defaultSpecialServicesData={specialServicesData}
+                        roomServiceHeaders={{
+                            roomType: "รูปแบบห้องพักที่คุณเลือก",
+                            quantity: "จำนวนห้องพัก",
+                            openTime: "เวลาเปิด",
+                            closeTime: "เวลาปิด",
+                            price: "ราคาที่กำหนด"
+                        }}
+                        specialServiceHeaders={{
+                            roomType: "รูปแบบบริการ",
+                            quantity: "ประเภทบริการ",
+                            openTime: "เวลาเปิด",
+                            closeTime: "เวลาปิด",
+                            price: "ราคาที่กำหนด"
+                        }}
+                        petCareServiceHeaders={{
+                            roomType: "รูปแบบบริการ",
+                            quantity: "ประเภทบริการ",
+                            openTime: "เวลาเปิด",
+                            closeTime: "เวลาปิด",
+                            price: "ราคาที่กำหนด"
+                        }}
+                        onRoomServiceChange={setRoomServiceData}
+                        onSpecialServiceChange={setSpecialServicesData}
+                        onPetCareServiceChange={setPetCareServicesData}
+                        onSubmit={() => {}}
+                    />
                 );
             default:
                 return null;
@@ -293,12 +672,18 @@ export default function CreateService() {
 
                 {/* Main Content */}
                 <main className="flex-1 overflow-auto p-6" style={{ backgroundColor: '#FFFFFF' }}>
-                    {/* Logo */}
-                    <div className="text-center mb-6">
-                        <LogoFirstPage />
-                        <h1 className="text-4xl font-bold mt-4" style={{ color: '#0D263B' }}>Pet-Friendly Hotel</h1>
-                        <p className="text-lg text-gray-600 mt-2">กรอกข้อมูลบริการของคุณเพื่อเริ่มต้น</p>
-                    </div>
+                    {isFetching ? (
+                        <div className="flex items-center justify-center min-h-[400px]">
+                            <Spin size="large" tip="กำลังโหลดข้อมูล..." />
+                        </div>
+                    ) : (
+                        <>
+                            {/* Logo */}
+                            <div className="text-center mb-6">
+                                <LogoFirstPage />
+                                <h1 className="text-4xl font-bold mt-4" style={{ color: '#0D263B' }}>Pet-Friendly Hotel</h1>
+                                <p className="text-lg text-gray-600 mt-2">กรอกข้อมูลบริการของคุณเพื่อเริ่มต้น</p>
+                            </div>
 
                     {/* Step Indicator */}
                     <div className="flex justify-center mb-8">
@@ -367,17 +752,19 @@ export default function CreateService() {
                                 if (currentStep < 3) {
                                     setCurrentStep(currentStep + 1);
                                 } else {
-                                    // TODO: Submit form data
-                                    alert('บันทึกข้อมูลสำเร็จ! (ยังไม่เชื่อมต่อ API)');
-                                    router.push('/partner/manage-rooms');
+                                    handleCompleteSubmit();
                                 }
                             }}
                             className="px-8"
                             style={{ backgroundColor: '#0D263B' }}
+                            loading={isSubmitting}
+                            disabled={isSubmitting}
                         >
-                            {currentStep === 3 ? 'บันทึกข้อมูล' : 'ถัดไป'}
+                            {currentStep === 3 ? (isSubmitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล') : 'ถัดไป'}
                         </Button>
                     </div>
+                        </>
+                    )}
                 </main>
             </div>
 

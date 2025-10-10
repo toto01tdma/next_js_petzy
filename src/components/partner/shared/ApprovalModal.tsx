@@ -58,12 +58,6 @@ export default function ApprovalModal({ isOpen }: ApprovalModalProps) {
                     className="text-lg mb-2"
                     style={{ color: '#6B7280' }}
                 >
-                    ระบบกำลังตรวจสอบข้อมูลของคุณ
-                </p>
-                <p
-                    className="text-base mb-6"
-                    style={{ color: '#9CA3AF' }}
-                >
                     กรุณารอการอนุมัติจากทีมงาน
                 </p>
 
@@ -73,11 +67,14 @@ export default function ApprovalModal({ isOpen }: ApprovalModalProps) {
                     size="large"
                     icon={<LogoutOutlined />}
                     onClick={handleLogout}
-                    className="mt-4"
                     style={{
+                        marginTop: '0.5rem',
+                        width: '200px',      // 👈 กำหนดความกว้างตามต้องการ เช่น '100%', '300px'
+                        height: '60px',      // 👈 กำหนดความสูงตามต้องการ
                         backgroundColor: '#DC2626',
                         borderColor: '#DC2626',
-                        color: '#FFFFFF'
+                        color: '#FFFFFF',
+                        fontSize: '50px',
                     }}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = '#B91C1C';

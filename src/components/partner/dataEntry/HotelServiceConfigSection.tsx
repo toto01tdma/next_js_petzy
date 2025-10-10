@@ -12,37 +12,30 @@ interface ServiceCheckboxProps {
     onChange: (checked: boolean) => void;
 }
 
-function ServiceCheckbox({ label, checked, onChange }: ServiceCheckboxProps) {
+const ServiceCheckbox: React.FC<ServiceCheckboxProps> = ({ label, checked, onChange }) => {
     return (
-        <div className="relative">
-            <button
-                type="button"
+        <div className="space-y-2">
+            <div
+                className="w-full py-2 px-4 rounded-lg flex items-center font-medium cursor-pointer transition-colors"
                 onClick={() => onChange(!checked)}
-                className={`w-full py-8 px-4 border-2 rounded-lg transition-all flex flex-col items-center justify-center space-y-2 ${
-                    checked
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-300 bg-white hover:border-gray-400'
-                }`}
-                style={{
-                    height: '120px'
-                }}
+                style={{ backgroundColor: '#00B6AA' }}
             >
-                <div
-                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
-                        checked
-                            ? 'border-blue-500 bg-blue-500'
-                            : 'border-gray-300 bg-white'
-                    }`}
-                >
-                    {checked && <CheckOutlined className="text-white text-lg" />}
+                <span className="flex-1 text-center" style={{ color: '#FFFFFF' }}>{label}</span>
+                <div className="ml-auto">
+                    {checked ? (
+                        <div className="border px-0.5 py-0.2 rounded-sm border-white bg-transparent" style={{ color: '#FFFFFF' }}>
+                            <CheckOutlined className="text-sm" style={{ color: '#FFFFFF' }}/>
+                        </div>
+                    ) : (
+                        <div className="border px-0.5 py-0.2 rounded-sm border-white bg-transparent" style={{ color: '#00B6AA' }}>
+                            <CheckOutlined className="text-sm" style={{ color: '#00B6AA' }}/>
+                        </div>
+                    )}
                 </div>
-                <span className={`text-sm font-medium ${checked ? 'text-blue-600' : 'text-gray-700'}`}>
-                    {label}
-                </span>
-            </button>
+            </div>
         </div>
     );
-}
+};
 
 interface HotelServiceConfigSectionProps {
     formData: {
@@ -92,10 +85,11 @@ export default function HotelServiceConfigSection({
     return (
         <div className="py-6 px-12 border border-black rounded-lg">
             <div className="space-y-4">
-                <p style={{ marginBottom: '0.75rem', color: '#484848' }}>
-                    <span className="text-xl font-bold me-4">กรุณาเลือกบริการที่คุณมี</span>{' '}
-                    <span className="text-md">สามารถเลือกได้หลายบริการตามความจริงที่คุณให้บริการ</span>
-                </p>
+                <p style={{ marginBottom: '0.75rem', color: '#484848' }}><span
+                    className="text-xl font-bold me-4">กรุณาเลือกบริการที่คุณมี</span>
+                    <span
+                        className="text-md">สามารถเลือกได้หลายบริการตามความจริงที่คุณให้บริการ
+                    </span></p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <ServiceCheckbox
                         label="รูปแบบบริการห้องพัก"

@@ -11,6 +11,8 @@ import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 const { TextArea } = Input;
 import type { UploadFile } from 'antd/es/upload/interface';
 import SingleFileAttachment from '@/components/partner/shared/SingleFileAttachment';
+import RoomServiceManagementSection from '@/components/partner/dataEntry/RoomServiceManagementSection';
+import type { RoomServiceRow as RoomServiceRowType } from '@/components/partner/dataEntry/RoomServiceManagementSection';
 
 // Interface for room service row data
 interface RoomServiceRow {
@@ -726,45 +728,17 @@ export default function DataEntry3() {
                         <div className="border border-black mt-15 mb-8"></div>
 
                         {/* Services Management */}
-                        <div className="space-y-6">
-                            <h3 className="text-2xl font-semibold text-gray-800">
-                                กรุณากำหนดรายการห้องพักและบริการกิจหนดของคุณ
-                            </h3>
-
-                            <RoomServiceForm
-                                data={defaultRoomServiceData}
-                                showDefaultData={true}
-                                headers={roomServiceHeaders}
-                                onDataChange={handleRoomServiceChange}
-                            />
-
-                            <div className="border border-black mt-15 mb-8"></div>
-
-                            <div className="mt-8">
-                                <RoomServiceForm
-                                    data={defaultSpecialServicesData}
-                                    showDefaultData={true}
-                                    title="เลือกรูปแบบบริการพิเศษ"
-                                    description="รหัสบริการพิเศษจะรันตามจำนวนบริการที่มี"
-                                    headers={specialServiceHeaders}
-                                    onDataChange={handleSpecialServiceChange}
-                                />
-                            </div>
-
-                            <div className="border border-black mt-15 mb-8"></div>
-
-                            {/* Special Services Table */}
-                            <div className="mt-8">
-                                <RoomServiceForm
-                                    data={defaultSpecialServicesData}
-                                    showDefaultData={true}
-                                    title="รูปแบบบริการรับฝาก"
-                                    description="รหัสบริการรับฝากจะรันตามจำนวนบริการที่มี"
-                                    headers={petCareServiceHeaders}
-                                    onDataChange={handlePetCareServiceChange}
-                                />
-                            </div>
-                        </div>
+                        <RoomServiceManagementSection
+                            defaultRoomServiceData={defaultRoomServiceData}
+                            defaultSpecialServicesData={defaultSpecialServicesData}
+                            roomServiceHeaders={roomServiceHeaders}
+                            specialServiceHeaders={specialServiceHeaders}
+                            petCareServiceHeaders={petCareServiceHeaders}
+                            onRoomServiceChange={handleRoomServiceChange}
+                            onSpecialServiceChange={handleSpecialServiceChange}
+                            onPetCareServiceChange={handlePetCareServiceChange}
+                            onSubmit={handleSubmit}
+                        />
                     </div>
 
                     {/* Submit Button */}
