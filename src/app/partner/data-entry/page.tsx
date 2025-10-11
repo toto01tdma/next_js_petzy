@@ -257,6 +257,25 @@ export default function DataEntry() {
 
         fetchPartnerData();
     }, [router]);
+
+    // Check for REJECTED status on component mount
+    useEffect(() => {
+        const checkApprovalStatus = async () => {
+            const approvalStatus = localStorage.getItem('approvalStatus');
+            
+            if (approvalStatus === 'REJECTED') {
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'ท่านไม่ผ่านการตรวจสอบ',
+                    text: 'กรุณาตรวจสอบข้อมูลแล้วยื่นส่งข้อมูลอีกครั้ง',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#DC2626'
+                });
+            }
+        };
+
+        checkApprovalStatus();
+    }, []);
     const [formData, setFormData] = useState({
         // Basic Information - Personal
         firstName: '',
@@ -520,8 +539,8 @@ export default function DataEntry() {
                                 backupPhone: formData.backupPhone,
                             }}
                             onInputChange={handleInputChange}
-                            disabled={isFetching}
-                        />
+                                            disabled={isFetching}
+                                        />
 
                         {/* Hotel Location Section */}
                         <HotelLocationSection
@@ -536,36 +555,36 @@ export default function DataEntry() {
                                 mobilePhone: formData.mobilePhone,
                             }}
                             onInputChange={handleInputChange}
-                            disabled={isFetching}
-                        />
+                                            disabled={isFetching}
+                                        />
 
                         {/* Business Details Section */}
                         <BusinessDetailsSection
                             businessAdditionalDetails={formData.businessAdditionalDetails}
                             onInputChange={handleInputChange}
-                            disabled={isFetching}
-                        />
+                                            disabled={isFetching}
+                                        />
 
                         {/* File Upload Section */}
                         <FileUploadSection
                             uploadedImages={uploadedImages}
                             onImageUpload={(index, file) => {
-                                const newUploadedImages = { ...uploadedImages };
+                                        const newUploadedImages = { ...uploadedImages };
                                 newUploadedImages[index] = {
                                     uid: `${index}-${Date.now()}`,
-                                    name: file.name,
-                                    status: 'done',
-                                    url: URL.createObjectURL(file),
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    originFileObj: file as any,
-                                };
-                                setUploadedImages(newUploadedImages);
-                            }}
+                                            name: file.name,
+                                            status: 'done',
+                                            url: URL.createObjectURL(file),
+                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                            originFileObj: file as any,
+                                        };
+                                        setUploadedImages(newUploadedImages);
+                                    }}
                             onImageRemove={(index) => {
-                                const newUploadedImages = { ...uploadedImages };
+                                        const newUploadedImages = { ...uploadedImages };
                                 delete newUploadedImages[index];
-                                setUploadedImages(newUploadedImages);
-                            }}
+                                        setUploadedImages(newUploadedImages);
+                                    }}
                             onPolicyModalOpen={() => setIsPolicyModalOpen(true)}
                         />
 

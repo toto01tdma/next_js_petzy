@@ -16,6 +16,8 @@ export default function ApprovalModal({ isOpen }: ApprovalModalProps) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
+        localStorage.removeItem('approvalStatus');
+        localStorage.removeItem('accommodationName');
 
         // Redirect to login page
         router.push('/login');

@@ -132,7 +132,7 @@ export default function HotelServiceConfigSection({
                                 ชื่อ โรงแรม หรือ สถานที่พัก (ยืนยัน)
                             </label>
                             <Input
-                                value={formData.hotelNameConfirm || formData.hotelName}
+                                value={formData.hotelNameConfirm}
                                 onChange={(e) => onInputChange('hotelNameConfirm', e.target.value)}
                                 placeholder="สุขสม โรงแรมสวัสดี"
                                 className="w-full h-12 text-base"
@@ -163,7 +163,7 @@ export default function HotelServiceConfigSection({
                                 ชื่อ โรงแรม หรือ สถานที่พัก (ภาษาอังกฤษ) (ยืนยัน)
                             </label>
                             <Input
-                                value={formData.hotelNameEngConfirm || formData.hotelNameEng}
+                                value={formData.hotelNameEngConfirm}
                                 onChange={(e) => onInputChange('hotelNameEngConfirm', e.target.value)}
                                 placeholder="Sooksom Hotel"
                                 className="w-full h-12 text-base"

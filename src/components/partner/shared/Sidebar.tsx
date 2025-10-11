@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { Avatar } from 'antd';
+import { useState, useEffect } from 'react';
 import { 
     HomeOutlined, 
     UserOutlined, 
@@ -22,6 +23,15 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     const router = useRouter();
     const pathname = usePathname();
+    const [accommodationName, setAccommodationName] = useState('โรงแรมของคุณ');
+
+    // Load accommodation name from localStorage
+    useEffect(() => {
+        const storedName = localStorage.getItem('accommodationName');
+        if (storedName) {
+            setAccommodationName(storedName);
+        }
+    }, []);
 
     const menuItems = [
         { icon: <HomeOutlined />, label: 'Home', path: '/partner/dashboard', active: pathname === '/partner/dashboard' },
@@ -49,6 +59,8 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         localStorage.removeItem('user');
         localStorage.removeItem('rememberMe');
         localStorage.removeItem('savedEmail');
+        localStorage.removeItem('approvalStatus');
+        localStorage.removeItem('accommodationName');
         
         // Redirect to login page
         router.push('/login');
@@ -80,7 +92,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                 <Avatar size={40} src="/api/placeholder/40/40" />
                                 <div>
                                     <p className="font-medium">Partner</p>
-                                    <p className="text-sm text-gray-400">โรงแรมยูนิค</p>
+                                    <p className="text-sm text-gray-400">{accommodationName}</p>
                                 </div>
                             </div>
                             <button 

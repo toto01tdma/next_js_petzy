@@ -3,13 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import LogoFirstPage from "@/components/first_page/logo";
-import { Button, Input, Select, Checkbox, Spin } from 'antd';
-import { CheckOutlined } from '@ant-design/icons';
+import { Button, Spin } from 'antd';
 import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import HotelServiceConfigSection from '@/components/partner/dataEntry/HotelServiceConfigSection';
-
-const { Option } = Select;
 
 // TypeScript Types
 type HotelDataResponse = {
@@ -35,8 +32,15 @@ type HotelDataResponse = {
 
 type SaveDataResponse = {
     success: boolean;
-    message: string;
-    data: {
+    message?: string;
+    error?: string;
+    code?: string;
+    details?: Array<{
+        field: string;
+        message: string;
+        value: string;
+    }>;
+    data?: {
         status: string;
         approvalStatus: string;
     };
@@ -360,13 +364,29 @@ export default function DataEntry2() {
                 // Navigate to dashboard after submission
                 router.push('/partner/dashboard');
             } else {
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'ไม่สามารถบันทึกข้อมูลได้',
-                    text: data.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
-                    confirmButtonText: 'ตกลง',
-                    confirmButtonColor: '#28A7CB'
-                });
+                // Check if there are validation errors
+                if (data.details && data.details.length > 0) {
+                    // Format validation errors for display
+                    const errorMessages = data.details
+                        .map(detail => `${detail.field}: ${detail.message}`)
+                        .join('\n');
+                    
+                    await Swal.fire({
+                        icon: 'error',
+                        title: data.error || 'ไม่สามารถบันทึกข้อมูลได้',
+                        text: errorMessages,
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#28A7CB'
+                    });
+                } else {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'ไม่สามารถบันทึกข้อมูลได้',
+                        text: data.message || data.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#28A7CB'
+                    });
+                }
             }
         } catch (error) {
             console.error('Error saving data:', error);
@@ -433,7 +453,7 @@ export default function DataEntry2() {
                     />
                     )}
 
-                    {/* Submit Button */}
+                        {/* Submit Button */}
                     {!isFetching && (
                         <div className="w-full flex justify-center mt-20">
                             <Button
@@ -450,7 +470,7 @@ export default function DataEntry2() {
                                     ไปสู่หน้าระบบ
                                 </span>
                             </Button>
-                        </div>
+                    </div>
                     )}
                 </div>
             </div>

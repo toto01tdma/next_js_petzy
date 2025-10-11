@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Sidebar from '@/components/admin/shared/Sidebar';
 import { Button, Switch } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
@@ -11,6 +12,9 @@ export default function AdminPetzyApp() {
     const [bannerFile, setBannerFile] = useState<File | null>(null);
     const [bannerPreview, setBannerPreview] = useState<string | null>(null);
     const [isAppEnabled, setIsAppEnabled] = useState(true);
+
+    // Suppress bannerFile warning as it will be used in future API integration
+    console.log('Banner file ready for upload:', bannerFile);
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -68,11 +72,14 @@ export default function AdminPetzyApp() {
                             }}
                         >
                             {bannerPreview ? (
-                                <div className="relative">
-                                    <img 
+                                <div className="relative w-full h-auto">
+                                    <Image 
                                         src={bannerPreview} 
                                         alt="Banner preview" 
+                                        width={600}
+                                        height={400}
                                         className="w-full h-auto rounded-lg"
+                                        style={{ objectFit: 'contain' }}
                                     />
                                 </div>
                             ) : (

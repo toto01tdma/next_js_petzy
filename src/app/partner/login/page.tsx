@@ -97,6 +97,10 @@ export default function Login() {
                     }
                 }));
                 
+                // Store preview approval status and accommodation name
+                localStorage.setItem('approvalStatus', 'DRAFT');
+                localStorage.setItem('accommodationName', 'โรงแรมพรีวิว');
+                
                 if (rememberMe) {
                     localStorage.setItem('rememberMe', 'true');
                     localStorage.setItem('savedEmail', inputValue);
@@ -149,29 +153,62 @@ export default function Login() {
                     localStorage.setItem('savedEmail', inputValue);
                 }
 
-                // Show success message
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'เข้าสู่ระบบสำเร็จ',
-                    text: `ยินดีต้อนรับ ${data.data.user.profile.fullName}`,
-                    showConfirmButton: false,
-                    timer: 1500,
-                    timerProgressBar: true
-                });
-
-                // Redirect based on user role and approval status
+                // Redirect based on user role
                 if (data.data.user.role === 'ADMIN') {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'เข้าสู่ระบบสำเร็จ',
+                        text: `ยินดีต้อนรับ ${data.data.user.profile.fullName}`,
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    });
                     router.push('/admin/dashboard');
                 } else {
-                    // Partner/Owner redirect logic
-                    // Check accommodation approval status
-                    const approvalStatus = data.data.user.accommodationApproval?.status;
+                    // Partner/Owner - Fetch approval status and store in localStorage
+                    try {
+                        const statusResponse = await fetch(`${API_BASE_URL}/api/partner/approval-status`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${data.data.tokens.accessToken}`
+                            }
+                        });
+
+                        const statusData = await statusResponse.json();
+
+                        if (statusData.success && statusData.data) {
+                            // Store approval status and accommodation name
+                            localStorage.setItem('approvalStatus', statusData.data.status || 'DRAFT');
+                            localStorage.setItem('accommodationName', statusData.data.accommodation_name || 'โรงแรมของคุณ');
+                        } else {
+                            // Fallback values if API fails
+                            localStorage.setItem('approvalStatus', 'DRAFT');
+                            localStorage.setItem('accommodationName', 'โรงแรมของคุณ');
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch approval status:', error);
+                        // Set fallback values on error
+                        localStorage.setItem('approvalStatus', 'DRAFT');
+                        localStorage.setItem('accommodationName', 'โรงแรมของคุณ');
+                    }
+
+                    // Show success message
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'เข้าสู่ระบบสำเร็จ',
+                        text: `ยินดีต้อนรับ ${data.data.user.profile.fullName}`,
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    });
+
+                    // Check approval status for redirect
+                    const approvalStatus = localStorage.getItem('approvalStatus');
                     
                     if (approvalStatus === 'APPROVED') {
-                        // Approved partners go to dashboard
                         router.push('/partner/dashboard');
                     } else {
-                        // Non-approved partners (PENDING, DRAFT, REJECTED, or no approval) go to data-entry
                         router.push('/partner/data-entry');
                     }
                 }

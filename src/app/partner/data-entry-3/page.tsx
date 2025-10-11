@@ -12,7 +12,6 @@ const { TextArea } = Input;
 import type { UploadFile } from 'antd/es/upload/interface';
 import SingleFileAttachment from '@/components/partner/shared/SingleFileAttachment';
 import RoomServiceManagementSection from '@/components/partner/dataEntry/RoomServiceManagementSection';
-import type { RoomServiceRow as RoomServiceRowType } from '@/components/partner/dataEntry/RoomServiceManagementSection';
 
 // Interface for room service row data
 interface RoomServiceRow {
@@ -327,7 +326,8 @@ export default function DataEntry3() {
         }
     };
 
-    // Room Service Component
+    // Room Service Component (legacy - replaced by RoomServiceManagementSection)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const RoomServiceForm = ({
         data = defaultRoomServiceData,
         showDefaultData = true,

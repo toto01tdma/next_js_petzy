@@ -16,9 +16,33 @@ import HotelLocationSection from '@/components/partner/dataEntry/HotelLocationSe
 import BusinessDetailsSection from '@/components/partner/dataEntry/BusinessDetailsSection';
 import FileUploadSection from '@/components/partner/dataEntry/FileUploadSection';
 import HotelServiceConfigSection from '@/components/partner/dataEntry/HotelServiceConfigSection';
-import RoomServiceConfigSection from '@/components/partner/dataEntry/RoomServiceConfigSection';
 import RoomServiceManagementSection from '@/components/partner/dataEntry/RoomServiceManagementSection';
 import type { RoomServiceRow } from '@/components/partner/dataEntry/RoomServiceConfigSection';
+
+// Service type interfaces
+interface ApiRoomService {
+    room_type: string;
+    quantity: number;
+    open_time: string;
+    close_time: string;
+    price: number;
+}
+
+interface ApiSpecialService {
+    service_type: string;
+    quantity: string;
+    open_time: string;
+    close_time: string;
+    price: number;
+}
+
+interface ApiPetCareService {
+    service_type: string;
+    quantity: string;
+    open_time?: string;
+    close_time?: string;
+    price: number;
+}
 
 export default function CreateService() {
     const router = useRouter();
@@ -184,7 +208,7 @@ export default function CreateService() {
 
                     // Populate room services
                     if (data.data.room_services && data.data.room_services.length > 0) {
-                        setRoomServiceData(data.data.room_services.map((service: any, index: number) => ({
+                        setRoomServiceData(data.data.room_services.map((service: ApiRoomService, index: number) => ({
                             id: index + 1,
                             roomType: service.room_type || '',
                             quantity: service.quantity?.toString() || '',
@@ -196,7 +220,7 @@ export default function CreateService() {
 
                     // Populate special services
                     if (data.data.special_services && data.data.special_services.length > 0) {
-                        setSpecialServicesData(data.data.special_services.map((service: any, index: number) => ({
+                        setSpecialServicesData(data.data.special_services.map((service: ApiSpecialService, index: number) => ({
                             id: index + 1,
                             roomType: service.service_type || '',
                             quantity: service.quantity || '',
@@ -208,7 +232,7 @@ export default function CreateService() {
 
                     // Populate pet care services
                     if (data.data.pet_care_services && data.data.pet_care_services.length > 0) {
-                        setPetCareServicesData(data.data.pet_care_services.map((service: any, index: number) => ({
+                        setPetCareServicesData(data.data.pet_care_services.map((service: ApiPetCareService, index: number) => ({
                             id: index + 1,
                             roomType: service.service_type || '',
                             quantity: service.quantity || '',
