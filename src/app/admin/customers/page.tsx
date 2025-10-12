@@ -388,7 +388,7 @@ export default function AdminCustomers() {
                     <div className="flex justify-between items-center mb-6">
                         <div className="flex items-center gap-2">
                             <Input
-                                placeholder="Search for id, name Costumer"
+                                placeholder="Search for id, name Customer"
                                 prefix={<SearchOutlined style={{ color: '#999999' }} />}
                                 value={searchText}
                                 onChange={(e) => setSearchText(e.target.value)}

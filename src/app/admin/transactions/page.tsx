@@ -8,7 +8,7 @@ export default function AdminTransactions() {
             <Sidebar />
             <div className="flex-1" style={{ marginLeft: '250px' }}>
                 <div className="p-6" style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E0E0E0' }}>
-                    <h1 className="text-3xl font-bold" style={{ color: '#333333' }}>ดูประวัติการทำระเบิน</h1>
+                    <h1 className="text-3xl font-bold" style={{ color: '#333333' }}>ดูประวัติการชำระเงิน</h1>
                 </div>
                 <div className="p-6">
                     <div className="p-8 rounded-lg text-center" style={{ backgroundColor: '#FFFFFF' }}>

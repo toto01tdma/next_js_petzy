@@ -258,19 +258,93 @@ export default function DataEntry() {
         fetchPartnerData();
     }, [router]);
 
-    // Check for REJECTED status on component mount
+    // Check for REJECTED status and fetch rejection details on component mount
     useEffect(() => {
         const checkApprovalStatus = async () => {
             const approvalStatus = localStorage.getItem('approvalStatus');
             
             if (approvalStatus === 'REJECTED') {
-                await Swal.fire({
-                    icon: 'warning',
-                    title: 'ท่านไม่ผ่านการตรวจสอบ',
-                    text: 'กรุณาตรวจสอบข้อมูลแล้วยื่นส่งข้อมูลอีกครั้ง',
-                    confirmButtonText: 'ตกลง',
-                    confirmButtonColor: '#DC2626'
-                });
+                // Fetch detailed rejection information from API
+                try {
+                    const token = localStorage.getItem('accessToken');
+                    if (token && USE_API_MODE) {
+                        const response = await fetch(`${API_BASE_URL}/api/partner/approval-status`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success && result.data.status === 'REJECTED') {
+                            const { review } = result.data;
+                            
+                            // Build rejection message with both rejectionReason and reviewNotes
+                            let rejectionMessage = '';
+                            
+                            if (review?.rejectionReason) {
+                                rejectionMessage = `<div style="text-align: left; margin-bottom: 12px;">
+                                    <strong style="color: #DC2626; font-size: 16px;">เหตุผลที่ปฏิเสธ:</strong><br/>
+                                    <div style="border: 1px solid #6B7280; padding: 10px; border-radius: 5px;">
+                                    <p style="font-size: 14px;">${review.rejectionReason}</p>
+                                    </div>
+                                </div>`;
+                            }
+                            
+                            if (review?.reviewNotes) {
+                                rejectionMessage += `<div style="text-align: left; margin-top: 16px;">
+                                    <strong style="font-size: 14px;">หมายเหตุจากผู้ตรวจสอบ:</strong><br/>
+                                    <div style="border: 1px solid #6B7280; padding: 10px; border-radius: 5px;">
+                                        <p style="font-size: 14px; color: #6B7280;">${review.reviewNotes}</p>
+                                    </div>
+                                </div>`;
+                            }
+                            
+                            if (!rejectionMessage) {
+                                rejectionMessage = 'กรุณาตรวจสอบข้อมูลแล้วยื่นส่งข้อมูลอีกครั้ง';
+                            }
+
+                            await Swal.fire({
+                                icon: 'error',
+                                title: 'คำขออนุมัติถูกปฏิเสธ',
+                                html: rejectionMessage,
+                                confirmButtonText: 'ตกลง แก้ไขข้อมูล',
+                                confirmButtonColor: '#DC2626',
+                                width: '600px'
+                            });
+                        } else {
+                            // Fallback if API call fails or status doesn't match
+                            await Swal.fire({
+                                icon: 'warning',
+                                title: 'ท่านไม่ผ่านการตรวจสอบ',
+                                text: 'กรุณาตรวจสอบข้อมูลแล้วยื่นส่งข้อมูลอีกครั้ง',
+                                confirmButtonText: 'ตกลง',
+                                confirmButtonColor: '#DC2626'
+                            });
+                        }
+                    } else {
+                        // Preview mode or no token - show generic message
+                        await Swal.fire({
+                            icon: 'warning',
+                            title: 'ท่านไม่ผ่านการตรวจสอบ',
+                            text: 'กรุณาตรวจสอบข้อมูลแล้วยื่นส่งข้อมูลอีกครั้ง',
+                            confirmButtonText: 'ตกลง',
+                            confirmButtonColor: '#DC2626'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error fetching rejection details:', error);
+                    // Fallback to generic message on error
+                    await Swal.fire({
+                        icon: 'warning',
+                        title: 'ท่านไม่ผ่านการตรวจสอบ',
+                        text: 'กรุณาตรวจสอบข้อมูลแล้วยื่นส่งข้อมูลอีกครั้ง',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#DC2626'
+                    });
+                }
             }
         };
 

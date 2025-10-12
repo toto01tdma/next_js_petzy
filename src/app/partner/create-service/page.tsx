@@ -185,6 +185,81 @@ export default function CreateService() {
                         setBusinessDetails(data.data.hotel_location.business_additional_details || '');
                     }
 
+                    // Populate documents (NEW: from API response)
+                    if (data.data.documents) {
+                        const docs = data.data.documents;
+                        const newUploadedDocs: { [key: number]: UploadFile } = {};
+
+                        // Helper function to get full image URL
+                        const getFullImageUrl = (path: string) => {
+                            if (!path) return '';
+                            if (path.startsWith('http://') || path.startsWith('https://')) {
+                                return path;
+                            }
+                            return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+                        };
+
+                        // Map document URLs to uploadedDocs state (indices 0-6)
+                        if (docs.national_id_card_url) {
+                            newUploadedDocs[0] = {
+                                uid: '0',
+                                name: 'national_id_card',
+                                status: 'done',
+                                url: getFullImageUrl(docs.national_id_card_url)
+                            };
+                        }
+                        if (docs.trade_registration_cert_url) {
+                            newUploadedDocs[1] = {
+                                uid: '1',
+                                name: 'trade_registration_cert',
+                                status: 'done',
+                                url: getFullImageUrl(docs.trade_registration_cert_url)
+                            };
+                        }
+                        if (docs.tax_documents_url) {
+                            newUploadedDocs[2] = {
+                                uid: '2',
+                                name: 'tax_documents',
+                                status: 'done',
+                                url: getFullImageUrl(docs.tax_documents_url)
+                            };
+                        }
+                        if (docs.house_registration_url) {
+                            newUploadedDocs[3] = {
+                                uid: '3',
+                                name: 'house_registration',
+                                status: 'done',
+                                url: getFullImageUrl(docs.house_registration_url)
+                            };
+                        }
+                        if (docs.additional_documents_url && docs.additional_documents_url.length > 0) {
+                            newUploadedDocs[4] = {
+                                uid: '4',
+                                name: 'additional_documents',
+                                status: 'done',
+                                url: getFullImageUrl(docs.additional_documents_url[0])
+                            };
+                        }
+                        if (docs.bank_account_book_url) {
+                            newUploadedDocs[5] = {
+                                uid: '5',
+                                name: 'bank_account_book',
+                                status: 'done',
+                                url: getFullImageUrl(docs.bank_account_book_url)
+                            };
+                        }
+                        if (docs.service_location_photos_url && docs.service_location_photos_url.length > 0) {
+                            newUploadedDocs[6] = {
+                                uid: '6',
+                                name: 'service_location_photos',
+                                status: 'done',
+                                url: getFullImageUrl(docs.service_location_photos_url[0])
+                            };
+                        }
+
+                        setUploadedDocs(newUploadedDocs);
+                    }
+
                     // Populate service configuration
                     if (data.data.service_configuration) {
                         setHotelServiceConfig({
@@ -283,27 +358,68 @@ export default function CreateService() {
             };
 
             if (USE_API_MODE) {
-                // Upload documents
-                const formData = new FormData();
-                if (uploadedDocs[0]?.originFileObj) formData.append('national_id_card', uploadedDocs[0].originFileObj as Blob);
-                if (uploadedDocs[1]?.originFileObj) formData.append('trade_registration_cert', uploadedDocs[1].originFileObj as Blob);
-                if (uploadedDocs[2]?.originFileObj) formData.append('tax_documents', uploadedDocs[2].originFileObj as Blob);
-                if (uploadedDocs[3]?.originFileObj) formData.append('house_registration', uploadedDocs[3].originFileObj as Blob);
-                if (uploadedDocs[4]?.originFileObj) formData.append('additional_documents', uploadedDocs[4].originFileObj as Blob);
-                if (uploadedDocs[5]?.originFileObj) formData.append('bank_account_book', uploadedDocs[5].originFileObj as Blob);
-                if (uploadedDocs[6]?.originFileObj) formData.append('service_location_photo', uploadedDocs[6].originFileObj as Blob);
+                // Check which documents need uploading (new files vs existing URLs)
+                const hasNewFiles = uploadedDocs[0]?.originFileObj || uploadedDocs[1]?.originFileObj || 
+                                   uploadedDocs[2]?.originFileObj || uploadedDocs[3]?.originFileObj || 
+                                   uploadedDocs[4]?.originFileObj || uploadedDocs[5]?.originFileObj || 
+                                   uploadedDocs[6]?.originFileObj;
 
-                const docResponse = await fetch(`${API_BASE_URL}/api/upload/documents`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData
-                });
+                if (hasNewFiles) {
+                    // Upload new documents
+                    const formData = new FormData();
+                    if (uploadedDocs[0]?.originFileObj) formData.append('national_id_card', uploadedDocs[0].originFileObj as Blob);
+                    if (uploadedDocs[1]?.originFileObj) formData.append('trade_registration_cert', uploadedDocs[1].originFileObj as Blob);
+                    if (uploadedDocs[2]?.originFileObj) formData.append('tax_documents', uploadedDocs[2].originFileObj as Blob);
+                    if (uploadedDocs[3]?.originFileObj) formData.append('house_registration', uploadedDocs[3].originFileObj as Blob);
+                    if (uploadedDocs[4]?.originFileObj) formData.append('additional_documents', uploadedDocs[4].originFileObj as Blob);
+                    if (uploadedDocs[5]?.originFileObj) formData.append('bank_account_book', uploadedDocs[5].originFileObj as Blob);
+                    if (uploadedDocs[6]?.originFileObj) formData.append('service_location_photo', uploadedDocs[6].originFileObj as Blob);
 
-                const docResult = await docResponse.json();
-                if (docResult.success && docResult.data) {
-                    documentUrls = { ...documentUrls, ...docResult.data };
+                    const docResponse = await fetch(`${API_BASE_URL}/api/upload/documents`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+
+                    const docResult = await docResponse.json();
+                    if (docResult.success && docResult.data) {
+                        documentUrls = { ...documentUrls, ...docResult.data };
+                    }
+                }
+
+                // Preserve existing URLs for documents that weren't re-uploaded
+                // Convert full URLs back to relative paths if needed
+                const getRelativePath = (url: string) => {
+                    if (!url) return '';
+                    if (url.startsWith('/uploads/')) return url;
+                    if (url.includes('/uploads/')) {
+                        return url.substring(url.indexOf('/uploads/'));
+                    }
+                    return url;
+                };
+
+                if (uploadedDocs[0]?.url && !uploadedDocs[0]?.originFileObj) {
+                    documentUrls.national_id_card_url = getRelativePath(uploadedDocs[0].url);
+                }
+                if (uploadedDocs[1]?.url && !uploadedDocs[1]?.originFileObj) {
+                    documentUrls.trade_registration_cert_url = getRelativePath(uploadedDocs[1].url);
+                }
+                if (uploadedDocs[2]?.url && !uploadedDocs[2]?.originFileObj) {
+                    documentUrls.tax_documents_url = getRelativePath(uploadedDocs[2].url);
+                }
+                if (uploadedDocs[3]?.url && !uploadedDocs[3]?.originFileObj) {
+                    documentUrls.house_registration_url = getRelativePath(uploadedDocs[3].url);
+                }
+                if (uploadedDocs[4]?.url && !uploadedDocs[4]?.originFileObj) {
+                    documentUrls.additional_documents_url = [getRelativePath(uploadedDocs[4].url)];
+                }
+                if (uploadedDocs[5]?.url && !uploadedDocs[5]?.originFileObj) {
+                    documentUrls.bank_account_book_url = getRelativePath(uploadedDocs[5].url);
+                }
+                if (uploadedDocs[6]?.url && !uploadedDocs[6]?.originFileObj) {
+                    documentUrls.service_location_photos_url = [getRelativePath(uploadedDocs[6].url)];
                 }
             }
 

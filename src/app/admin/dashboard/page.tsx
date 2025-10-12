@@ -86,7 +86,7 @@ export default function AdminDashboard() {
                                     {/* Customer Progress */}
                                     <div className="p-6 rounded-lg" style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                                         <div className="flex justify-between items-center mb-2">
-                                            <h3 className="text-base font-medium" style={{ color: '#666666' }}>COSTUMER</h3>
+                                            <h3 className="text-base font-medium" style={{ color: '#666666' }}>CUSTOMER</h3>
                                             <button className="text-sm" style={{ color: '#999999' }}>⋮</button>
                                         </div>
                                         <div className="mb-2">
