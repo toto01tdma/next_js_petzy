@@ -9,6 +9,7 @@ import LogoFirstPage from "@/components/first_page/logo";
 import type { UploadFile } from 'antd';
 import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
+import { checkAuthError } from '@/utils/api';
 
 // Import all the separated components
 import PersonalInformationSection from '@/components/partner/dataEntry/PersonalInformationSection';
@@ -152,6 +153,11 @@ export default function CreateService() {
                 });
 
                 const data = await response.json();
+
+                // Check for authentication error
+                if (checkAuthError(response, data)) {
+                    return;
+                }
 
                 if (data.success && data.data) {
                     // Populate personal information
@@ -562,6 +568,11 @@ export default function CreateService() {
                 });
 
                 const result = await response.json();
+
+                // Check for authentication error
+                if (checkAuthError(response, result)) {
+                    return;
+                }
 
                 if (result.success) {
                     await Swal.fire({

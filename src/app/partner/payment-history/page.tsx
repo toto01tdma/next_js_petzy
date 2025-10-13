@@ -7,6 +7,7 @@ import { Input, Button, Spin, Image } from 'antd';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import ApprovalModal from '@/components/partner/shared/ApprovalModal';
 import Swal from 'sweetalert2';
+import { checkAuthError } from '@/utils/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
 const USE_API_MODE = process.env.NEXT_PUBLIC_USE_API_MODE === 'true';
@@ -103,6 +104,11 @@ export default function PaymentHistory() {
 
             const result = await response.json();
 
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
+
             if (result.success && result.data) {
                 // Get the first bank account (or the only one)
                 const account = Array.isArray(result.data) ? result.data[0] : result.data;
@@ -135,6 +141,11 @@ export default function PaymentHistory() {
             });
 
             const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
 
             if (result.success && result.data) {
                 setTransactions(result.data.transactions || []);
@@ -252,6 +263,11 @@ export default function PaymentHistory() {
             });
 
             const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
 
             if (result.success) {
                 await Swal.fire({

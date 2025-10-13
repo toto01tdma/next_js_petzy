@@ -11,6 +11,7 @@ import type { UploadFile } from 'antd';
 import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import dayjs from 'dayjs';
+import { checkAuthError } from '@/utils/api';
 
 const { Option } = Select;
 
@@ -74,6 +75,11 @@ export default function ManagePromotions() {
             });
 
             const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
 
             if (result.success && result.data) {
                 setPromotions(result.data);
@@ -225,6 +231,11 @@ export default function ManagePromotions() {
             });
 
             const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
 
             if (result.success) {
                 await Swal.fire({

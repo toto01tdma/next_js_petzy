@@ -180,7 +180,12 @@ export default function Login() {
                         if (statusData.success && statusData.data) {
                             // Store approval status and accommodation name
                             localStorage.setItem('approvalStatus', statusData.data.status || 'DRAFT');
-                            localStorage.setItem('accommodationName', statusData.data.accommodation_name || 'โรงแรมของคุณ');
+                            
+                            // Extract accommodation name from nested structure
+                            const accommodationName = statusData.data.accommodation?.name || 
+                                                     statusData.data.accommodation?.nameEn || 
+                                                     'โรงแรมของคุณ';
+                            localStorage.setItem('accommodationName', accommodationName);
                         } else {
                             // Fallback values if API fails
                             localStorage.setItem('approvalStatus', 'DRAFT');

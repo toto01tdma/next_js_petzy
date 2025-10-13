@@ -11,6 +11,7 @@ import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import ApprovalModal from '@/components/partner/shared/ApprovalModal';
+import { checkAuthError } from '@/utils/api';
 
 interface RoomSummary {
     id: string;
@@ -109,6 +110,12 @@ export default function ManageRooms() {
             });
 
             const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
+
             if (result.success) {
                 setRoomSummary(result.data.accommodation || []);
             }
@@ -154,6 +161,12 @@ export default function ManageRooms() {
             });
 
             const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
+
             if (result.success) {
                 const formatted = result.data.map((room: RoomDetail, index: number) => ({
                     ...room,
@@ -193,6 +206,12 @@ export default function ManageRooms() {
             });
 
             const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
+
             if (result.success) {
                 setSelectedRoom(result.data);
                 setNewPrice(result.data.pricing.dailyRate.toString());
@@ -258,6 +277,11 @@ export default function ManageRooms() {
 
             const result = await response.json();
 
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
+
             if (!response.ok || !result.success) {
                 throw new Error(result.error || 'Failed to update room');
             }
@@ -301,7 +325,7 @@ export default function ManageRooms() {
         if (USE_API_MODE) {
             try {
                 const token = localStorage.getItem('accessToken');
-                await fetch(`${API_BASE_URL}/api/partner/rooms/${selectedRoom.id}/schedule`, {
+                const response = await fetch(`${API_BASE_URL}/api/partner/rooms/${selectedRoom.id}/schedule`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -311,6 +335,13 @@ export default function ManageRooms() {
                         unavailableDates: newUnavailable
                     })
                 });
+
+                const result = await response.json();
+
+                // Check for authentication error
+                if (checkAuthError(response, result)) {
+                    return;
+                }
             } catch (error) {
                 console.error('Error updating schedule:', error);
             }

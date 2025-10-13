@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { checkAuthError } from '@/utils/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
 const USE_API_MODE = process.env.NEXT_PUBLIC_USE_API_MODE === 'true';
@@ -248,6 +249,11 @@ export function useChat(options: UseChatOptions = {}) {
 
             const result = await response.json();
 
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return [];
+            }
+
             if (result.success) {
                 setConversations(result.data.conversations);
                 return result.data.conversations;
@@ -317,6 +323,11 @@ export function useChat(options: UseChatOptions = {}) {
 
             const result = await response.json();
 
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return [];
+            }
+
             if (result.success) {
                 setMessages(prev => ({ ...prev, [conversationId]: result.data.messages }));
                 return result.data.messages;
@@ -377,6 +388,11 @@ export function useChat(options: UseChatOptions = {}) {
 
             const result = await response.json();
 
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return null;
+            }
+
             if (result.success) {
                 const newMessage = result.data;
                 setMessages(prev => ({
@@ -411,13 +427,20 @@ export function useChat(options: UseChatOptions = {}) {
         const token = localStorage.getItem('accessToken');
 
         try {
-            await fetch(`${API_BASE_URL}/api/chats/conversations/${conversationId}/mark-read`, {
+            const response = await fetch(`${API_BASE_URL}/api/chats/conversations/${conversationId}/mark-read`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
+
+            const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
 
             setConversations(prev => prev.map(conv =>
                 conv.id === conversationId ? { ...conv, unread_count: 0 } : conv

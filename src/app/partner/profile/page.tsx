@@ -10,6 +10,7 @@ import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import ApprovalModal from '@/components/partner/shared/ApprovalModal';
 import Image from 'next/image';
+import { checkAuthError } from '@/utils/api';
 
 interface ProfileData {
     fullName: string;
@@ -95,9 +96,14 @@ export default function UserProfile() {
                     },
                 });
 
-                if (!response.ok) throw new Error('Failed to fetch profile');
-
                 const result = await response.json();
+
+                // Check for authentication error
+                if (checkAuthError(response, result)) {
+                    return;
+                }
+
+                if (!response.ok) throw new Error('Failed to fetch profile');
                 
                 if (result.success) {
                     const data = result.data;
@@ -290,6 +296,11 @@ export default function UserProfile() {
                 });
 
                 const result = await response.json();
+
+                // Check for authentication error
+                if (checkAuthError(response, result)) {
+                    return;
+                }
 
                 if (!response.ok) {
                     // Handle validation errors

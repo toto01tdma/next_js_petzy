@@ -7,6 +7,7 @@ import { Button, Input } from 'antd';
 import Swal from 'sweetalert2';
 import { DownOutlined, UpOutlined } from '@ant-design/icons';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
+import { checkAuthError } from '@/utils/api';
 
 const { TextArea } = Input;
 import type { UploadFile } from 'antd/es/upload/interface';
@@ -174,29 +175,29 @@ export default function DataEntry3() {
             // Preview mode check
             if (!USE_API_MODE) {
                 // Store data in sessionStorage for data-entry-4 (preview mode)
-                const dataToPass = {
-                    roomServices: roomServiceRef.current,
-                    specialServices: specialServiceRef.current,
-                    petCareServices: petCareServiceRef.current,
-                    description: description,
-                    uploadedImages: uploadedImages
-                };
-                sessionStorage.setItem('dataEntry3Data', JSON.stringify(dataToPass));
+            const dataToPass = {
+                roomServices: roomServiceRef.current,
+                specialServices: specialServiceRef.current,
+                petCareServices: petCareServiceRef.current,
+                description: description,
+                uploadedImages: uploadedImages
+            };
+            sessionStorage.setItem('dataEntry3Data', JSON.stringify(dataToPass));
 
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'ยืนยันข้อมูลสำเร็จ',
-                    text: '',
-                    showConfirmButton: false,
-                    timer: 2000,
-                    timerProgressBar: true,
-                    background: '#fff',
-                    customClass: {
-                        popup: 'rounded-lg'
-                    }
-                });
-                
-                router.push('/partner/data-entry-4');
+            await Swal.fire({
+                icon: 'success',
+                title: 'ยืนยันข้อมูลสำเร็จ',
+                text: '',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                background: '#fff',
+                customClass: {
+                    popup: 'rounded-lg'
+                }
+            });
+            
+            router.push('/partner/data-entry-4');
                 return;
             }
 
@@ -295,6 +296,11 @@ export default function DataEntry3() {
             });
 
             const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
 
             if (result.success) {
                 await Swal.fire({

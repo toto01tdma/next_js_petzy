@@ -7,6 +7,7 @@ import { Button, Spin } from 'antd';
 import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import HotelServiceConfigSection from '@/components/partner/dataEntry/HotelServiceConfigSection';
+import { checkAuthError } from '@/utils/api';
 
 // TypeScript Types
 type HotelDataResponse = {
@@ -137,6 +138,11 @@ export default function DataEntry2() {
                 });
 
                 const data: HotelDataResponse = await response.json();
+
+                // Check for authentication error
+                if (checkAuthError(response, data)) {
+                    return;
+                }
 
                 if (data.success && data.data) {
                     // Map API response to form data
@@ -350,6 +356,11 @@ export default function DataEntry2() {
             });
 
             const data: SaveDataResponse = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, data)) {
+                return;
+            }
 
             if (data.success) {
                 // Show success message

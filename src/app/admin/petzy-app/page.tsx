@@ -7,6 +7,7 @@ import Sidebar from '@/components/admin/shared/Sidebar';
 import { Button, Switch, Spin } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
+import { checkAuthError } from '@/utils/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
 const USE_API_MODE = process.env.NEXT_PUBLIC_USE_API_MODE === 'true';
@@ -53,6 +54,11 @@ export default function AdminPetzyApp() {
             });
 
             const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
 
             if (result.success && result.data) {
                 // Banner exists
@@ -154,6 +160,11 @@ export default function AdminPetzyApp() {
 
             const result = await response.json();
 
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
+
             if (result.success) {
                 const fullUrl = result.data.banner_url.startsWith('http') 
                     ? result.data.banner_url 
@@ -230,6 +241,11 @@ export default function AdminPetzyApp() {
 
             const result = await response.json();
 
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return;
+            }
+
             if (result.success) {
                 setIsAppEnabled(result.data.is_active);
                 await Swal.fire({
@@ -297,7 +313,7 @@ export default function AdminPetzyApp() {
                     {/* Banner Upload Section */}
                     <div className="mb-8">
                         <h2 className="text-2xl font-bold mb-4" style={{ color: '#000000' }}>
-                            จัดการป๊อบอัพ
+                        จัดการป๊อบอัพ
                         </h2>
                         
                         <div 
@@ -335,13 +351,13 @@ export default function AdminPetzyApp() {
                         </div>
 
                         <div className="flex gap-4 items-center">
-                            <input
-                                type="file"
-                                id="banner-upload"
+                        <input
+                            type="file"
+                            id="banner-upload"
                                 accept="image/png,image/jpeg,image/jpg"
                                 onChange={handleBannerFileSelect}
-                                className="hidden"
-                            />
+                            className="hidden"
+                        />
                             <label 
                                 htmlFor="banner-upload"
                                 style={{
@@ -397,17 +413,17 @@ export default function AdminPetzyApp() {
                             จัดการเปิด-ปิด แอปพลิเคชั่น
                         </h3>
                         <div className="flex items-center gap-4">
-                            <Switch
-                                checked={isAppEnabled}
+                        <Switch
+                            checked={isAppEnabled}
                                 onChange={handleToggleStatus}
                                 disabled={toggleDisabled || isLoading}
                                 loading={isLoading}
-                                style={{
-                                    backgroundColor: isAppEnabled ? '#FDB930' : '#CCCCCC',
-                                    width: '60px',
-                                    height: '30px'
-                                }}
-                            />
+                            style={{
+                                backgroundColor: isAppEnabled ? '#FDB930' : '#CCCCCC',
+                                width: '60px',
+                                height: '30px'
+                            }}
+                        />
                             <span style={{ color: '#666666', fontSize: '14px' }}>
                                 {toggleDisabled ? '(กรุณาอัปโหลดแบนเนอร์ก่อน)' : ''}
                             </span>

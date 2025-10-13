@@ -11,6 +11,7 @@ import BusinessDetailsSection from '@/components/partner/dataEntry/BusinessDetai
 import FileUploadSection from '@/components/partner/dataEntry/FileUploadSection';
 import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
+import { checkAuthError } from '@/utils/api';
 
 // Type definitions
 type PartnerDataResponse = {
@@ -146,6 +147,11 @@ export default function DataEntry() {
 
                 const data: PartnerDataResponse = await response.json();
 
+                // Check for authentication error
+                if (checkAuthError(response, data)) {
+                    return;
+                }
+
                 if (data.success && data.data) {
                     // Map API response to form data
                     setFormData({
@@ -277,6 +283,11 @@ export default function DataEntry() {
                         });
 
                         const result = await response.json();
+
+                        // Check for authentication error
+                        if (checkAuthError(response, result)) {
+                            return;
+                        }
                         
                         if (result.success && result.data.status === 'REJECTED') {
                             const { review } = result.data;
@@ -530,6 +541,11 @@ export default function DataEntry() {
             });
 
             const data: SaveDataResponse = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, data)) {
+                return;
+            }
 
             if (data.success) {
                 // Show success dialog
