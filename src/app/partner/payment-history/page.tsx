@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, UploadOutlined, RightOutlined } from '@ant-design/icons';
 import { Input, Button, Spin, Image } from 'antd';
@@ -63,11 +63,7 @@ export default function PaymentHistory() {
     };
 
     // Fetch bank account and payment history on mount
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         if (!USE_API_MODE) {
             setIsLoading(false);
             return;
@@ -88,7 +84,12 @@ export default function PaymentHistory() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []); // Empty dependency array since fetchBankAccount and fetchPaymentHistory are defined below
+
+    // Fetch on mount
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const fetchBankAccount = async () => {
         const token = localStorage.getItem('accessToken');

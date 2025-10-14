@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, SendOutlined } from '@ant-design/icons';
 import { Input, Avatar, Badge, Spin } from 'antd';
@@ -65,8 +65,11 @@ export default function Chat() {
         fetchConversations(conversationStatus);
     }, [conversationStatus, fetchConversations]);
     
-    // Get current conversation messages
-    const currentMessages = selectedConversationId ? messages[selectedConversationId] || [] : [];
+    // Get current conversation messages (wrapped in useMemo to prevent re-creation on every render)
+    const currentMessages = useMemo(() => {
+        return selectedConversationId ? messages[selectedConversationId] || [] : [];
+    }, [selectedConversationId, messages]);
+    
     const currentTypingUsers = selectedConversationId ? typingUsers[selectedConversationId] || [] : [];
     
     // Scroll to bottom when messages change

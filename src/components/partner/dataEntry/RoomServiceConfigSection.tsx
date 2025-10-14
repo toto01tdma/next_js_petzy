@@ -6,7 +6,8 @@ import { DownOutlined, UpOutlined } from '@ant-design/icons';
 
 // Interface for room service row data
 export interface RoomServiceRow {
-    id: number;
+    id: number; // Local ID for React keys
+    backendId?: string; // Backend UUID for DELETE operations
     roomType: string;
     quantity: string;
     openTime: string;

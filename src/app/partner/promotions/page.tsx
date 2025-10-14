@@ -186,7 +186,7 @@ export default function ManagePromotions() {
                 await Swal.fire({
                     icon: 'success',
                     title: 'สร้างโปรโมชันสำเร็จ!',
-                    text: 'โปรโมชันของคุณถูกบันทึกเรียบร้อยแล้ว',
+                    text: 'โปรโมชั่นของคุณถูกบันทึกเรียบร้อยแล้ว',
                     confirmButtonText: 'ตรวจสอบ',
                     confirmButtonColor: '#0D263B',
                 });
@@ -241,7 +241,7 @@ export default function ManagePromotions() {
                 await Swal.fire({
                     icon: 'success',
                     title: 'สร้างโปรโมชันสำเร็จ!',
-                    text: 'โปรโมชันของคุณถูกบันทึกเรียบร้อยแล้ว',
+                    text: 'โปรโมชั่นของคุณถูกบันทึกเรียบร้อยแล้ว',
                     confirmButtonText: 'ตรวจสอบ',
                     confirmButtonColor: '#0D263B',
                 });
@@ -383,7 +383,7 @@ export default function ManagePromotions() {
                             >
                                 <MenuOutlined className="text-xl" />
                             </button>
-                            <h1 className="text-2xl font-semibold text-gray-800">จัดการโปรโมชันของคุณ</h1>
+                            <h1 className="text-2xl font-semibold text-gray-800">จัดการโปรโมชั่นของคุณ</h1>
                         </div>
                     </div>
                 </header>

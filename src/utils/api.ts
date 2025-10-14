@@ -8,7 +8,7 @@
  * - Clears expired tokens
  */
 
-import { handleApiError, isAuthenticationError, ApiResponse } from './apiErrorHandler';
+import { handleApiError, isAuthenticationError, ApiResponse, ApiErrorResponse } from './apiErrorHandler';
 
 /**
  * Detect current system (partner or admin) based on URL pathname
@@ -68,7 +68,7 @@ const handleAuthError = () => {
  *   console.log(result.data.user);
  * }
  */
-export async function apiFetch<T = any>(
+export async function apiFetch<T = unknown>(
     url: string,
     options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
@@ -132,14 +132,14 @@ export async function apiFetch<T = any>(
 /**
  * GET request with authentication handling
  */
-export async function apiGet<T = any>(url: string): Promise<ApiResponse<T>> {
+export async function apiGet<T = unknown>(url: string): Promise<ApiResponse<T>> {
     return apiFetch<T>(url, { method: 'GET' });
 }
 
 /**
  * POST request with authentication handling
  */
-export async function apiPost<T = any>(url: string, body?: any): Promise<ApiResponse<T>> {
+export async function apiPost<T = unknown>(url: string, body?: Record<string, unknown>): Promise<ApiResponse<T>> {
     return apiFetch<T>(url, {
         method: 'POST',
         body: body ? JSON.stringify(body) : undefined,
@@ -149,7 +149,7 @@ export async function apiPost<T = any>(url: string, body?: any): Promise<ApiResp
 /**
  * PUT request with authentication handling
  */
-export async function apiPut<T = any>(url: string, body?: any): Promise<ApiResponse<T>> {
+export async function apiPut<T = unknown>(url: string, body?: Record<string, unknown>): Promise<ApiResponse<T>> {
     return apiFetch<T>(url, {
         method: 'PUT',
         body: body ? JSON.stringify(body) : undefined,
@@ -159,7 +159,7 @@ export async function apiPut<T = any>(url: string, body?: any): Promise<ApiRespo
 /**
  * PATCH request with authentication handling
  */
-export async function apiPatch<T = any>(url: string, body?: any): Promise<ApiResponse<T>> {
+export async function apiPatch<T = unknown>(url: string, body?: Record<string, unknown>): Promise<ApiResponse<T>> {
     return apiFetch<T>(url, {
         method: 'PATCH',
         body: body ? JSON.stringify(body) : undefined,
@@ -169,14 +169,14 @@ export async function apiPatch<T = any>(url: string, body?: any): Promise<ApiRes
 /**
  * DELETE request with authentication handling
  */
-export async function apiDelete<T = any>(url: string): Promise<ApiResponse<T>> {
+export async function apiDelete<T = unknown>(url: string): Promise<ApiResponse<T>> {
     return apiFetch<T>(url, { method: 'DELETE' });
 }
 
 /**
  * Upload file with authentication handling
  */
-export async function apiUpload<T = any>(
+export async function apiUpload<T = unknown>(
     url: string,
     formData: FormData
 ): Promise<ApiResponse<T>> {
@@ -241,7 +241,7 @@ export async function apiUpload<T = any>(
  *   return; // Will auto-redirect to login
  * }
  */
-export function checkAuthError(response: Response, data: any): boolean {
+export function checkAuthError(response: Response, data: ApiResponse | ApiErrorResponse): boolean {
     if (response.status === 401 || isAuthenticationError(data)) {
         console.warn('Authentication error detected - clearing tokens and redirecting');
         handleAuthError();

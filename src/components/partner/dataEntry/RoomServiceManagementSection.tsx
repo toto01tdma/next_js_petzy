@@ -9,6 +9,7 @@ const { TextArea } = Input;
 // Interface for room service row data
 export interface RoomServiceRow {
     id: number;
+    backendId?: string; // Backend UUID for DELETE operations
     roomType: string;
     quantity: string;
     openTime: string;
@@ -26,6 +27,7 @@ interface RoomServiceFormProps {
         [key: string]: string;
     };
     onDataChange?: (data: RoomServiceRow[]) => void;
+    onDeleteService?: (backendId: string) => Promise<boolean>; // Handler for backend deletion
     onSubmit?: () => void;
 }
 
@@ -37,6 +39,7 @@ function RoomServiceForm({
     description = "รหัสห้องพักจะรันตามจำนวนห้องที่มี",
     headers,
     onDataChange,
+    onDeleteService,
     onSubmit
 }: RoomServiceFormProps) {
     const [localRoomServiceRows, setLocalRoomServiceRows] = useState<RoomServiceRow[]>(
@@ -83,7 +86,20 @@ function RoomServiceForm({
         }
     };
 
-    const deleteLocalRoomServiceRow = (id: number) => {
+    const deleteLocalRoomServiceRow = async (id: number) => {
+        // Find the row to check if it has a backend ID
+        const rowToDelete = localRoomServiceRows.find(row => row.id === id);
+        
+        // If row has backend ID, call delete handler first
+        if (rowToDelete?.backendId && onDeleteService) {
+            const deleteSuccess = await onDeleteService(rowToDelete.backendId);
+            if (!deleteSuccess) {
+                // If backend deletion failed, don't remove from frontend
+                return;
+            }
+        }
+        
+        // Remove from local state
         const filteredRows = localRoomServiceRows.filter(row => row.id !== id);
         setLocalRoomServiceRows(filteredRows);
         // Update the ref immediately
@@ -195,24 +211,32 @@ function RoomServiceForm({
 interface RoomServiceManagementSectionProps {
     defaultRoomServiceData: RoomServiceRow[];
     defaultSpecialServicesData: RoomServiceRow[];
+    defaultPetCareServicesData?: RoomServiceRow[]; // Add prop for pet care services
     roomServiceHeaders: { [key: string]: string };
     specialServiceHeaders: { [key: string]: string };
     petCareServiceHeaders: { [key: string]: string };
     onRoomServiceChange: (data: RoomServiceRow[]) => void;
     onSpecialServiceChange: (data: RoomServiceRow[]) => void;
     onPetCareServiceChange: (data: RoomServiceRow[]) => void;
+    onDeleteRoomService?: (backendId: string) => Promise<boolean>;
+    onDeleteSpecialService?: (backendId: string) => Promise<boolean>;
+    onDeletePetCareService?: (backendId: string) => Promise<boolean>;
     onSubmit: () => void;
 }
 
 export default function RoomServiceManagementSection({
     defaultRoomServiceData,
     defaultSpecialServicesData,
+    defaultPetCareServicesData = [], // Default to empty array
     roomServiceHeaders,
     specialServiceHeaders,
     petCareServiceHeaders,
     onRoomServiceChange,
     onSpecialServiceChange,
     onPetCareServiceChange,
+    onDeleteRoomService,
+    onDeleteSpecialService,
+    onDeletePetCareService,
     onSubmit
 }: RoomServiceManagementSectionProps) {
     return (
@@ -226,6 +250,7 @@ export default function RoomServiceManagementSection({
                 showDefaultData={true}
                 headers={roomServiceHeaders}
                 onDataChange={onRoomServiceChange}
+                onDeleteService={onDeleteRoomService}
                 onSubmit={onSubmit}
             />
 
@@ -239,21 +264,23 @@ export default function RoomServiceManagementSection({
                     description="รหัสบริการพิเศษจะรันตามจำนวนบริการที่มี"
                     headers={specialServiceHeaders}
                     onDataChange={onSpecialServiceChange}
+                    onDeleteService={onDeleteSpecialService}
                     onSubmit={onSubmit}
                 />
             </div>
 
             <div className="border border-black mt-15 mb-8"></div>
 
-            {/* Special Services Table */}
+            {/* Pet Care Services Table */}
             <div className="mt-8">
                 <RoomServiceForm
-                    data={defaultSpecialServicesData}
+                    data={defaultPetCareServicesData}
                     showDefaultData={true}
                     title="รูปแบบบริการรับฝาก"
                     description="รหัสบริการรับฝากจะรันตามจำนวนบริการที่มี"
                     headers={petCareServiceHeaders}
                     onDataChange={onPetCareServiceChange}
+                    onDeleteService={onDeletePetCareService}
                     onSubmit={onSubmit}
                 />
             </div>

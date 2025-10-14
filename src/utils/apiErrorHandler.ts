@@ -8,13 +8,13 @@ export interface ApiErrorResponse {
     error: string;
     message?: string;
     code?: string;
-    details?: any;
+    details?: unknown;
 }
 
 /**
  * API Success Response Interface
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
     success: boolean;
     message?: string;
     data?: T;
@@ -188,7 +188,7 @@ export const handleApiError = (response: Response, errorData: ApiErrorResponse) 
 /**
  * Generic API call wrapper with error handling
  */
-export const apiCall = async <T = any>(
+export const apiCall = async <T = unknown>(
     url: string,
     options: RequestInit = {}
 ): Promise<ApiResponse<T>> => {
@@ -241,8 +241,8 @@ export const apiCall = async <T = any>(
 /**
  * Check if error response indicates authentication failure
  */
-export const isAuthenticationError = (response: any): boolean => {
-    return (
+export const isAuthenticationError = (response: ApiErrorResponse | ApiResponse): boolean => {
+    return !!(
         response?.code === 'AUTHENTICATION_ERROR' ||
         response?.error === 'Invalid or expired token' ||
         response?.error === 'Unauthorized' ||

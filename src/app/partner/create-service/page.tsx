@@ -22,6 +22,7 @@ import type { RoomServiceRow } from '@/components/partner/dataEntry/RoomServiceC
 
 // Service type interfaces
 interface ApiRoomService {
+    id?: string; // Backend ID (UUID)
     room_type: string;
     quantity: number;
     open_time: string;
@@ -30,6 +31,7 @@ interface ApiRoomService {
 }
 
 interface ApiSpecialService {
+    id?: string; // Backend ID (UUID)
     service_type: string;
     quantity: string;
     open_time: string;
@@ -38,6 +40,7 @@ interface ApiSpecialService {
 }
 
 interface ApiPetCareService {
+    id?: string; // Backend ID (UUID)
     service_type: string;
     quantity: string;
     open_time?: string;
@@ -109,7 +112,7 @@ export default function CreateService() {
     const [showSpecialServiceTypeInput, setShowSpecialServiceTypeInput] = useState(false);
 
     // Accommodation Photos State
-    const [uploadedPhotos, setUploadedPhotos] = useState<{ [key: number]: UploadFile }>({});
+    const [uploadedPhotos] = useState<{ [key: number]: UploadFile }>({});
     const [roomServiceData, setRoomServiceData] = useState<RoomServiceRow[]>([
         { id: 1, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
         { id: 2, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
@@ -290,7 +293,8 @@ export default function CreateService() {
                     // Populate room services
                     if (data.data.room_services && data.data.room_services.length > 0) {
                         setRoomServiceData(data.data.room_services.map((service: ApiRoomService, index: number) => ({
-                            id: index + 1,
+                            id: index + 1, // Local ID for React keys
+                            backendId: service.id, // Backend UUID for DELETE operations
                             roomType: service.room_type || '',
                             quantity: service.quantity?.toString() || '',
                             openTime: service.open_time || '',
@@ -302,7 +306,8 @@ export default function CreateService() {
                     // Populate special services
                     if (data.data.special_services && data.data.special_services.length > 0) {
                         setSpecialServicesData(data.data.special_services.map((service: ApiSpecialService, index: number) => ({
-                            id: index + 1,
+                            id: index + 1, // Local ID for React keys
+                            backendId: service.id, // Backend UUID for DELETE operations
                             roomType: service.service_type || '',
                             quantity: service.quantity || '',
                             openTime: service.open_time || '',
@@ -314,7 +319,8 @@ export default function CreateService() {
                     // Populate pet care services
                     if (data.data.pet_care_services && data.data.pet_care_services.length > 0) {
                         setPetCareServicesData(data.data.pet_care_services.map((service: ApiPetCareService, index: number) => ({
-                            id: index + 1,
+                            id: index + 1, // Local ID for React keys
+                            backendId: service.id, // Backend UUID for DELETE operations
                             roomType: service.service_type || '',
                             quantity: service.quantity || '',
                             openTime: service.open_time || '',
@@ -333,6 +339,154 @@ export default function CreateService() {
 
         fetchServiceData();
     }, [router]);
+
+    // Delete handlers for backend services
+    const handleDeleteRoomService = async (backendId: string): Promise<boolean> => {
+        const token = localStorage.getItem('accessToken');
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/partner/services/${backendId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return false;
+            }
+
+            if (result.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'ลบบริการสำเร็จ',
+                    text: 'บริการห้องพักถูกลบออกจากระบบแล้ว',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return true;
+            } else {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่สามารถลบบริการได้',
+                    text: result.message || 'เกิดข้อผิดพลาด',
+                    confirmButtonColor: '#d33'
+                });
+                return false;
+            }
+        } catch (error) {
+            console.error('Error deleting room service:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                confirmButtonColor: '#d33'
+            });
+            return false;
+        }
+    };
+
+    const handleDeleteSpecialService = async (backendId: string): Promise<boolean> => {
+        const token = localStorage.getItem('accessToken');
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/partner/services/${backendId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return false;
+            }
+
+            if (result.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'ลบบริการสำเร็จ',
+                    text: 'บริการพิเศษถูกลบออกจากระบบแล้ว',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return true;
+            } else {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่สามารถลบบริการได้',
+                    text: result.message || 'เกิดข้อผิดพลาด',
+                    confirmButtonColor: '#d33'
+                });
+                return false;
+            }
+        } catch (error) {
+            console.error('Error deleting special service:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                confirmButtonColor: '#d33'
+            });
+            return false;
+        }
+    };
+
+    const handleDeletePetCareService = async (backendId: string): Promise<boolean> => {
+        const token = localStorage.getItem('accessToken');
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/partner/services/${backendId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            // Check for authentication error
+            if (checkAuthError(response, result)) {
+                return false;
+            }
+
+            if (result.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'ลบบริการสำเร็จ',
+                    text: 'บริการรับฝากสัตว์เลี้ยงถูกลบออกจากระบบแล้ว',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return true;
+            } else {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่สามารถลบบริการได้',
+                    text: result.message || 'เกิดข้อผิดพลาด',
+                    confirmButtonColor: '#d33'
+                });
+                return false;
+            }
+        } catch (error) {
+            console.error('Error deleting pet care service:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                confirmButtonColor: '#d33'
+            });
+            return false;
+        }
+    };
 
     // Complete form submission handler
     const handleCompleteSubmit = async () => {
@@ -699,25 +853,6 @@ export default function CreateService() {
         handleServiceConfigChange('services', currentServices);
     };
 
-    const handlePhotoUpload = (index: number, file: File) => {
-        const newPhotos = { ...uploadedPhotos };
-        newPhotos[index] = {
-            uid: `${index}-${Date.now()}`,
-            name: file.name,
-            status: 'done',
-            url: URL.createObjectURL(file),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            originFileObj: file as any,
-        };
-        setUploadedPhotos(newPhotos);
-    };
-
-    const handlePhotoRemove = (index: number) => {
-        const newPhotos = { ...uploadedPhotos };
-        delete newPhotos[index];
-        setUploadedPhotos(newPhotos);
-    };
-
     const renderStepContent = () => {
         switch (currentStep) {
             case 1:
@@ -763,6 +898,7 @@ export default function CreateService() {
                     <RoomServiceManagementSection
                         defaultRoomServiceData={roomServiceData}
                         defaultSpecialServicesData={specialServicesData}
+                        defaultPetCareServicesData={petCareServicesData}
                         roomServiceHeaders={{
                             roomType: "รูปแบบห้องพักที่คุณเลือก",
                             quantity: "จำนวนห้องพัก",
@@ -787,6 +923,9 @@ export default function CreateService() {
                         onRoomServiceChange={setRoomServiceData}
                         onSpecialServiceChange={setSpecialServicesData}
                         onPetCareServiceChange={setPetCareServicesData}
+                        onDeleteRoomService={handleDeleteRoomService}
+                        onDeleteSpecialService={handleDeleteSpecialService}
+                        onDeletePetCareService={handleDeletePetCareService}
                         onSubmit={() => {}}
                     />
                 );
