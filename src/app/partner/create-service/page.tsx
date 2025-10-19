@@ -18,9 +18,24 @@ import BusinessDetailsSection from '@/components/partner/dataEntry/BusinessDetai
 import FileUploadSection from '@/components/partner/dataEntry/FileUploadSection';
 import HotelServiceConfigSection from '@/components/partner/dataEntry/HotelServiceConfigSection';
 import RoomServiceManagementSection from '@/components/partner/dataEntry/RoomServiceManagementSection';
+import AccommodationPhotosSection from '@/components/partner/dataEntry/AccommodationPhotosSection';
 import type { RoomServiceRow } from '@/components/partner/dataEntry/RoomServiceConfigSection';
+import { DownOutlined, UpOutlined } from '@ant-design/icons';
+import { Input } from 'antd';
 
 // Service type interfaces
+interface DynamicServiceForm {
+    id: string;
+    title: string;
+    data: {
+        id: number;
+        code: string;
+        name: string;
+        openTime: string;
+        closeTime: string;
+        price: string;
+    }[];
+}
 interface ApiRoomService {
     id?: string; // Backend ID (UUID)
     room_type: string;
@@ -112,7 +127,8 @@ export default function CreateService() {
     const [showSpecialServiceTypeInput, setShowSpecialServiceTypeInput] = useState(false);
 
     // Accommodation Photos State
-    const [uploadedPhotos] = useState<{ [key: number]: UploadFile }>({});
+    const [uploadedPhotos, setUploadedPhotos] = useState<{ [key: number]: UploadFile }>({});
+    const [accommodationDescription, setAccommodationDescription] = useState('');
     const [roomServiceData, setRoomServiceData] = useState<RoomServiceRow[]>([
         { id: 1, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
         { id: 2, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
@@ -124,6 +140,11 @@ export default function CreateService() {
     const [petCareServicesData, setPetCareServicesData] = useState<RoomServiceRow[]>([
         { id: 1, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
     ]);
+
+    // Step 4: Dynamic Service Forms State
+    const [dynamicRoomServices, setDynamicRoomServices] = useState<DynamicServiceForm[]>([]);
+    const [dynamicSpecialServices, setDynamicSpecialServices] = useState<DynamicServiceForm[]>([]);
+    const [dynamicPetCareServices, setDynamicPetCareServices] = useState<DynamicServiceForm[]>([]);
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -327,6 +348,52 @@ export default function CreateService() {
                             closeTime: service.close_time || '',
                             price: service.price?.toString() || ''
                         })));
+                    }
+
+                    // Populate accommodation photos (Step 3)
+                    if (data.data.accommodation_photos) {
+                        const photos = data.data.accommodation_photos;
+                        const newPhotos: { [key: number]: UploadFile } = {};
+
+                        // Helper function to get full image URL
+                        const getFullImageUrl = (path: string) => {
+                            if (!path) return '';
+                            if (path.startsWith('http://') || path.startsWith('https://')) {
+                                return path;
+                            }
+                            return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+                        };
+
+                        // Cover image (index 0)
+                        if (photos.cover_image_url) {
+                            newPhotos[0] = {
+                                uid: '0',
+                                name: 'cover_image',
+                                status: 'done',
+                                url: getFullImageUrl(photos.cover_image_url)
+                            };
+                        }
+
+                        // Room images (indices 1-6)
+                        if (photos.room_image_urls && Array.isArray(photos.room_image_urls)) {
+                            photos.room_image_urls.forEach((url: string, index: number) => {
+                                if (url) {
+                                    newPhotos[index + 1] = {
+                                        uid: `${index + 1}`,
+                                        name: `room_image_${index + 1}`,
+                                        status: 'done',
+                                        url: getFullImageUrl(url)
+                                    };
+                                }
+                            });
+                        }
+
+                        setUploadedPhotos(newPhotos);
+
+                        // Set accommodation description
+                        if (photos.description) {
+                            setAccommodationDescription(photos.description);
+                        }
                     }
                 }
             } catch (error) {
@@ -679,7 +746,8 @@ export default function CreateService() {
                 // Step 3: Accommodation Photos
                 accommodation_photos: {
                     cover_image_url: coverImageUrl,
-                    room_image_urls: roomImageUrls
+                    room_image_urls: roomImageUrls,
+                    description: accommodationDescription
                 },
 
                 // Step 3: Room Services
@@ -800,6 +868,26 @@ export default function CreateService() {
         setUploadedDocs(newDocs);
     };
 
+    // Accommodation Photos Handlers
+    const handlePhotoUpload = (index: number, file: File) => {
+        const newPhotos = { ...uploadedPhotos };
+        newPhotos[index] = {
+            uid: `${index}-${Date.now()}`,
+            name: file.name,
+            status: 'done',
+            url: URL.createObjectURL(file),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            originFileObj: file as any,
+        };
+        setUploadedPhotos(newPhotos);
+    };
+
+    const handlePhotoRemove = (index: number) => {
+        const newPhotos = { ...uploadedPhotos };
+        delete newPhotos[index];
+        setUploadedPhotos(newPhotos);
+    };
+
     const handleServiceConfigChange = (field: string, value: string | boolean | string[]) => {
         setHotelServiceConfig(prev => ({ ...prev, [field]: value }));
     };
@@ -853,6 +941,197 @@ export default function CreateService() {
         handleServiceConfigChange('services', currentServices);
     };
 
+    // Generate dynamic service forms for Step 4 based on Step 3 data
+    const generateDynamicServiceForms = () => {
+        // Process room services - create forms based on number of rooms
+        if (roomServiceData && roomServiceData.length > 0) {
+            const roomForms: DynamicServiceForm[] = roomServiceData
+                .filter(service => service.roomType && service.quantity) // Only include filled rows
+                .map((service, index) => ({
+                    id: `room-service-${index}`,
+                    title: `${service.roomType} (${service.quantity} ห้อง)`,
+                    data: Array.from({ length: parseInt(service.quantity) || 1 }, (_, i) => ({
+                        id: i + 1,
+                        code: `${service.roomType.substring(0, 2).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
+                        name: service.roomType,
+                        openTime: service.openTime || '00:00',
+                        closeTime: service.closeTime || '00:00',
+                        price: service.price || '0'
+                    }))
+                }));
+            setDynamicRoomServices(roomForms);
+        }
+        
+        // Process special services - create separate forms for each type
+        if (specialServicesData && specialServicesData.length > 0) {
+            const specialForms: DynamicServiceForm[] = specialServicesData
+                .filter(service => service.roomType) // Only include filled rows
+                .map((service, index) => ({
+                    id: `special-service-${index}`,
+                    title: service.roomType,
+                    data: [{
+                        id: 1,
+                        code: `SP-${String(index + 1).padStart(3, '0')}`,
+                        name: service.roomType,
+                        openTime: service.openTime || '00:00',
+                        closeTime: service.closeTime || '00:00',
+                        price: service.price || '0'
+                    }]
+                }));
+            setDynamicSpecialServices(specialForms);
+        }
+        
+        // Process pet care services - create separate forms for each type
+        if (petCareServicesData && petCareServicesData.length > 0) {
+            const petCareForms: DynamicServiceForm[] = petCareServicesData
+                .filter(service => service.roomType) // Only include filled rows
+                .map((service, index) => ({
+                    id: `pet-care-service-${index}`,
+                    title: service.roomType,
+                    data: [{
+                        id: 1,
+                        code: `PC-${String(index + 1).padStart(3, '0')}`,
+                        name: service.roomType,
+                        openTime: service.openTime || '00:00',
+                        closeTime: service.closeTime || '00:00',
+                        price: service.price || '0'
+                    }]
+                }));
+            setDynamicPetCareServices(petCareForms);
+        }
+    };
+
+    // Handler for Step 4 field changes
+    const handleStep4FieldChange = (
+        serviceType: 'room' | 'special' | 'petcare',
+        formId: string,
+        rowId: number,
+        field: 'openTime' | 'closeTime' | 'price',
+        value: string
+    ) => {
+        if (serviceType === 'room') {
+            setDynamicRoomServices(prev =>
+                prev.map(form =>
+                    form.id === formId
+                        ? {
+                              ...form,
+                              data: form.data.map(row =>
+                                  row.id === rowId ? { ...row, [field]: value } : row
+                              )
+                          }
+                        : form
+                )
+            );
+        } else if (serviceType === 'special') {
+            setDynamicSpecialServices(prev =>
+                prev.map(form =>
+                    form.id === formId
+                        ? {
+                              ...form,
+                              data: form.data.map(row =>
+                                  row.id === rowId ? { ...row, [field]: value } : row
+                              )
+                          }
+                        : form
+                )
+            );
+        } else if (serviceType === 'petcare') {
+            setDynamicPetCareServices(prev =>
+                prev.map(form =>
+                    form.id === formId
+                        ? {
+                              ...form,
+                              data: form.data.map(row =>
+                                  row.id === rowId ? { ...row, [field]: value } : row
+                              )
+                          }
+                        : form
+                )
+            );
+        }
+    };
+
+    // Service Form Component for Step 4
+    const ServiceForm = ({
+        data = [],
+        title,
+        headers,
+        titleColor = "#1F4173",
+        onFieldChange
+    }: {
+        data: { id: number; code: string; name: string; openTime: string; closeTime: string; price: string }[];
+        title: string;
+        headers: { [key: string]: string };
+        titleColor?: string;
+        onFieldChange: (rowId: number, field: 'openTime' | 'closeTime' | 'price', value: string) => void;
+    }) => {
+        const [isExpanded, setIsExpanded] = useState(true);
+        
+        return (
+            <div className="mb-8">
+                <div
+                    className="px-4 py-2 rounded-lg w-[300px] flex items-center justify-between mb-2 cursor-pointer"
+                    style={{ backgroundColor: titleColor }}
+                    onClick={() => setIsExpanded(!isExpanded)}
+                >
+                    <span style={{ color: '#FFFFFF' }}>{title}</span>
+                    <div className="border-white border-2 rounded-lg pt-0.5 pb-0.25 px-1">
+                        {isExpanded ?
+                            <UpOutlined style={{ fontSize: '14px', color: 'white' }} /> :
+                            <DownOutlined style={{ fontSize: '14px', color: 'white' }} />
+                        }
+                    </div>
+                </div>
+
+                <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                >
+                    <div className="space-y-4 pt-4">
+                        {/* Header Row */}
+                        <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
+                            {Object.entries(headers).map(([key, value]) => (
+                                <div key={key} className="bg-teal-500 px-4 py-2 rounded-lg" style={{ color: '#FFFFFF' }}>
+                                    <span className="text-sm">{value}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Data Rows */}
+                        {data.map((row) => (
+                            <div key={row.id} className="grid gap-4 items-center" style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
+                                {Object.keys(headers).map((fieldKey) => {
+                                    const isEditable = fieldKey === 'openTime' || fieldKey === 'closeTime' || fieldKey === 'price';
+                                    return (
+                                        <div key={fieldKey} className="border rounded-lg px-2 py-2 text-center">
+                                            <Input
+                                                type={fieldKey.includes('Time') ? 'time' : 'text'}
+                                                value={row[fieldKey as keyof typeof row] as string}
+                                                className="border-0 p-0 text-center text-sm"
+                                                readOnly={!isEditable}
+                                                onChange={(e) => {
+                                                    if (isEditable) {
+                                                        onFieldChange(row.id, fieldKey as 'openTime' | 'closeTime' | 'price', e.target.value);
+                                                    }
+                                                }}
+                                                suffix={fieldKey.includes('price') ? 'บาท' : undefined}
+                                                style={{
+                                                    backgroundColor: isEditable ? '#FFFFFF' : '#F9FAFB',
+                                                    cursor: isEditable ? 'text' : 'default'
+                                                }}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const renderStepContent = () => {
         switch (currentStep) {
             case 1:
@@ -895,11 +1174,21 @@ export default function CreateService() {
                 );
             case 3:
                 return (
-                    <RoomServiceManagementSection
-                        defaultRoomServiceData={roomServiceData}
-                        defaultSpecialServicesData={specialServicesData}
-                        defaultPetCareServicesData={petCareServicesData}
-                        roomServiceHeaders={{
+                    <>
+                        <AccommodationPhotosSection
+                            uploadedImages={uploadedPhotos}
+                            description={accommodationDescription}
+                            onImageUpload={handlePhotoUpload}
+                            onImageRemove={handlePhotoRemove}
+                            onDescriptionChange={setAccommodationDescription}
+                        />
+
+                        <div className="mt-8">
+                            <RoomServiceManagementSection
+                                defaultRoomServiceData={roomServiceData}
+                                defaultSpecialServicesData={specialServicesData}
+                                defaultPetCareServicesData={petCareServicesData}
+                                roomServiceHeaders={{
                             roomType: "รูปแบบห้องพักที่คุณเลือก",
                             quantity: "จำนวนห้องพัก",
                             openTime: "เวลาเปิด",
@@ -928,6 +1217,100 @@ export default function CreateService() {
                         onDeletePetCareService={handleDeletePetCareService}
                         onSubmit={() => {}}
                     />
+                        </div>
+                    </>
+                );
+            case 4:
+                return (
+                    <div className="py-6">
+                        {/* Dynamic Room Services Section */}
+                        {dynamicRoomServices.length > 0 && (
+                            <>
+                                <div className="flex justify-center items-center rounded-lg py-1.5 mb-5 w-[220px]" style={{ backgroundColor: '#00B6AA' }}>
+                                    <span className="text-lg" style={{ color: '#FFFFFF' }}>รูปแบบห้องพักของคุณ</span>
+                                </div>
+                                {dynamicRoomServices.map((roomService) => (
+                                    <ServiceForm
+                                        key={roomService.id}
+                                        data={roomService.data}
+                                        title={roomService.title}
+                                        headers={{
+                                            code: "รหัสห้องพัก",
+                                            name: "รูปแบบห้องพักที่คุณเลือก",
+                                            openTime: "เวลาเปิด",
+                                            closeTime: "เวลาปิด",
+                                            price: "ราคาที่กำหนด"
+                                        }}
+                                        onFieldChange={(rowId, field, value) => 
+                                            handleStep4FieldChange('room', roomService.id, rowId, field, value)
+                                        }
+                                    />
+                                ))}
+                                <div className="border border-black mt-15 mb-8"></div>
+                            </>
+                        )}
+
+                        {/* Dynamic Special Services Section */}
+                        {dynamicSpecialServices.length > 0 && (
+                            <>
+                                <div className="flex justify-center items-center rounded-lg py-1.5 mb-5 w-[220px]" style={{ backgroundColor: '#00B6AA' }}>
+                                    <span className="text-lg" style={{ color: '#FFFFFF' }}>รูปแบบบริการพิเศษ</span>
+                                </div>
+                                {dynamicSpecialServices.map((specialService) => (
+                                    <ServiceForm
+                                        key={specialService.id}
+                                        data={specialService.data}
+                                        title={specialService.title}
+                                        headers={{
+                                            code: "รหัสบริการ",
+                                            name: "ประเภทบริการ",
+                                            openTime: "เวลาเปิด",
+                                            closeTime: "เวลาปิด",
+                                            price: "ราคาที่กำหนด"
+                                        }}
+                                        onFieldChange={(rowId, field, value) => 
+                                            handleStep4FieldChange('special', specialService.id, rowId, field, value)
+                                        }
+                                    />
+                                ))}
+                                <div className="border border-black mt-15 mb-8"></div>
+                            </>
+                        )}
+
+                        {/* Dynamic Pet Care Services Section */}
+                        {dynamicPetCareServices.length > 0 && (
+                            <>
+                                <div className="flex justify-center items-center rounded-lg py-1.5 mb-5 w-[300px]" style={{ backgroundColor: '#00B6AA' }}>
+                                    <span className="text-lg" style={{ color: '#FFFFFF' }}>รูปแบบบริการรับฝากสัตว์เลี้ยง</span>
+                                </div>
+                                {dynamicPetCareServices.map((petCareService) => (
+                                    <ServiceForm
+                                        key={petCareService.id}
+                                        data={petCareService.data}
+                                        title={petCareService.title}
+                                        headers={{
+                                            code: "รหัสบริการ",
+                                            name: "ประเภทบริการ",
+                                            openTime: "เวลาเปิด",
+                                            closeTime: "เวลาปิด",
+                                            price: "ราคาที่กำหนด"
+                                        }}
+                                        onFieldChange={(rowId, field, value) => 
+                                            handleStep4FieldChange('petcare', petCareService.id, rowId, field, value)
+                                        }
+                                    />
+                                ))}
+                            </>
+                        )}
+
+                        {/* Show message if no services configured */}
+                        {dynamicRoomServices.length === 0 && dynamicSpecialServices.length === 0 && dynamicPetCareServices.length === 0 && (
+                            <div className="text-center py-8">
+                                <p className="text-gray-600 text-lg">ไม่พบข้อมูลบริการ</p>
+                                <p className="text-gray-500 text-sm mt-2">กรุณากลับไปกรอกข้อมูลในขั้นตอนที่ 3</p>
+                            </div>
+                        )}
+                    </div>
                 );
             default:
                 return null;
@@ -937,7 +1320,8 @@ export default function CreateService() {
     const stepTitles = [
         'ข้อมูลส่วนตัวและธุรกิจ',
         'การกำหนดค่าบริการโรงแรม',
-        'รูปภาพและรายละเอียดบริการ'
+        'รูปภาพที่พักและรายละเอียดบริการ',
+        'ยืนยันข้อมูลบริการ'
     ];
 
     return (
@@ -978,7 +1362,7 @@ export default function CreateService() {
                     {/* Step Indicator */}
                     <div className="flex justify-center mb-8">
                         <div className="flex items-center space-x-4">
-                            {[1, 2, 3].map((step) => (
+                            {[1, 2, 3, 4].map((step) => (
                                 <div key={step} className="flex items-center">
                                     <div
                                         className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
@@ -991,7 +1375,7 @@ export default function CreateService() {
                                     >
                                         {step}
                                     </div>
-                                    {step < 3 && (
+                                    {step < 4 && (
                                         <div
                                             className={`w-20 h-1 ${
                                                 currentStep > step ? 'bg-green-500' : 'bg-gray-300'
@@ -1032,15 +1416,20 @@ export default function CreateService() {
                         </Button>
 
                         <div className="text-sm text-gray-600">
-                            ขั้นตอน {currentStep} จาก 3
+                            ขั้นตอน {currentStep} จาก 4
                         </div>
 
                         <Button
                             size="large"
                             type="primary"
                             onClick={() => {
-                                if (currentStep < 3) {
+                                if (currentStep < 4) {
+                                    if (currentStep === 3) {
+                                        // Generate dynamic service forms before moving to Step 4
+                                        generateDynamicServiceForms();
+                                    }
                                     setCurrentStep(currentStep + 1);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
                                 } else {
                                     handleCompleteSubmit();
                                 }
@@ -1050,7 +1439,7 @@ export default function CreateService() {
                             loading={isSubmitting}
                             disabled={isSubmitting}
                         >
-                            {currentStep === 3 ? (isSubmitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล') : 'ถัดไป'}
+                            {currentStep === 4 ? (isSubmitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล') : 'ถัดไป'}
                         </Button>
                     </div>
                         </>

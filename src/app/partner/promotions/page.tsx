@@ -413,9 +413,9 @@ export default function ManagePromotions() {
                                         <HomeOutlined className='text-3xl' />
                                     </div>
                                     <div className="flex">
-                                        <p className="text-5xl mx-2" style={{ marginBottom: '0.5rem' }}>
+                                        <div className="text-5xl mx-2" style={{ marginBottom: '0.5rem' }}>
                                             {isFetching ? <Spin size="large" /> : totalPromotions}
-                                        </p>
+                                        </div>
                                         <p className="text-5xl mx-2" style={{ marginBottom: '0rem' }}>รายการ</p>
                                     </div>
                                     <p className="text-sm" style={{ marginBottom: '0rem' }}>รายการที่คุณเข้าร่วม</p>
@@ -431,9 +431,9 @@ export default function ManagePromotions() {
                                         <CheckCircleOutlined className='text-3xl' />
                                     </div>
                                     <div className="flex">
-                                        <p className="text-5xl mx-2" style={{ marginBottom: '0.5rem' }}>
+                                        <div className="text-5xl mx-2" style={{ marginBottom: '0.5rem' }}>
                                             {isFetching ? <Spin size="large" /> : promotions.filter(p => p.status === 'active').length}
-                                        </p>
+                                        </div>
                                         <p className="text-5xl mx-2" style={{ marginBottom: '0rem' }}>รายการ</p>
                                     </div>
                                     <p className="text-sm" style={{ marginBottom: '0rem' }}>โปรโมชันที่กำลังใช้งาน</p>

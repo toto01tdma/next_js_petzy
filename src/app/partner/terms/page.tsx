@@ -1,19 +1,143 @@
 'use client';
 
-import { useState } from 'react';
-import Sidebar from '@/components/partner/shared/Sidebar';
+import { useState, useEffect } from 'react';
+import { Spin } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
+import Image from 'next/image';
+import Sidebar from '@/components/partner/shared/Sidebar';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import ApprovalModal from '@/components/partner/shared/ApprovalModal';
+import { API_BASE_URL } from '@/config/api';
+
+interface PolicyData {
+    id: string;
+    file_url: string;
+    file_type: string;
+    uploaded_at: string;
+}
 
 export default function PartnerContracts() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [policyData, setPolicyData] = useState<PolicyData | null>(null);
+    const [loading, setLoading] = useState(true);
     
     // Approval status check
     const { isApproved, isLoading: isLoadingApproval } = useApprovalStatus();
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
+    };
+
+    // Fetch policy data
+    useEffect(() => {
+        fetchPolicyData();
+    }, []);
+
+    const fetchPolicyData = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`${API_BASE_URL}/api/partner/policy`);
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data) {
+                    setPolicyData(result.data);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching policy:', error);
+            // Don't show error - policy might not exist yet
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const renderPolicyContent = () => {
+        if (loading) {
+            return (
+                <div className="flex items-center justify-center py-20">
+                    <Spin size="large" />
+                </div>
+            );
+        }
+
+        if (!policyData) {
+            return (
+                <div className="space-y-4 text-gray-700 leading-relaxed">
+                    <p>
+                        สัญญาและนโยบายคู่ค้า xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                    </p>
+                    
+                    <p>
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                    </p>
+                    
+                    <p>
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                    </p>
+                    
+                    <p>
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                    </p>
+                </div>
+            );
+        }
+
+        const fullUrl = policyData.file_url.startsWith('http') 
+            ? policyData.file_url 
+            : `${API_BASE_URL}${policyData.file_url}`;
+        console.log(fullUrl);
+        if (policyData.file_type === 'application/pdf') {
+            return (
+                <div className="text-center py-8">
+                    {/* <FilePdfOutlined style={{ fontSize: '64px', color: '#FF6B6B' }} className="mb-4" />
+                    <p className="text-gray-600 mb-4">นโยบายความเป็นส่วนตัว (PDF)</p> */}
+                    <a 
+                        href={fullUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                        เปิดดูเอกสาร PDF
+                    </a>
+                    <div className="mt-4">
+                        <iframe
+                            src={fullUrl}
+                            className="w-full border border-gray-300 rounded-lg"
+                            style={{ height: '600px' }}
+                            title="Privacy Policy PDF"
+                        />
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="text-center">
+                {/* <FileImageOutlined style={{ fontSize: '48px', color: '#4096FF' }} className="mb-4" />
+                <p className="text-gray-600 mb-4">นโยบายความเป็นส่วนตัว</p> */}
+                <Image
+                    src={fullUrl}
+                    alt="Privacy Policy"
+                    width={800}
+                    height={600}
+                    style={{ maxWidth: '100%', height: 'auto', objectFit: 'contain' }}
+                    className="rounded-lg"
+                />
+            </div>
+        );
     };
 
     return (
@@ -48,35 +172,7 @@ export default function PartnerContracts() {
                                     สัญญาและนโยบายคู่ค้า
                                 </h2>
                                 
-                                <div className="space-y-4 text-gray-700 leading-relaxed">
-                                    <p>
-                                        สัญญาและนโยบายคู่ค้า xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                    </p>
-                                    
-                                    <p>
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                    </p>
-                                    
-                                    <p>
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                    </p>
-                                    
-                                    <p>
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                                    </p>
-                                </div>
+                                {renderPolicyContent()}
                             </div>
                         </div>
                     </div>

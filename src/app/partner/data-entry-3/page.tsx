@@ -568,7 +568,6 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[1] ? "mt-0" : "h-[100px]"}
-                                            imageHeight={120}
                                         />
                                     </div>
                                     <div className="p-0">
@@ -596,7 +595,6 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[2] ? "mt-0" : "h-[100px]"}
-                                            imageHeight={120}
                                         />
                                     </div>
                                     <div className="p-0">
@@ -624,7 +622,6 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[3] ? "mt-0" : "h-[100px]"}
-                                            imageHeight={120}
                                         />
                                     </div>
                                     <div className="p-0">
@@ -652,7 +649,6 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[4] ? "mt-0" : "h-[100px]"}
-                                            imageHeight={120}
                                         />
                                     </div>
                                     <div className="p-0">
@@ -680,7 +676,6 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[5] ? "mt-0" : "h-[100px]"}
-                                            imageHeight={120}
                                         />
                                     </div>
                                     <div className="p-0">
@@ -708,7 +703,6 @@ export default function DataEntry3() {
                                             descriptionClass="text-center"
                                             slotHeight="h-[170px]"
                                             childHeight={uploadedImages[6] ? "mt-0" : "h-[100px]"}
-                                            imageHeight={120}
                                         />
                                     </div>
                                 </div>

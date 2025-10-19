@@ -1,7 +1,8 @@
 'use client';
 
-import { Upload, Image } from 'antd';
+import { Upload } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
+import Image from 'next/image';
 import type { UploadFile } from 'antd';
 import { useState } from 'react';
 
@@ -15,7 +16,6 @@ interface SingleFileAttachmentProps {
     childHeight?: string;
     labelClass?: string;
     descriptionClass?: string;
-    imageHeight?: number;
 }
 
 export default function SingleFileAttachment({
@@ -26,7 +26,6 @@ export default function SingleFileAttachment({
     description,
     slotHeight = "h-[300px]",
     childHeight = "h-[190px]",
-    imageHeight = 190,
     labelClass = "",
     descriptionClass = ""
 }: SingleFileAttachmentProps) {
@@ -61,22 +60,19 @@ export default function SingleFileAttachment({
                     {uploadedImage ? (
                         <>
                             {!imageError ? (
-                                <Image
-                                    src={uploadedImage.url}
-                                    alt={label}
-                                    className="w-full h-full object-cover rounded"
-                                    width={300}
-                                    height={imageHeight}
-                                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                                    preview={{
-                                        src: uploadedImage.url,
-                                    }}
-                                    onError={() => {
-                                        console.error(`Failed to load image: ${uploadedImage.url}`);
-                                        setImageError(true);
-                                    }}
-                                    fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
-                                />
+                                <div className="w-full h-full relative">
+                                    <Image
+                                        src={uploadedImage.url || ''}
+                                        alt={label}
+                                        fill
+                                        style={{ objectFit: 'cover' }}
+                                        className="rounded"
+                                        onError={() => {
+                                            console.error(`Failed to load image: ${uploadedImage.url}`);
+                                            setImageError(true);
+                                        }}
+                                    />
+                                </div>
                             ) : (
                                 <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
                                     <p className="text-sm">Failed to load image</p>
@@ -85,7 +81,7 @@ export default function SingleFileAttachment({
                             )}
                             <div
                                 className="absolute top-1 right-1 bg-red-500 rounded-full w-6 h-6 flex items-center justify-center text-sm cursor-pointer hover:bg-red-600"
-                                style={{ color: '#FFFFFF' }}
+                                style={{ color: '#FFFFFF', zIndex: 10 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onImageRemove();

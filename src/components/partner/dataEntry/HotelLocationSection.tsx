@@ -6,6 +6,8 @@ interface HotelLocationSectionProps {
     formData: {
         accommodationName: string;
         accommodationNameEn: string;
+        accommodationNameConfirm?: string;
+        accommodationNameEnConfirm?: string;
         tradeRegistrationNumber: string;
         address: string;
         businessEmail: string;
@@ -15,12 +17,14 @@ interface HotelLocationSectionProps {
     };
     onInputChange: (field: string, value: string) => void;
     disabled?: boolean;
+    showConfirmationFields?: boolean;
 }
 
 export default function HotelLocationSection({
     formData,
     onInputChange,
-    disabled = false
+    disabled = false,
+    showConfirmationFields = false
 }: HotelLocationSectionProps) {
     return (
         <>
@@ -52,6 +56,25 @@ export default function HotelLocationSection({
                                 *กรุณากรอกชื่อจริงครั้งเพื่อยืนยันความถูกต้อง
                             </p>
                         </div>
+
+                        {showConfirmationFields && (
+                            <div>
+                                <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
+                                    ชื่อ โรงแรม หรือ สถานที่พัก (ยืนยัน) *
+                                </label>
+                                <Input
+                                    value={formData.accommodationNameConfirm}
+                                    onChange={(e) => onInputChange('accommodationNameConfirm', e.target.value)}
+                                    placeholder="กรุณากรอกชื่อจริงอีกครั้งเพื่อยืนยัน"
+                                    className="w-full h-12 text-base"
+                                    style={{ height: '48px', fontSize: '16px' }}
+                                    disabled={disabled}
+                                />
+                                <p className="text-sm text-gray-500 mt-1" style={{ marginBottom: 0, marginTop: '0.4rem' }}>
+                                    *กรุณากรอกชื่อให้ตรงกับด้านบนเพื่อยืนยันความถูกต้อง
+                                </p>
+                            </div>
+                        )}
 
                         <div>
                             <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
@@ -135,6 +158,25 @@ export default function HotelLocationSection({
                                 ...
                             </p>
                         </div>
+
+                        {showConfirmationFields && (
+                            <div>
+                                <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
+                                    ชื่อ โรงแรม หรือ สถานที่พัก (ยืนยัน) *(ภาษาอังกฤษ)
+                                </label>
+                                <Input
+                                    value={formData.accommodationNameEnConfirm}
+                                    onChange={(e) => onInputChange('accommodationNameEnConfirm', e.target.value)}
+                                    placeholder="กรุณากรอกชื่อภาษาอังกฤษอีกครั้งเพื่อยืนยัน"
+                                    className="w-full h-12 text-base"
+                                    style={{ height: '48px', fontSize: '16px' }}
+                                    disabled={disabled}
+                                />
+                                <p className="text-sm mt-1" style={{ marginBottom: 0, marginTop: '0.4rem', color: '#FFFFFF' }}>
+                                    ...
+                                </p>
+                            </div>
+                        )}
 
                         <div>
                             <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
