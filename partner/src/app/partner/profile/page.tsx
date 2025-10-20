@@ -58,6 +58,12 @@ export default function UserProfile() {
     });
 
     useEffect(() => {
+        // In preview mode, skip authentication check
+        if (!USE_API_MODE) {
+            fetchProfile();
+            return;
+        }
+        
         const token = localStorage.getItem('accessToken');
         if (!token) {
             router.push('/login');

@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 
+const USE_API_MODE = process.env.NEXT_PUBLIC_USE_API_MODE === 'true';
+
 /**
  * Hook to read approval status from localStorage (set during login)
  * This hook no longer makes API calls - the status is fetched and stored during login
+ * In preview mode (USE_API_MODE=false), always returns approved status
  */
 export const useApprovalStatus = () => {
     const [approvalStatus, setApprovalStatus] = useState<string>('DRAFT');
@@ -10,6 +13,14 @@ export const useApprovalStatus = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     useEffect(() => {
+        // In preview mode, always approve
+        if (!USE_API_MODE) {
+            setApprovalStatus('APPROVED');
+            setIsApproved(true);
+            setIsLoading(false);
+            return;
+        }
+        
         // Read approval status from localStorage (set during login)
         const storedStatus = localStorage.getItem('approvalStatus');
         

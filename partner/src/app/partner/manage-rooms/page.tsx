@@ -79,6 +79,13 @@ export default function ManageRooms() {
     };
 
     useEffect(() => {
+        // In preview mode, skip authentication check
+        if (!USE_API_MODE) {
+            fetchRoomSummary();
+            fetchRoomDetails();
+            return;
+        }
+        
         const token = localStorage.getItem('accessToken');
         if (!token) {
             router.push('/login');
