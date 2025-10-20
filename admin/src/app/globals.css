@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --font-family-sans: var(--font-kanit), 'Kanit', ui-sans-serif, system-ui;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --font-kanit: 'Kanit', sans-serif;
+}
+
+/* Force white background and black text regardless of browser color scheme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-kanit), 'Kanit', sans-serif;
+}
+
+/* Force all elements to have white background and black text */
+* {
+  /* background-color: inherit; */
+  color: inherit;
+}
+
+/* Override any potential dark mode styles */
+html {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Apply Kanit font to all elements */
+* {
+  font-family: var(--font-kanit), 'Kanit', sans-serif;
+}
+
+/* 
+  Note: We're using React 19 with Ant Design v5.27.3
+  Ant Design officially supports React 16-18, but works fine with React 19
+  The compatibility warning is suppressed via WarningSupressor component
+*/
+
+/* Custom Upload Styles */
+.ant-upload-select-picture-card {
+  width: 100% !important;
+  height: 120px !important;
+}
+
+.ant-upload-list-picture-card .ant-upload-list-item {
+  width: 100% !important;
+  height: 120px !important;
+}
+
+.ant-upload-list-picture-card-container {
+  width: 100% !important;
+}
+
+/* Override any potential system dark mode preferences */
+@media (prefers-color-scheme: dark) {
+  * {
+    color-scheme: light !important;
+  }
+  
+  input, textarea, select {
+    color-scheme: light !important;
+  }
+}
+

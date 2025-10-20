@@ -2,6 +2,11 @@
 
 # dependencies
 /node_modules
+/partner/node_modules
+/admin/node_modules
+/partner/.next
+/admin/.next
+
 /next_js_petzy
 next_js_petzy.zip
 /.pnp
