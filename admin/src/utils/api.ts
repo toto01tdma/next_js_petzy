@@ -6,9 +6,12 @@
  * - Handles authentication errors (401, token expiration)
  * - Redirects to appropriate login page
  * - Clears expired tokens
+ * - Uses mock data when NEXT_PUBLIC_USE_API_MODE=false (admin only)
  */
 
 import { handleApiError, isAuthenticationError, ApiResponse, ApiErrorResponse } from './apiErrorHandler';
+import { USE_API_MODE } from '@/config/api';
+import { getMockResponse } from './mockApi';
 
 /**
  * Detect current system (partner or admin) based on URL pathname
@@ -72,6 +75,29 @@ export async function apiFetch<T = unknown>(
     url: string,
     options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
+    // Check if we're in admin system and API mode is disabled
+    // For admin system, if USE_API_MODE is false, use mock data
+    const isAdminSystem = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+    
+    if (isAdminSystem && !USE_API_MODE) {
+        // Use mock data for preview mode
+        console.log('[Mock API] Using mock data for:', url);
+        
+        try {
+            const body = options.body ? JSON.parse(options.body as string) : undefined;
+            const method = options.method || 'GET';
+            return await getMockResponse<T>(url, method, body);
+        } catch (error) {
+            console.error('[Mock API] Error generating mock response:', error);
+            return {
+                success: false,
+                error: 'Mock API Error',
+                message: 'Failed to generate mock response'
+            };
+        }
+    }
+    
+    // Normal API mode - proceed with real API call
     try {
         // Get token from localStorage
         const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
@@ -180,6 +206,30 @@ export async function apiUpload<T = unknown>(
     url: string,
     formData: FormData
 ): Promise<ApiResponse<T>> {
+    // Check if we're in admin system and API mode is disabled
+    const isAdminSystem = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+    
+    if (isAdminSystem && !USE_API_MODE) {
+        // Use mock data for preview mode
+        console.log('[Mock API] Using mock data for upload:', url);
+        
+        try {
+            // For uploads, we'll return a success response with mock file URL
+            return await getMockResponse<T>(url, 'POST', { 
+                file: 'mock-file-upload.jpg',
+                fileName: formData.get('file')?.toString() || 'upload.jpg'
+            });
+        } catch (error) {
+            console.error('[Mock API] Error generating mock upload response:', error);
+            return {
+                success: false,
+                error: 'Mock API Error',
+                message: 'Failed to generate mock upload response'
+            };
+        }
+    }
+    
+    // Normal API mode - proceed with real API call
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     
     try {

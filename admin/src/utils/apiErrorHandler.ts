@@ -1,4 +1,6 @@
 import Swal from 'sweetalert2';
+import { USE_API_MODE } from '@/config/api';
+import { getMockResponse } from './mockApi';
 
 /**
  * API Error Response Interface
@@ -192,6 +194,28 @@ export const apiCall = async <T = unknown>(
     url: string,
     options: RequestInit = {}
 ): Promise<ApiResponse<T>> => {
+    // Check if we're in admin system and API mode is disabled
+    const isAdminSystem = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+    
+    if (isAdminSystem && !USE_API_MODE) {
+        // Use mock data for preview mode
+        console.log('[Mock API] Using mock data for apiCall:', url);
+        
+        try {
+            const body = options.body ? JSON.parse(options.body as string) : undefined;
+            const method = options.method || 'GET';
+            return await getMockResponse<T>(url, method, body);
+        } catch (error) {
+            console.error('[Mock API] Error generating mock response:', error);
+            return {
+                success: false,
+                error: 'Mock API Error',
+                message: 'Failed to generate mock response'
+            };
+        }
+    }
+    
+    // Normal API mode - proceed with real API call
     try {
         // Add authorization header if token exists
         const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;

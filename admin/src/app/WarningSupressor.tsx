@@ -1,9 +1,13 @@
 'use client';
 
 import { useEffect } from 'react';
+import { initializeFetchInterceptor } from '@/utils/fetchInterceptor';
 
 export default function WarningSupressor() {
   useEffect(() => {
+    // Initialize fetch interceptor for admin preview mode
+    initializeFetchInterceptor();
+    
     // Suppress Ant Design React 19 compatibility warning immediately
     const originalWarn = console.warn;
     const originalError = console.error;
