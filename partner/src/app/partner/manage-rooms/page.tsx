@@ -103,7 +103,8 @@ export default function ManageRooms() {
                 setRoomSummary([
                     { id: 'PZ1', type: 'ROOM', title: 'รายการห้องพักทั้งหมดของคุณ', count: 10, countLabel: 'ห้อง', color: '#1F4173', icon: 'eye' },
                     { id: 'PZ2', type: 'BOARDING', title: 'บริการรับฝากสัตว์เลี้ยงของคุณ', count: 3, countLabel: 'บริการ', color: '#484848', icon: 'eye' },
-                    { id: 'PZ3', type: 'SPA', title: 'บริการสปาสัตว์เลี้ยง', count: 3, countLabel: 'บริการ', color: '#484848', icon: 'eye' }
+                    { id: 'PZ3', type: 'SPA', title: 'บริการสปาสัตว์เลี้ยง', count: 2, countLabel: 'บริการ', color: '#484848', icon: 'eye' },
+                    { id: 'PZ4', type: 'CLINIC', title: 'บริการคลินิกสัตว์เลี้ยง', count: 1, countLabel: 'บริการ', color: '#484848', icon: 'eye' }
                 ]);
                 return;
             }
@@ -160,7 +161,7 @@ export default function ManageRooms() {
             }
 
             const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/api/partner/rooms`, {
+            const response = await fetch(`${API_BASE_URL}/api/partner/service-data`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -174,12 +175,44 @@ export default function ManageRooms() {
                 return;
             }
 
-            if (result.success) {
-                const formatted = result.data.map((room: RoomDetail, index: number) => ({
-                    ...room,
-                    key: room.id || `${index + 1}`
-                }));
-                setRoomDetails(formatted);
+            if (result.success && result.data) {
+                // Extract room details from sub_room_details.room_services
+                const subRoomDetails = result.data.sub_room_details || {};
+                const roomServices = subRoomDetails.room_services || [];
+                
+                // Flatten the room services array to get individual room details
+                const formattedRooms: RoomDetail[] = [];
+                let roomIndex = 0;
+                
+                roomServices.forEach((roomService: any) => {
+                    const roomType = roomService.room_type || 'Unknown';
+                    const subRooms = roomService.sub_rooms || [];
+                    
+                    subRooms.forEach((subRoom: any) => {
+                        roomIndex++;
+                        formattedRooms.push({
+                            key: `room-${roomIndex}`,
+                            id: `room-${roomIndex}`,
+                            roomCode: subRoom.code || `ROOM-${roomIndex}`,
+                            roomType: subRoom.name || roomType,
+                            pricing: {
+                                dailyRate: subRoom.price || 0,
+                                actualReceived: subRoom.price || 0,
+                                currency: 'THB'
+                            },
+                            status: 'AVAILABLE',
+                            statusLabel: 'ว่าง',
+                            isOpen: true,
+                            schedule: {
+                                availableDays: [0, 1, 2, 3, 4, 5, 6], // All days
+                                openTime: subRoom.open_time || '00:00',
+                                closeTime: subRoom.close_time || '23:59'
+                            }
+                        });
+                    });
+                });
+                
+                setRoomDetails(formattedRooms);
             }
         } catch (error) {
             console.error('Error fetching room details:', error);

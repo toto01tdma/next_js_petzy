@@ -395,6 +395,62 @@ export default function CreateService() {
                             setAccommodationDescription(photos.description);
                         }
                     }
+
+                    // Populate Step 4: Sub-Room Details
+                    if (data.data.sub_room_details) {
+                        const subRoomDetails = data.data.sub_room_details;
+                        
+                        // Populate room services Step 4 forms
+                        if (subRoomDetails.room_services && subRoomDetails.room_services.length > 0) {
+                            const roomForms: DynamicServiceForm[] = subRoomDetails.room_services.map((roomServiceGroup: any, index: number) => ({
+                                id: `room-service-${index}`,
+                                title: `${roomServiceGroup.room_type} (${roomServiceGroup.sub_rooms?.length || 0} ห้อง)`,
+                                data: (roomServiceGroup.sub_rooms || []).map((subRoom: any, i: number) => ({
+                                    id: i + 1,
+                                    code: subRoom.code || '',
+                                    name: subRoom.name || roomServiceGroup.room_type,
+                                    openTime: subRoom.open_time || '00:00',
+                                    closeTime: subRoom.close_time || '00:00',
+                                    price: subRoom.price?.toString() || '0'
+                                }))
+                            }));
+                            setDynamicRoomServices(roomForms);
+                        }
+                        
+                        // Populate special services Step 4 forms
+                        if (subRoomDetails.special_services && subRoomDetails.special_services.length > 0) {
+                            const specialForms: DynamicServiceForm[] = subRoomDetails.special_services.map((specialServiceGroup: any, index: number) => ({
+                                id: `special-service-${index}`,
+                                title: specialServiceGroup.service_type || '',
+                                data: (specialServiceGroup.sub_services || []).map((subService: any, i: number) => ({
+                                    id: i + 1,
+                                    code: subService.code || '',
+                                    name: subService.name || specialServiceGroup.service_type,
+                                    openTime: subService.open_time || '00:00',
+                                    closeTime: subService.close_time || '00:00',
+                                    price: subService.price?.toString() || '0'
+                                }))
+                            }));
+                            setDynamicSpecialServices(specialForms);
+                        }
+                        
+                        // Populate pet care services Step 4 forms
+                        if (subRoomDetails.pet_care_services && subRoomDetails.pet_care_services.length > 0) {
+                            const petCareForms: DynamicServiceForm[] = subRoomDetails.pet_care_services.map((petCareServiceGroup: any, index: number) => ({
+                                id: `pet-care-service-${index}`,
+                                title: petCareServiceGroup.service_type || '',
+                                data: (petCareServiceGroup.sub_services || []).map((subService: any, i: number) => ({
+                                    id: i + 1,
+                                    code: subService.code || '',
+                                    name: subService.name || petCareServiceGroup.service_type,
+                                    openTime: subService.open_time || '00:00',
+                                    closeTime: subService.close_time || '00:00',
+                                    price: subService.price?.toString() || '0'
+                                }))
+                            }));
+                            setDynamicPetCareServices(petCareForms);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching service data:', error);
@@ -406,6 +462,312 @@ export default function CreateService() {
 
         fetchServiceData();
     }, [router]);
+
+    // Save Step 3 images when clicking "บันทึก" button
+    const handleStep3Save = async () => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'กรุณาเข้าสู่ระบบ',
+                    text: 'ไม่พบข้อมูลการเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#DC2626'
+                });
+                return;
+            }
+
+            if (!USE_API_MODE) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกข้อมูลสำเร็จ (Preview Mode)',
+                    text: 'ข้อมูลรูปภาพถูกบันทึกเรียบร้อยแล้ว',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+                return;
+            }
+
+            let hasNewImages = false;
+            let savedCount = 0;
+            let coverImageUrl = '';
+            const roomImageUrls: string[] = [];
+
+            // Upload cover image if it's a new file
+            if (uploadedPhotos[0]?.originFileObj) {
+                hasNewImages = true;
+                const coverFormData = new FormData();
+                coverFormData.append('cover', uploadedPhotos[0].originFileObj as Blob);
+
+                const coverResponse = await fetch(`${API_BASE_URL}/api/upload/accommodation-photos`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: coverFormData
+                });
+
+                const coverResult = await coverResponse.json();
+                if (coverResult.success && coverResult.data?.cover_url) {
+                    savedCount++;
+                    coverImageUrl = coverResult.data.cover_url;
+                    
+                    // Update the uploadedPhotos state with the new URL
+                    const getFullImageUrl = (path: string) => {
+                        if (!path) return '';
+                        if (path.startsWith('http://') || path.startsWith('https://')) {
+                            return path;
+                        }
+                        return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+                    };
+
+                    setUploadedPhotos(prev => ({
+                        ...prev,
+                        0: {
+                            ...prev[0],
+                            url: getFullImageUrl(coverResult.data.cover_url),
+                            status: 'done',
+                            originFileObj: undefined // Clear the file object since it's now saved
+                        }
+                    }));
+                }
+            } else if (uploadedPhotos[0]?.url) {
+                // Use existing cover image URL
+                const getRelativePath = (url: string) => {
+                    if (!url) return '';
+                    if (url.startsWith('/uploads/')) return url;
+                    if (url.includes('/uploads/')) {
+                        return url.substring(url.indexOf('/uploads/'));
+                    }
+                    return url;
+                };
+                coverImageUrl = getRelativePath(uploadedPhotos[0].url);
+            }
+
+            // Upload room images if they're new files
+            for (let i = 1; i <= 6; i++) {
+                const image = uploadedPhotos[i];
+                if (image?.originFileObj) {
+                    hasNewImages = true;
+                    const roomFormData = new FormData();
+                    roomFormData.append('room_image', image.originFileObj as Blob);
+
+                    const roomResponse = await fetch(`${API_BASE_URL}/api/upload/accommodation-photos`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: roomFormData
+                    });
+
+                    const roomResult = await roomResponse.json();
+                    if (roomResult.success && roomResult.data?.room_image_url) {
+                        savedCount++;
+                        const getRelativePath = (url: string) => {
+                            if (!url) return '';
+                            if (url.startsWith('/uploads/')) return url;
+                            if (url.includes('/uploads/')) {
+                                return url.substring(url.indexOf('/uploads/'));
+                            }
+                            return url;
+                        };
+                        roomImageUrls.push(getRelativePath(roomResult.data.room_image_url));
+                        
+                        // Update the uploadedPhotos state with the new URL
+                        const getFullImageUrl = (path: string) => {
+                            if (!path) return '';
+                            if (path.startsWith('http://') || path.startsWith('https://')) {
+                                return path;
+                            }
+                            return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+                        };
+
+                        setUploadedPhotos(prev => ({
+                            ...prev,
+                            [i]: {
+                                ...prev[i],
+                                url: getFullImageUrl(roomResult.data.room_image_url),
+                                status: 'done',
+                                originFileObj: undefined // Clear the file object since it's now saved
+                            }
+                        }));
+                    }
+                } else if (image?.url) {
+                    // Use existing room image URL
+                    const getRelativePath = (url: string) => {
+                        if (!url) return '';
+                        if (url.startsWith('/uploads/')) return url;
+                        if (url.includes('/uploads/')) {
+                            return url.substring(url.indexOf('/uploads/'));
+                        }
+                        return url;
+                    };
+                    roomImageUrls.push(getRelativePath(image.url));
+                }
+            }
+
+            // Save accommodation photos data to backend
+            // Check if we have existing user/hotel data to create a valid payload
+            const hasExistingData = personalInfo.firstName && personalInfo.email && hotelLocation.accommodationName && hotelLocation.address;
+            
+            if (hasExistingData) {
+                // Use existing data to create a valid payload
+                const savePayload = {
+                    personal_info: {
+                        first_name: personalInfo.firstName,
+                        last_name: personalInfo.lastName,
+                        first_name_eng: personalInfo.firstNameEng || '',
+                        last_name_eng: personalInfo.lastNameEng || '',
+                        national_id_number: personalInfo.nationalIdNumber || '',
+                        corporate_tax_id: personalInfo.corporateTaxId || '',
+                        email: personalInfo.email,
+                        phone_number: personalInfo.phoneNumber,
+                        backup_phone: personalInfo.backupPhone || '',
+                        additional_details: personalInfo.additionalDetails || ''
+                    },
+                    hotel_location: {
+                        accommodation_name: hotelLocation.accommodationName,
+                        accommodation_name_en: hotelLocation.accommodationNameEn,
+                        trade_registration_number: hotelLocation.tradeRegistrationNumber || '',
+                        address: hotelLocation.address,
+                        business_email: hotelLocation.businessEmail || '',
+                        office_phone: hotelLocation.officePhone || '',
+                        google_maps_link: hotelLocation.googleMapsLink || '',
+                        mobile_phone: hotelLocation.mobilePhone || '',
+                        business_additional_details: businessDetails || ''
+                    },
+                    accommodation_photos: {
+                        cover_image_url: coverImageUrl,
+                        room_image_urls: roomImageUrls,
+                        description: accommodationDescription
+                    }
+                };
+
+                const saveResponse = await fetch(`${API_BASE_URL}/api/partner/create-service`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(savePayload)
+                });
+
+                const saveResult = await saveResponse.json();
+                
+                if (checkAuthError(saveResponse, saveResult)) {
+                    return;
+                }
+                
+                if (saveResult.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกข้อมูลสำเร็จ',
+                        text: hasNewImages 
+                            ? `บันทึกรูปภาพ ${savedCount} รูปเรียบร้อยแล้ว` 
+                            : 'บันทึกข้อมูลเรียบร้อยแล้ว',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                } else {
+                    throw new Error(saveResult.error || 'Failed to save images');
+                }
+            } else {
+                // If no existing data, just show success message
+                // Images are uploaded but will be saved when the full form is submitted
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'อัพโหลดรูปภาพสำเร็จ',
+                    text: hasNewImages 
+                        ? `อัพโหลดรูปภาพ ${savedCount} รูปเรียบร้อยแล้ว\nรูปภาพจะถูกบันทึกเมื่อคุณบันทึกข้อมูลทั้งหมด` 
+                        : 'ไม่มีรูปภาพใหม่ที่ต้องบันทึก',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            }
+        } catch (error) {
+            console.error('Error saving Step 3 images:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: error instanceof Error ? error.message : 'ไม่สามารถบันทึกรูปภาพได้',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#DC2626'
+            });
+        }
+    };
+
+    // Generate dynamic forms from Step 3 data if Step 4 data doesn't exist
+    useEffect(() => {
+        // Only generate if we have Step 3 data but no Step 4 data
+        if (
+            (roomServiceData.length > 0 || specialServicesData.length > 0 || petCareServicesData.length > 0) &&
+            dynamicRoomServices.length === 0 &&
+            dynamicSpecialServices.length === 0 &&
+            dynamicPetCareServices.length === 0 &&
+            !isFetching
+        ) {
+            // Process room services - create forms based on number of rooms
+            if (roomServiceData && roomServiceData.length > 0) {
+                const roomForms: DynamicServiceForm[] = roomServiceData
+                    .filter(service => service.roomType && service.quantity) // Only include filled rows
+                    .map((service, index) => ({
+                        id: `room-service-${index}`,
+                        title: `${service.roomType} (${service.quantity} ห้อง)`,
+                        data: Array.from({ length: parseInt(service.quantity) || 1 }, (_, i) => ({
+                            id: i + 1,
+                            code: `${service.roomType.substring(0, 2).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
+                            name: service.roomType,
+                            openTime: service.openTime || '00:00',
+                            closeTime: service.closeTime || '00:00',
+                            price: service.price || '0'
+                        }))
+                    }));
+                setDynamicRoomServices(roomForms);
+            }
+            
+            // Process special services - create separate forms for each type
+            if (specialServicesData && specialServicesData.length > 0) {
+                const specialForms: DynamicServiceForm[] = specialServicesData
+                    .filter(service => service.roomType) // Only include filled rows
+                    .map((service, index) => ({
+                        id: `special-service-${index}`,
+                        title: service.roomType,
+                        data: [{
+                            id: 1,
+                            code: `SP-${String(index + 1).padStart(3, '0')}`,
+                            name: service.roomType,
+                            openTime: service.openTime || '00:00',
+                            closeTime: service.closeTime || '00:00',
+                            price: service.price || '0'
+                        }]
+                    }));
+                setDynamicSpecialServices(specialForms);
+            }
+            
+            // Process pet care services - create separate forms for each type
+            if (petCareServicesData && petCareServicesData.length > 0) {
+                const petCareForms: DynamicServiceForm[] = petCareServicesData
+                    .filter(service => service.roomType) // Only include filled rows
+                    .map((service, index) => ({
+                        id: `pet-care-service-${index}`,
+                        title: service.roomType,
+                        data: [{
+                            id: 1,
+                            code: `PC-${String(index + 1).padStart(3, '0')}`,
+                            name: service.roomType,
+                            openTime: service.openTime || '00:00',
+                            closeTime: service.closeTime || '00:00',
+                            price: service.price || '0'
+                        }]
+                    }));
+                setDynamicPetCareServices(petCareForms);
+            }
+        }
+    }, [roomServiceData, specialServicesData, petCareServicesData, dynamicRoomServices.length, dynamicSpecialServices.length, dynamicPetCareServices.length, isFetching]);
 
     // Delete handlers for backend services
     const handleDeleteRoomService = async (backendId: string): Promise<boolean> => {
@@ -654,8 +1016,18 @@ export default function CreateService() {
             let coverImageUrl = '';
             const roomImageUrls: string[] = [];
 
+            // Helper function to get relative path from URL
+            const getRelativePath = (url: string) => {
+                if (!url) return '';
+                if (url.startsWith('/uploads/')) return url;
+                if (url.includes('/uploads/')) {
+                    return url.substring(url.indexOf('/uploads/'));
+                }
+                return url;
+            };
+
             if (USE_API_MODE) {
-                // Upload cover image
+                // Upload cover image if it's a new file
                 if (uploadedPhotos[0]?.originFileObj) {
                     const coverFormData = new FormData();
                     coverFormData.append('cover', uploadedPhotos[0].originFileObj as Blob);
@@ -672,9 +1044,12 @@ export default function CreateService() {
                     if (coverResult.success && coverResult.data?.cover_url) {
                         coverImageUrl = coverResult.data.cover_url;
                     }
+                } else if (uploadedPhotos[0]?.url) {
+                    // Use existing cover image URL if no new file was uploaded
+                    coverImageUrl = getRelativePath(uploadedPhotos[0].url);
                 }
 
-                // Upload room images
+                // Upload room images if they're new files, otherwise use existing URLs
                 for (let i = 1; i <= 6; i++) {
                     const image = uploadedPhotos[i];
                     if (image?.originFileObj) {
@@ -693,6 +1068,9 @@ export default function CreateService() {
                         if (roomResult.success && roomResult.data?.room_image_url) {
                             roomImageUrls.push(roomResult.data.room_image_url);
                         }
+                    } else if (image?.url) {
+                        // Use existing room image URL if no new file was uploaded
+                        roomImageUrls.push(getRelativePath(image.url));
                     }
                 }
             }
@@ -775,7 +1153,41 @@ export default function CreateService() {
                     open_time: service.openTime,
                     close_time: service.closeTime,
                     price: parseFloat(service.price) || 0
-                }))
+                })),
+
+                // Step 4: Sub-Room Details (individual room/service configurations)
+                sub_room_details: {
+                    room_services: dynamicRoomServices.map(roomService => ({
+                        room_type: roomService.data[0]?.name || '',
+                        sub_rooms: roomService.data.map(subRoom => ({
+                            code: subRoom.code,
+                            name: subRoom.name,
+                            open_time: subRoom.openTime,
+                            close_time: subRoom.closeTime,
+                            price: parseFloat(subRoom.price) || 0
+                        }))
+                    })),
+                    special_services: dynamicSpecialServices.map(specialService => ({
+                        service_type: specialService.data[0]?.name || '',
+                        sub_services: specialService.data.map(subService => ({
+                            code: subService.code,
+                            name: subService.name,
+                            open_time: subService.openTime,
+                            close_time: subService.closeTime,
+                            price: parseFloat(subService.price) || 0
+                        }))
+                    })),
+                    pet_care_services: dynamicPetCareServices.map(petCareService => ({
+                        service_type: petCareService.data[0]?.name || '',
+                        sub_services: petCareService.data.map(subService => ({
+                            code: subService.code,
+                            name: subService.name,
+                            open_time: subService.openTime || '',
+                            close_time: subService.closeTime || '',
+                            price: parseFloat(subService.price) || 0
+                        }))
+                    }))
+                }
             };
 
             // Step 4: Submit to API
@@ -1216,7 +1628,7 @@ export default function CreateService() {
                         onDeleteRoomService={handleDeleteRoomService}
                         onDeleteSpecialService={handleDeleteSpecialService}
                         onDeletePetCareService={handleDeletePetCareService}
-                        onSubmit={() => {}}
+                        onSubmit={handleStep3Save}
                     />
                         </div>
                     </>
