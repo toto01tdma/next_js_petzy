@@ -48,8 +48,11 @@ type PartnerDataResponse = {
 
 type SaveDataResponse = {
     success: boolean;
-    error: string;
-    data: {
+    error?: string;
+    message?: string | string[];
+    code?: string;
+    statusCode?: number;
+    data?: {
         accommodation_id: string;
         status: string;
     };
@@ -557,12 +560,25 @@ export default function DataEntry() {
                     router.push('/partner/policy');
                 }, 2000);
             } else {
+                // Handle validation errors - check if message is an array
+                let errorMessage = data.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+                
+                if (data.message) {
+                    if (Array.isArray(data.message)) {
+                        // Multiple validation errors
+                        errorMessage = data.message.join('\n');
+                    } else if (typeof data.message === 'string') {
+                        errorMessage = data.message;
+                    }
+                }
+
                 await Swal.fire({
                     icon: 'error',
                     title: 'ไม่สามารถบันทึกข้อมูลได้',
-                    text: data.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+                    html: `<div style="text-align: left; white-space: pre-line;">${errorMessage}</div>`,
                     confirmButtonText: 'ตกลง',
-                    confirmButtonColor: '#28A7CB'
+                    confirmButtonColor: '#28A7CB',
+                    width: '500px'
                 });
             }
         } catch (error) {

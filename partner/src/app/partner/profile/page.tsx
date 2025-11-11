@@ -44,7 +44,7 @@ export default function UserProfile() {
     
     // Approval status check
     const { isApproved, isLoading: isLoadingApproval } = useApprovalStatus();
-
+    
     const [profileData, setProfileData] = useState<ProfileData>({
         fullName: '',
         nameEn: '',
@@ -70,13 +70,13 @@ export default function UserProfile() {
             fetchServiceData();
             return;
         }
-
+        
         const token = localStorage.getItem('accessToken');
         if (!token) {
             router.push('/login');
             return;
         }
-
+        
         fetchProfile();
         fetchServiceData();
     }, [router]);
@@ -119,7 +119,7 @@ export default function UserProfile() {
                 }
 
                 if (!response.ok) throw new Error('Failed to fetch profile');
-
+                
                 if (result.success) {
                     const data = result.data;
                     setProfileData({
@@ -135,8 +135,8 @@ export default function UserProfile() {
                         currentPassword: '',
                         newPassword: '',
                         profileImage: data.profileImage || null,
-                        coverImages: Array.isArray(data.coverImages) && data.coverImages.length === 7
-                            ? data.coverImages
+                        coverImages: Array.isArray(data.coverImages) && data.coverImages.length === 7 
+                            ? data.coverImages 
                             : Array(7).fill(null)
                     });
                     setAccommodationType(data.accommodationType || 'โรงแรมสัตว์เลี้ยง');
@@ -255,8 +255,8 @@ export default function UserProfile() {
                     // Update state with data URL preview immediately
                     // Use a unique key based on timestamp to force re-render
                     const dataUrl = reader.result;
-                    setProfileData(prev => ({
-                        ...prev,
+                setProfileData(prev => ({
+                    ...prev,
                         profileImage: dataUrl
                     }));
                 }
@@ -322,7 +322,7 @@ export default function UserProfile() {
         }
 
         const formDataUpload = new FormData();
-        formDataUpload.append('profileImage', uploadedFiles.profileImageFile);
+            formDataUpload.append('profileImage', uploadedFiles.profileImageFile);
 
         const uploadResponse = await fetch(`${API_BASE_URL}/api/upload/profile-image`, {
             method: 'POST',
@@ -682,18 +682,18 @@ export default function UserProfile() {
                 if (profileData.nameEn) payload.nameEn = profileData.nameEn;
                 if (profileData.phoneNumber) payload.phoneNumber = profileData.phoneNumber;
                 if (profileData.backupPhoneNumber) payload.backupPhoneNumber = profileData.backupPhoneNumber;
-
+                
                 // Only include password if user wants to change it
                 if (profileData.currentPassword && profileData.newPassword) {
                     payload.currentPassword = profileData.currentPassword;
                     payload.newPassword = profileData.newPassword;
                 }
-
+                
                 // Include uploaded image URLs
                 if (profileImageUrl) {
                     payload.profileImage = profileImageUrl;
                 }
-
+                
                 if (coverImageUrls && coverImageUrls.length > 0) {
                     payload.coverImages = coverImageUrls;
                 }
@@ -717,7 +717,7 @@ export default function UserProfile() {
                 if (!response.ok) {
                     // Handle validation errors
                     if (result.details && Array.isArray(result.details)) {
-                        const errorMessages = result.details.map((d: { field: string; message: string }) =>
+                        const errorMessages = result.details.map((d: { field: string; message: string }) => 
                             `${d.field}: ${d.message}`
                         ).join('\n');
                         throw new Error(errorMessages);
@@ -741,7 +741,7 @@ export default function UserProfile() {
                         currentPassword: '',
                         newPassword: ''
                     }));
-
+                    
                     setUploadedFiles({
                         profileImageFile: null,
                         coverImageFiles: Array(7).fill(null)
@@ -833,7 +833,7 @@ export default function UserProfile() {
                                         <h3 className="text-xl font-semibold mb-4" style={{ color: '#000000' }}>รูปโปรไฟล์</h3>
                                         <div className="relative">
                                             <label htmlFor="profile-upload" className="cursor-pointer">
-                                                {profileData.profileImage ? (
+                                            {profileData.profileImage ? (
                                                     <div className="relative">
                                                         {profileData.profileImage.startsWith('data:') ? (
                                                             <img
@@ -858,34 +858,34 @@ export default function UserProfile() {
                                                                 }}
                                                             />
                                                         ) : (
-                                                            <Image
+                                                <Image 
                                                                 key={`profile-${profileData.profileImage}`}
-                                                                src={profileData.profileImage}
-                                                                alt="Profile"
-                                                                className="rounded-full mx-auto"
-                                                                style={{ width: '200px', height: '200px', objectFit: 'cover' }}
+                                                    src={profileData.profileImage} 
+                                                    alt="Profile" 
+                                                    className="rounded-full mx-auto"
+                                                    style={{ width: '200px', height: '200px', objectFit: 'cover' }}
                                                                 width={200}
                                                                 height={200}
                                                                 unoptimized={profileData.profileImage.startsWith('http://localhost') || profileData.profileImage.startsWith('http://127.0.0.1')}
-                                                            />
+                                                />
                                                         )}
                                                         <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 hover:bg-opacity-30 flex items-center justify-center transition-all pointer-events-none">
                                                             <UploadOutlined style={{ fontSize: '32px', color: '#FFFFFF', opacity: 0 }} className="hover:opacity-100" />
                                                         </div>
                                                     </div>
-                                                ) : (
-                                                    <div
+                                            ) : (
+                                                <div 
                                                         className="rounded-full mx-auto flex items-center justify-center hover:bg-gray-200 transition-colors"
-                                                        style={{
-                                                            width: '200px',
-                                                            height: '200px',
-                                                            backgroundColor: '#E5E7EB',
-                                                            border: '2px solid #D1D5DB'
-                                                        }}
-                                                    >
+                                                    style={{ 
+                                                        width: '200px', 
+                                                        height: '200px', 
+                                                        backgroundColor: '#E5E7EB',
+                                                        border: '2px solid #D1D5DB'
+                                                    }}
+                                                >
                                                         <UploadOutlined style={{ fontSize: '48px', color: '#9CA3AF' }} />
-                                                    </div>
-                                                )}
+                                                </div>
+                                            )}
                                             </label>
                                             <input
                                                 type="file"
@@ -971,8 +971,8 @@ export default function UserProfile() {
                                                 <label className="block text-sm font-medium mb-2" style={{ color: '#333333' }}>
                                                     รหัสผ่านของคุณ
                                                 </label>
-                                                <Input.Password
-                                                    placeholder="**********251"
+                                                <Input.Password 
+                                                    placeholder="**********251" 
                                                     value={profileData.currentPassword}
                                                     onChange={(e) => setProfileData({ ...profileData, currentPassword: e.target.value })}
                                                     className="w-full"
@@ -987,8 +987,8 @@ export default function UserProfile() {
                                                 <label className="block text-sm font-medium mb-2" style={{ color: '#333333' }}>
                                                     เปลี่ยนรหัสผ่าน
                                                 </label>
-                                                <Input.Password
-                                                    placeholder="**********"
+                                                <Input.Password 
+                                                    placeholder="**********" 
                                                     value={profileData.newPassword}
                                                     onChange={(e) => setProfileData({ ...profileData, newPassword: e.target.value })}
                                                     className="w-full"
@@ -1007,7 +1007,7 @@ export default function UserProfile() {
                         {/* Cover Images Section */}
                         <div className="rounded-lg shadow-sm p-8 mb-6" style={{ backgroundColor: '#FFFFFF' }}>
                             <h3 className="text-xl font-semibold mb-6" style={{ color: '#000000' }}>อัพรูปภาพหน้าปก</h3>
-
+                            
                             <div className="flex gap-4 mb-6">
                                 {/* Main Upload Area (Left) */}
                                 <div className="flex-1">
@@ -1019,9 +1019,9 @@ export default function UserProfile() {
                                         className="hidden"
                                     />
                                     <label htmlFor="cover-0" className="cursor-pointer">
-                                        <div
+                                        <div 
                                             className="border-2 border-dashed rounded-lg flex flex-col items-center justify-center"
-                                            style={{
+                                            style={{ 
                                                 backgroundColor: profileData.coverImages[0] ? '#000000' : '#E8E8E8',
                                                 borderColor: '#CCCCCC',
                                                 height: '348px',
@@ -1058,9 +1058,9 @@ export default function UserProfile() {
                                                 className="hidden"
                                             />
                                             <label htmlFor={`cover-${index}`} className="cursor-pointer">
-                                                <div
+                                                <div 
                                                     className="border-2 border-dashed rounded-lg flex flex-col items-center justify-center"
-                                                    style={{
+                                                    style={{ 
                                                         backgroundColor: profileData.coverImages[index] ? '#000000' : '#E8E8E8',
                                                         borderColor: '#CCCCCC',
                                                         height: '170px',
@@ -1087,7 +1087,7 @@ export default function UserProfile() {
                                 </div>
                             </div>
 
-                            <Button
+                            <Button 
                                 size="large"
                                 onClick={handleCoverImagesSubmit}
                                 loading={isLoading}
@@ -1109,7 +1109,7 @@ export default function UserProfile() {
                         {/* Terms and Logout Section */}
                         <div className="rounded-lg shadow-sm p-8" style={{ backgroundColor: '#FFFFFF' }}>
                             <h3 className="text-xl font-semibold mb-4" style={{ color: '#000000' }}>กรอกรายละเอียดข้อมูลสิทธิ์</h3>
-
+                            
                             <div className="rounded-lg p-8 mb-6" style={{ backgroundColor: '#E8E8E8', minHeight: '200px' }}>
                                 {/* Terms content area */}
                                 <div style={{ color: '#666666' }}>
@@ -1127,7 +1127,7 @@ export default function UserProfile() {
                             </div>
 
                             <div className="flex gap-4 mb-4">
-                                <Button
+                                <Button 
                                     size="large"
                                     style={{
                                         backgroundColor: '#0D263B',
@@ -1142,7 +1142,7 @@ export default function UserProfile() {
                                 >
                                     ติดต่อฝ่ายลูกค้าสัมพันธ์
                                 </Button>
-                                <Button
+                                <Button 
                                     size="large"
                                     onClick={handleLogout}
                                     style={{
@@ -1165,7 +1165,7 @@ export default function UserProfile() {
                             </p>
 
                             <div className="text-center">
-                                <Button
+                                <Button 
                                     size="large"
                                     onClick={handleProfileImageSubmit}
                                     loading={isLoading}
@@ -1187,7 +1187,7 @@ export default function UserProfile() {
                     </div>
                 </main>
             </div>
-
+            
             {/* Approval Status Modal */}
             <ApprovalModal isOpen={!isLoadingApproval && !isApproved} />
         </div>

@@ -265,7 +265,7 @@ export default function Login() {
                                         setInputType('phone');
                                     }
                                 }}
-                                placeholder={inputType === 'email' ? 'กรุณา กรอกอีเมลของคุณ' : 'กรุณา กรอกเบอร์โทรศัพท์ของคุณ'}
+                                placeholder="กรุณา กรอกอีเมล หรือ หมายเลขโทรศัพท์ของคุณ"
                                 className="w-full px-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                             />
                             {inputType === 'email' ? (

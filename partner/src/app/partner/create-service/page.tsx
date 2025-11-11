@@ -23,6 +23,112 @@ import type { RoomServiceRow } from '@/components/partner/dataEntry/RoomServiceC
 import { DownOutlined, UpOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 
+// Helper function to format time from backend (Date string or HH:mm format) to HH:mm for input
+const formatTimeForInput = (time: string | null | undefined): string => {
+    if (!time) return '00:00';
+    // If it's already in HH:mm format, return as is
+    if (typeof time === 'string' && /^\d{2}:\d{2}$/.test(time)) {
+        return time;
+    }
+    // If it's a Date string, extract HH:mm
+    try {
+        const date = new Date(time);
+        if (!isNaN(date.getTime())) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+    } catch (e) {
+        // If parsing fails, try to extract time from string
+        const match = time.match(/(\d{2}):(\d{2})/);
+        if (match) {
+            return `${match[1]}:${match[2]}`;
+        }
+    }
+    return '00:00';
+};
+
+// Service Form Component for Step 4 - Moved outside to prevent rebuilds
+const ServiceForm = ({
+    data = [],
+    title,
+    headers,
+    titleColor = "#1F4173",
+    onFieldChange
+}: {
+    data: { id: number; code: string; name: string; openTime: string; closeTime: string; price: string }[];
+    title: string;
+    headers: { [key: string]: string };
+    titleColor?: string;
+    onFieldChange: (rowId: number, field: 'openTime' | 'closeTime' | 'price', value: string) => void;
+}) => {
+    const [isExpanded, setIsExpanded] = useState(true);
+    
+    return (
+        <div className="mb-8">
+            <div
+                className="px-4 py-2 rounded-lg w-[300px] flex items-center justify-between mb-2 cursor-pointer"
+                style={{ backgroundColor: titleColor }}
+                onClick={() => setIsExpanded(!isExpanded)}
+            >
+                <span style={{ color: '#FFFFFF' }}>{title}</span>
+                <div className="border-white border-2 rounded-lg pt-0.5 pb-0.25 px-1">
+                    {isExpanded ?
+                        <UpOutlined style={{ fontSize: '14px', color: 'white' }} /> :
+                        <DownOutlined style={{ fontSize: '14px', color: 'white' }} />
+                    }
+                </div>
+            </div>
+
+            <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                }`}
+            >
+                <div className="space-y-4 pt-4">
+                    {/* Header Row */}
+                    <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
+                        {Object.entries(headers).map(([key, value]) => (
+                            <div key={key} className="bg-teal-500 px-4 py-2 rounded-lg" style={{ color: '#FFFFFF' }}>
+                                <span className="text-sm">{value}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Data Rows */}
+                    {data.map((row) => (
+                        <div key={row.id} className="grid gap-4 items-center" style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
+                            {Object.keys(headers).map((fieldKey) => {
+                                const isEditable = fieldKey === 'openTime' || fieldKey === 'closeTime' || fieldKey === 'price';
+                                return (
+                                    <div key={fieldKey} className="border rounded-lg px-2 py-2 text-center">
+                                        <Input
+                                            type={fieldKey.includes('Time') ? 'time' : 'text'}
+                                            value={row[fieldKey as keyof typeof row] as string}
+                                            className="border-0 p-0 text-center text-sm"
+                                            readOnly={!isEditable}
+                                            onChange={(e) => {
+                                                if (isEditable) {
+                                                    onFieldChange(row.id, fieldKey as 'openTime' | 'closeTime' | 'price', e.target.value);
+                                                }
+                                            }}
+                                            suffix={fieldKey.includes('price') ? 'บาท' : undefined}
+                                            style={{
+                                                backgroundColor: isEditable ? '#FFFFFF' : '#F9FAFB',
+                                                cursor: isEditable ? 'text' : 'default'
+                                            }}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // Service type interfaces
 interface DynamicServiceForm {
     id: string;
@@ -409,8 +515,8 @@ export default function CreateService() {
                                     id: i + 1,
                                     code: subRoom.code || '',
                                     name: subRoom.name || roomServiceGroup.room_type,
-                                    openTime: subRoom.open_time || '00:00',
-                                    closeTime: subRoom.close_time || '00:00',
+                                    openTime: formatTimeForInput(subRoom.open_time) || '00:00',
+                                    closeTime: formatTimeForInput(subRoom.close_time) || '00:00',
                                     price: subRoom.price?.toString() || '0'
                                 }))
                             }));
@@ -426,8 +532,8 @@ export default function CreateService() {
                                     id: i + 1,
                                     code: subService.code || '',
                                     name: subService.name || specialServiceGroup.service_type,
-                                    openTime: subService.open_time || '00:00',
-                                    closeTime: subService.close_time || '00:00',
+                                    openTime: formatTimeForInput(subService.open_time) || '00:00',
+                                    closeTime: formatTimeForInput(subService.close_time) || '00:00',
                                     price: subService.price?.toString() || '0'
                                 }))
                             }));
@@ -443,8 +549,8 @@ export default function CreateService() {
                                     id: i + 1,
                                     code: subService.code || '',
                                     name: subService.name || petCareServiceGroup.service_type,
-                                    openTime: subService.open_time || '00:00',
-                                    closeTime: subService.close_time || '00:00',
+                                    openTime: formatTimeForInput(subService.open_time) || '00:00',
+                                    closeTime: formatTimeForInput(subService.close_time) || '00:00',
                                     price: subService.price?.toString() || '0'
                                 }))
                             }));
@@ -672,7 +778,22 @@ export default function CreateService() {
                         timerProgressBar: true
                     });
                 } else {
-                    throw new Error(saveResult.error || 'Failed to save images');
+                    // Display error messages from API
+                    let errorMessage = '';
+                    if (Array.isArray(saveResult.message)) {
+                        errorMessage = saveResult.message.map((msg: string, idx: number) => `${idx + 1}. ${msg}`).join('\n');
+                    } else {
+                        errorMessage = saveResult.message || saveResult.error || 'Failed to save images';
+                    }
+                    
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        html: `<pre style="text-align: left; white-space: pre-wrap; word-wrap: break-word;">${errorMessage}</pre>`,
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#DC2626'
+                    });
+                    return; // Don't throw, just return
                 }
             } else {
                 // If no existing data, just show success message
@@ -701,8 +822,10 @@ export default function CreateService() {
     };
 
     // Generate dynamic forms from Step 3 data if Step 4 data doesn't exist
+    // Only run once when data is first loaded, not on every state change
     useEffect(() => {
         // Only generate if we have Step 3 data but no Step 4 data
+        // Use a ref or flag to ensure this only runs once
         if (
             (roomServiceData.length > 0 || specialServicesData.length > 0 || petCareServicesData.length > 0) &&
             dynamicRoomServices.length === 0 &&
@@ -767,7 +890,9 @@ export default function CreateService() {
                 setDynamicPetCareServices(petCareForms);
             }
         }
-    }, [roomServiceData, specialServicesData, petCareServicesData, dynamicRoomServices.length, dynamicSpecialServices.length, dynamicPetCareServices.length, isFetching]);
+        // Only depend on isFetching and the existence of Step 3 data, not the dynamic arrays themselves
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isFetching]);
 
     // Delete handlers for backend services
     const handleDeleteRoomService = async (backendId: string): Promise<boolean> => {
@@ -1220,7 +1345,23 @@ export default function CreateService() {
                     
                     router.push('/partner/manage-rooms');
                 } else {
-                    throw new Error(result.message || 'Failed to create service');
+                    // Display error messages from API
+                    let errorMessage = '';
+                    if (Array.isArray(result.message)) {
+                        // If message is an array, format each message on a new line
+                        errorMessage = result.message.map((msg: string, idx: number) => `${idx + 1}. ${msg}`).join('\n');
+                    } else {
+                        errorMessage = result.message || 'Failed to create service';
+                    }
+                    
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        html: `<pre style="text-align: left; white-space: pre-wrap; word-wrap: break-word;">${errorMessage}</pre>`,
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#DC2626'
+                    });
+                    return; // Don't throw, just return to stay on the page
                 }
             } else {
                 // Preview mode
@@ -1463,86 +1604,6 @@ export default function CreateService() {
         }
     };
 
-    // Service Form Component for Step 4
-    const ServiceForm = ({
-        data = [],
-        title,
-        headers,
-        titleColor = "#1F4173",
-        onFieldChange
-    }: {
-        data: { id: number; code: string; name: string; openTime: string; closeTime: string; price: string }[];
-        title: string;
-        headers: { [key: string]: string };
-        titleColor?: string;
-        onFieldChange: (rowId: number, field: 'openTime' | 'closeTime' | 'price', value: string) => void;
-    }) => {
-        const [isExpanded, setIsExpanded] = useState(true);
-        
-        return (
-            <div className="mb-8">
-                <div
-                    className="px-4 py-2 rounded-lg w-[300px] flex items-center justify-between mb-2 cursor-pointer"
-                    style={{ backgroundColor: titleColor }}
-                    onClick={() => setIsExpanded(!isExpanded)}
-                >
-                    <span style={{ color: '#FFFFFF' }}>{title}</span>
-                    <div className="border-white border-2 rounded-lg pt-0.5 pb-0.25 px-1">
-                        {isExpanded ?
-                            <UpOutlined style={{ fontSize: '14px', color: 'white' }} /> :
-                            <DownOutlined style={{ fontSize: '14px', color: 'white' }} />
-                        }
-                    </div>
-                </div>
-
-                <div
-                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                        isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-                    }`}
-                >
-                    <div className="space-y-4 pt-4">
-                        {/* Header Row */}
-                        <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
-                            {Object.entries(headers).map(([key, value]) => (
-                                <div key={key} className="bg-teal-500 px-4 py-2 rounded-lg" style={{ color: '#FFFFFF' }}>
-                                    <span className="text-sm">{value}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Data Rows */}
-                        {data.map((row) => (
-                            <div key={row.id} className="grid gap-4 items-center" style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
-                                {Object.keys(headers).map((fieldKey) => {
-                                    const isEditable = fieldKey === 'openTime' || fieldKey === 'closeTime' || fieldKey === 'price';
-                                    return (
-                                        <div key={fieldKey} className="border rounded-lg px-2 py-2 text-center">
-                                            <Input
-                                                type={fieldKey.includes('Time') ? 'time' : 'text'}
-                                                value={row[fieldKey as keyof typeof row] as string}
-                                                className="border-0 p-0 text-center text-sm"
-                                                readOnly={!isEditable}
-                                                onChange={(e) => {
-                                                    if (isEditable) {
-                                                        onFieldChange(row.id, fieldKey as 'openTime' | 'closeTime' | 'price', e.target.value);
-                                                    }
-                                                }}
-                                                suffix={fieldKey.includes('price') ? 'บาท' : undefined}
-                                                style={{
-                                                    backgroundColor: isEditable ? '#FFFFFF' : '#F9FAFB',
-                                                    cursor: isEditable ? 'text' : 'default'
-                                                }}
-                                            />
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     const renderStepContent = () => {
         switch (currentStep) {
@@ -1819,6 +1880,7 @@ export default function CreateService() {
                             onClick={() => {
                                 if (currentStep > 1) {
                                     setCurrentStep(currentStep - 1);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
                                 } else {
                                     router.back();
                                 }
