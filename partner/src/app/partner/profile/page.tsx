@@ -248,24 +248,26 @@ export default function UserProfile() {
                 profileImageFile: file
             }));
 
-            // Create preview immediately
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (reader.result && typeof reader.result === 'string') {
-                    // Update state with data URL preview immediately
-                    // Use a unique key based on timestamp to force re-render
-                    const dataUrl = reader.result;
+            // Create preview immediately using URL.createObjectURL for better performance and reliability
+            try {
+                // Revoke previous object URL if exists to prevent memory leaks
+                if (profileData.profileImage && profileData.profileImage.startsWith('blob:')) {
+                    URL.revokeObjectURL(profileData.profileImage);
+                }
+                
+                // Create new object URL for preview
+                const previewUrl = URL.createObjectURL(file);
+                
                 setProfileData(prev => ({
                     ...prev,
-                        profileImage: dataUrl
-                    }));
-                }
-            };
-            reader.onerror = () => {
+                    profileImage: previewUrl
+                }));
+            } catch (error) {
+                console.error('Error creating preview:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
-                    text: 'ไม่สามารถอ่านไฟล์ได้',
+                    text: 'ไม่สามารถแสดงตัวอย่างรูปภาพได้',
                     confirmButtonColor: '#0D263B'
                 });
                 // Clear the file on error
@@ -273,8 +275,7 @@ export default function UserProfile() {
                     ...prev,
                     profileImageFile: null
                 }));
-            };
-            reader.readAsDataURL(file);
+            }
         }
 
         // Reset input value to allow selecting the same file again
@@ -284,6 +285,18 @@ export default function UserProfile() {
     const handleCoverImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ไฟล์ไม่ถูกต้อง',
+                    text: 'กรุณาเลือกรูปภาพเท่านั้น',
+                    confirmButtonColor: '#0D263B'
+                });
+                e.target.value = ''; // Reset input
+                return;
+            }
+
             // Store the file object for upload later
             setUploadedFiles(prev => {
                 const newCoverImageFiles = [...prev.coverImageFiles];
@@ -294,19 +307,33 @@ export default function UserProfile() {
                 };
             });
 
-            // Create preview
-            const reader = new FileReader();
-            reader.onloadend = () => {
+            // Create preview using URL.createObjectURL for better performance
+            try {
+                // Revoke previous object URL if exists to prevent memory leaks
+                if (profileData.coverImages[index] && profileData.coverImages[index]?.startsWith('blob:')) {
+                    URL.revokeObjectURL(profileData.coverImages[index]!);
+                }
+                
+                // Create new object URL for preview
+                const previewUrl = URL.createObjectURL(file);
+                
                 setProfileData(prev => {
                     const newCoverImages = [...prev.coverImages];
-                    newCoverImages[index] = reader.result as string;
+                    newCoverImages[index] = previewUrl;
                     return {
                         ...prev,
                         coverImages: newCoverImages
                     };
                 });
-            };
-            reader.readAsDataURL(file);
+            } catch (error) {
+                console.error('Error creating cover image preview:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถแสดงตัวอย่างรูปภาพได้',
+                    confirmButtonColor: '#0D263B'
+                });
+            }
         }
 
         // Reset input value to allow selecting the same file again
@@ -835,40 +862,28 @@ export default function UserProfile() {
                                             <label htmlFor="profile-upload" className="cursor-pointer">
                                             {profileData.profileImage ? (
                                                     <div className="relative">
-                                                        {profileData.profileImage.startsWith('data:') ? (
-                                                            <img
-                                                                key={`profile-preview-${uploadedFiles.profileImageFile?.name || 'new'}-${uploadedFiles.profileImageFile?.size || 0}`}
-                                                                src={profileData.profileImage}
-                                                                alt="Profile Preview"
-                                                                className="rounded-full mx-auto"
-                                                                style={{
-                                                                    width: '200px',
-                                                                    height: '200px',
-                                                                    objectFit: 'cover',
-                                                                    display: 'block',
-                                                                    borderRadius: '50%'
-                                                                }}
-                                                                onError={(e) => {
-                                                                    console.error('Profile image preview error:', e);
-                                                                    // Fallback to placeholder if preview fails
-                                                                    setProfileData(prev => ({
-                                                                        ...prev,
-                                                                        profileImage: null
-                                                                    }));
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                <Image 
-                                                                key={`profile-${profileData.profileImage}`}
-                                                    src={profileData.profileImage} 
-                                                    alt="Profile" 
-                                                    className="rounded-full mx-auto"
-                                                    style={{ width: '200px', height: '200px', objectFit: 'cover' }}
-                                                                width={200}
-                                                                height={200}
-                                                                unoptimized={profileData.profileImage.startsWith('http://localhost') || profileData.profileImage.startsWith('http://127.0.0.1')}
-                                                />
-                                                        )}
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img
+                                                            key={`profile-preview-${uploadedFiles.profileImageFile?.name || 'existing'}-${Date.now()}`}
+                                                            src={profileData.profileImage}
+                                                            alt="Profile Preview"
+                                                            className="rounded-full mx-auto"
+                                                            style={{
+                                                                width: '200px',
+                                                                height: '200px',
+                                                                objectFit: 'cover',
+                                                                display: 'block',
+                                                                borderRadius: '50%'
+                                                            }}
+                                                            onError={(e) => {
+                                                                console.error('Profile image preview error:', e);
+                                                                // Fallback to placeholder if preview fails
+                                                                setProfileData(prev => ({
+                                                                    ...prev,
+                                                                    profileImage: null
+                                                                }));
+                                                            }}
+                                                        />
                                                         <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 hover:bg-opacity-30 flex items-center justify-center transition-all pointer-events-none">
                                                             <UploadOutlined style={{ fontSize: '32px', color: '#FFFFFF', opacity: 0 }} className="hover:opacity-100" />
                                                         </div>

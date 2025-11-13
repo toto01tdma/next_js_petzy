@@ -359,7 +359,7 @@ export default function AdminPartners() {
             render: (_, record) => (
                 <div>
                     <div style={{ color: '#0066FF', fontWeight: '500' }}>
-                        {record.accommodation.name || 'โรงแรมสับชายดี'}
+                        {record.accommodation?.name || 'โรงแรมสับชายดี'}
                     </div>
                     <div style={{ color: '#666666', fontSize: '14px' }}>
                         {record.user.fullName}
@@ -410,7 +410,7 @@ export default function AdminPartners() {
             key: 'address',
             render: (_, record) => (
                 <div style={{ color: '#333333' }}>
-                    {record.accommodation.address || '2972 Westheimer Rd. Santa Ana, Illinois 85486'}
+                    {record.accommodation?.address || '2972 Westheimer Rd. Santa Ana, Illinois 85486'}
                 </div>
             ),
         },
@@ -558,11 +558,11 @@ export default function AdminPartners() {
                                         </div>
                                         <div>
                                             <div className="text-sm" style={{ color: '#666666' }}>ชื่อที่พัก</div>
-                                            <div className="font-medium" style={{ color: '#333333' }}>{selectedPartner.accommodation.name || '-'}</div>
+                                            <div className="font-medium" style={{ color: '#333333' }}>{selectedPartner.accommodation?.name || '-'}</div>
                                         </div>
                                         <div>
                                             <div className="text-sm" style={{ color: '#666666' }}>ที่อยู่</div>
-                                            <div className="font-medium" style={{ color: '#333333' }}>{selectedPartner.accommodation.address || '-'}</div>
+                                            <div className="font-medium" style={{ color: '#333333' }}>{selectedPartner.accommodation?.address || '-'}</div>
                                         </div>
                                         <div>
                                             <div className="text-sm" style={{ color: '#666666' }}>วันที่สมัคร</div>

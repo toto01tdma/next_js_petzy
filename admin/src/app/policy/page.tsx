@@ -202,30 +202,37 @@ export default function AdminPolicy() {
 
         if (policyData.file_type === 'application/pdf') {
             return (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                    <FilePdfOutlined style={{ fontSize: '64px', color: '#FF6B6B' }} />
-                    <p className="mt-4 text-gray-600">นโยบายความเป็นส่วนตัว (PDF)</p>
+                <div className="text-center py-8">
                     <a 
                         href={fullUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-700 underline"
+                        className="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors mb-4"
                     >
-                        คลิกเพื่อดูไฟล์
+                        เปิดดูเอกสาร PDF
                     </a>
+                    <div className="mt-4">
+                        <iframe
+                            src={fullUrl}
+                            className="w-full border border-gray-300 rounded-lg"
+                            style={{ height: '600px' }}
+                            title="Privacy Policy PDF"
+                        />
+                    </div>
                 </div>
             );
         }
 
         return (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center">
-                <Image
-                    src={fullUrl}
-                    alt="Privacy Policy"
-                    width={800}
-                    height={500}
-                    style={{ maxWidth: '100%', height: 'auto', objectFit: 'contain' }}
-                />
+            <div className="text-center py-8">
+                <div className="mt-4">
+                    <iframe
+                        src={fullUrl}
+                        className="w-full border border-gray-300 rounded-lg"
+                        style={{ height: '600px' }}
+                        title="Privacy Policy Image"
+                    />
+                </div>
             </div>
         );
     };

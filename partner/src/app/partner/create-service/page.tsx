@@ -60,7 +60,7 @@ const ServiceForm = ({
     title: string;
     headers: { [key: string]: string };
     titleColor?: string;
-    onFieldChange: (rowId: number, field: 'openTime' | 'closeTime' | 'price', value: string) => void;
+    onFieldChange: (rowId: number, field: string, value: string) => void;
 }) => {
     const [isExpanded, setIsExpanded] = useState(true);
     
@@ -99,7 +99,7 @@ const ServiceForm = ({
                     {data.map((row) => (
                         <div key={row.id} className="grid gap-4 items-center" style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
                             {Object.keys(headers).map((fieldKey) => {
-                                const isEditable = fieldKey === 'openTime' || fieldKey === 'closeTime' || fieldKey === 'price';
+                                const isEditable = fieldKey === 'openTime' || fieldKey === 'closeTime' || fieldKey === 'price' || fieldKey === 'code' || fieldKey === 'name';
                                 return (
                                     <div key={fieldKey} className="border rounded-lg px-2 py-2 text-center">
                                         <Input
@@ -109,7 +109,7 @@ const ServiceForm = ({
                                             readOnly={!isEditable}
                                             onChange={(e) => {
                                                 if (isEditable) {
-                                                    onFieldChange(row.id, fieldKey as 'openTime' | 'closeTime' | 'price', e.target.value);
+                                                    onFieldChange(row.id, fieldKey, e.target.value);
                                                 }
                                             }}
                                             suffix={fieldKey.includes('price') ? 'บาท' : undefined}
@@ -502,6 +502,7 @@ export default function CreateService() {
                         }
                     }
 
+                    // console.log("data.data.sub_room_details", data.data.sub_room_details);
                     // Populate Step 4: Sub-Room Details
                     if (data.data.sub_room_details) {
                         const subRoomDetails = data.data.sub_room_details;
@@ -520,6 +521,7 @@ export default function CreateService() {
                                     price: subRoom.price?.toString() || '0'
                                 }))
                             }));
+                            console.log("roomForms", roomForms);
                             setDynamicRoomServices(roomForms);
                         }
                         
@@ -823,9 +825,11 @@ export default function CreateService() {
 
     // Generate dynamic forms from Step 3 data if Step 4 data doesn't exist
     // Only run once when data is first loaded, not on every state change
+    // Note: If sub_room_details exist in API response, they are already loaded in fetchServiceData()
     useEffect(() => {
         // Only generate if we have Step 3 data but no Step 4 data
-        // Use a ref or flag to ensure this only runs once
+        // This means user has never saved Step 4 before (sub_room_details arrays were empty)
+        console.log("isFetching",isFetching);
         if (
             (roomServiceData.length > 0 || specialServicesData.length > 0 || petCareServicesData.length > 0) &&
             dynamicRoomServices.length === 0 &&
@@ -833,7 +837,7 @@ export default function CreateService() {
             dynamicPetCareServices.length === 0 &&
             !isFetching
         ) {
-            // Process room services - create forms based on number of rooms
+            // Process room services - Generate from Step 3 data
             if (roomServiceData && roomServiceData.length > 0) {
                 const roomForms: DynamicServiceForm[] = roomServiceData
                     .filter(service => service.roomType && service.quantity) // Only include filled rows
@@ -849,10 +853,11 @@ export default function CreateService() {
                             price: service.price || '0'
                         }))
                     }));
+                    console.log("555555");
                 setDynamicRoomServices(roomForms);
             }
             
-            // Process special services - create separate forms for each type
+            // Process special services - Generate from Step 3 data
             if (specialServicesData && specialServicesData.length > 0) {
                 const specialForms: DynamicServiceForm[] = specialServicesData
                     .filter(service => service.roomType) // Only include filled rows
@@ -871,7 +876,7 @@ export default function CreateService() {
                 setDynamicSpecialServices(specialForms);
             }
             
-            // Process pet care services - create separate forms for each type
+            // Process pet care services - Generate from Step 3 data
             if (petCareServicesData && petCareServicesData.length > 0) {
                 const petCareForms: DynamicServiceForm[] = petCareServicesData
                     .filter(service => service.roomType) // Only include filled rows
@@ -1279,7 +1284,6 @@ export default function CreateService() {
                     close_time: service.closeTime,
                     price: parseFloat(service.price) || 0
                 })),
-
                 // Step 4: Sub-Room Details (individual room/service configurations)
                 sub_room_details: {
                     room_services: dynamicRoomServices.map(roomService => ({
@@ -1497,6 +1501,7 @@ export default function CreateService() {
     // Generate dynamic service forms for Step 4 based on Step 3 data
     const generateDynamicServiceForms = () => {
         // Process room services - create forms based on number of rooms
+        console.log("roomServiceData", roomServiceData);
         if (roomServiceData && roomServiceData.length > 0) {
             const roomForms: DynamicServiceForm[] = roomServiceData
                 .filter(service => service.roomType && service.quantity) // Only include filled rows
@@ -1512,6 +1517,7 @@ export default function CreateService() {
                         price: service.price || '0'
                     }))
                 }));
+                console.log("77777");
             setDynamicRoomServices(roomForms);
         }
         
@@ -1559,7 +1565,7 @@ export default function CreateService() {
         serviceType: 'room' | 'special' | 'petcare',
         formId: string,
         rowId: number,
-        field: 'openTime' | 'closeTime' | 'price',
+        field: string,
         value: string
     ) => {
         if (serviceType === 'room') {

@@ -27,7 +27,7 @@ const getCurrentSystem = (): 'partner' | 'admin' => {
  */
 const getLoginPage = (): string => {
     const system = getCurrentSystem();
-    return system === 'admin' ? '/admin/login' : '/partner/login';
+    return system === '/login';
 };
 
 /**
