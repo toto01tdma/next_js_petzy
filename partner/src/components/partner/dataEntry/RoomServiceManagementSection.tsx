@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Input } from 'antd';
-import { DownOutlined, UpOutlined } from '@ant-design/icons';
+import { Input, Button } from 'antd';
+import { DownOutlined, UpOutlined, SettingOutlined } from '@ant-design/icons';
+import RoomSettingsModal, { RoomDetailRow } from './RoomSettingsModal';
 
 const { TextArea } = Input;
 
@@ -27,8 +28,9 @@ interface RoomServiceFormProps {
         [key: string]: string;
     };
     onDataChange?: (data: RoomServiceRow[]) => void;
-    onDeleteService?: (backendId: string) => Promise<boolean>; // Handler for backend deletion
+    onDeleteService?: (backendId: string | undefined) => Promise<boolean>; // Handler for backend deletion
     onSubmit?: () => void;
+    onRoomDetailsChange?: (rowId: number, rooms: RoomDetailRow[]) => void; // Handler for room details changes
 }
 
 // Room Service Form Component
@@ -40,12 +42,16 @@ function RoomServiceForm({
     headers,
     onDataChange,
     onDeleteService,
-    onSubmit
+    onSubmit,
+    onRoomDetailsChange
 }: RoomServiceFormProps) {
     const [localRoomServiceRows, setLocalRoomServiceRows] = useState<RoomServiceRow[]>(
         showDefaultData ? data : []
     );
     const [isLocalExpanded, setIsLocalExpanded] = useState(showDefaultData);
+    const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [roomDetailsMap, setRoomDetailsMap] = useState<Map<number, RoomDetailRow[]>>(new Map());
 
     // Initialize the parent ref with default data
     useEffect(() => {
@@ -90,9 +96,10 @@ function RoomServiceForm({
         // Find the row to check if it has a backend ID
         const rowToDelete = localRoomServiceRows.find(row => row.id === id);
         
-        // If row has backend ID, call delete handler first
-        if (rowToDelete?.backendId && onDeleteService) {
-            const deleteSuccess = await onDeleteService(rowToDelete.backendId);
+        // Always call delete handler if it exists (it will handle undefined backendId for new services)
+        if (onDeleteService) {
+            const backendId: string | undefined = rowToDelete?.backendId;
+            const deleteSuccess = await onDeleteService(backendId);
             if (!deleteSuccess) {
                 // If backend deletion failed, don't remove from frontend
                 return;
@@ -112,6 +119,36 @@ function RoomServiceForm({
         if (onSubmit) {
             onSubmit();
         }
+    };
+
+    const handleSettingClick = (rowId: number) => {
+        setSelectedRowId(rowId);
+        setIsModalVisible(true);
+    };
+
+    const handleModalSave = (rooms: RoomDetailRow[]) => {
+        if (selectedRowId !== null) {
+            setRoomDetailsMap(prev => {
+                const newMap = new Map(prev);
+                newMap.set(selectedRowId, rooms);
+                return newMap;
+            });
+            if (onRoomDetailsChange) {
+                onRoomDetailsChange(selectedRowId, rooms);
+            }
+        }
+        setIsModalVisible(false);
+        setSelectedRowId(null);
+    };
+
+    const handleModalClose = () => {
+        setIsModalVisible(false);
+        setSelectedRowId(null);
+    };
+
+    const getSelectedRow = () => {
+        if (selectedRowId === null) return null;
+        return localRoomServiceRows.find(row => row.id === selectedRowId);
     };
 
     return (
@@ -175,6 +212,16 @@ function RoomServiceForm({
                                                 ✕
                                             </button>
                                         </div>
+                                    ) : fieldKey === 'quantity' ? (
+                                        // Quantity column - replace with Setting button
+                                        <Button
+                                            type="default"
+                                            icon={<SettingOutlined />}
+                                            onClick={() => handleSettingClick(row.id)}
+                                            className="w-full"
+                                        >
+                                            ตั้งค่าห้องพัก
+                                        </Button>
                                     ) : (
                                         // Other columns
                                         <Input
@@ -190,6 +237,21 @@ function RoomServiceForm({
                             ))}
                         </div>
                     ))}
+
+                    {/* Room Settings Modal */}
+                    {selectedRowId !== null && (
+                        <RoomSettingsModal
+                            visible={isModalVisible}
+                            roomType={getSelectedRow()?.roomType || ''}
+                            roomQuantity={parseInt(getSelectedRow()?.quantity || '0') || 0}
+                            defaultOpenTime={getSelectedRow()?.openTime || '00:00'}
+                            defaultCloseTime={getSelectedRow()?.closeTime || '00:00'}
+                            defaultPrice={getSelectedRow()?.price || '0'}
+                            existingRooms={roomDetailsMap.get(selectedRowId)}
+                            onClose={handleModalClose}
+                            onSave={handleModalSave}
+                        />
+                    )}
 
                     {/* Confirm Button - Now inside the expandable section */}
                     <div className="flex justify-end mt-4">
@@ -218,10 +280,17 @@ interface RoomServiceManagementSectionProps {
     onRoomServiceChange: (data: RoomServiceRow[]) => void;
     onSpecialServiceChange: (data: RoomServiceRow[]) => void;
     onPetCareServiceChange: (data: RoomServiceRow[]) => void;
-    onDeleteRoomService?: (backendId: string) => Promise<boolean>;
-    onDeleteSpecialService?: (backendId: string) => Promise<boolean>;
-    onDeletePetCareService?: (backendId: string) => Promise<boolean>;
+    onDeleteRoomService?: (backendId: string | undefined) => Promise<boolean>;
+    onDeleteSpecialService?: (backendId: string | undefined) => Promise<boolean>;
+    onDeletePetCareService?: (backendId: string | undefined) => Promise<boolean>;
     onSubmit: () => void;
+    onRoomDetailsChange?: (rowId: number, rooms: RoomDetailRow[]) => void; // New prop for room details (room services)
+    onSpecialServiceDetailsChange?: (rowId: number, rooms: RoomDetailRow[]) => void; // New prop for special service details
+    onPetCareServiceDetailsChange?: (rowId: number, rooms: RoomDetailRow[]) => void; // New prop for pet care service details
+    // NEW: Props to conditionally show/hide sections based on Step 2 selections
+    showRoomService?: boolean;
+    showSpecialService?: boolean;
+    showPetCareService?: boolean;
 }
 
 export default function RoomServiceManagementSection({
@@ -237,53 +306,73 @@ export default function RoomServiceManagementSection({
     onDeleteRoomService,
     onDeleteSpecialService,
     onDeletePetCareService,
-    onSubmit
+    onSubmit,
+    onRoomDetailsChange,
+    onSpecialServiceDetailsChange,
+    onPetCareServiceDetailsChange,
+    showRoomService = true, // Default to true for backward compatibility
+    showSpecialService = true,
+    showPetCareService = true
 }: RoomServiceManagementSectionProps) {
     return (
         <div className="space-y-6">
             <h3 className="text-2xl font-semibold text-gray-800">
-                กรุณากำหนดรายการห้องพักและบริการกิจหนดของคุณ5555
+                กรุณากำหนดรายการห้องพักและบริการที่คุณเลือก
             </h3>
 
-            <RoomServiceForm
-                data={defaultRoomServiceData}
-                showDefaultData={true}
-                headers={roomServiceHeaders}
-                onDataChange={onRoomServiceChange}
-                onDeleteService={onDeleteRoomService}
-                onSubmit={onSubmit}
-            />
+            {showRoomService && (
+                <>
+                    <RoomServiceForm
+                        data={defaultRoomServiceData}
+                        showDefaultData={true}
+                        headers={roomServiceHeaders}
+                        onDataChange={onRoomServiceChange}
+                        onDeleteService={onDeleteRoomService}
+                        onSubmit={onSubmit}
+                        onRoomDetailsChange={onRoomDetailsChange}
+                    />
+                    {(showSpecialService || showPetCareService) && (
+                        <div className="border border-black mt-15 mb-8"></div>
+                    )}
+                </>
+            )}
 
-            <div className="border border-black mt-15 mb-8"></div>
+            {showSpecialService && (
+                <>
+                    <div className="mt-8">
+                        <RoomServiceForm
+                            data={defaultSpecialServicesData}
+                            showDefaultData={true}
+                            title="เลือกรูปแบบบริการพิเศษ"
+                            description="รหัสบริการพิเศษจะรันตามจำนวนบริการที่มี"
+                            headers={specialServiceHeaders}
+                            onDataChange={onSpecialServiceChange}
+                            onDeleteService={onDeleteSpecialService}
+                            onSubmit={onSubmit}
+                            onRoomDetailsChange={onSpecialServiceDetailsChange}
+                        />
+                    </div>
+                    {showPetCareService && (
+                        <div className="border border-black mt-15 mb-8"></div>
+                    )}
+                </>
+            )}
 
-            <div className="mt-8">
-                <RoomServiceForm
-                    data={defaultSpecialServicesData}
-                    showDefaultData={true}
-                    title="เลือกรูปแบบบริการพิเศษ"
-                    description="รหัสบริการพิเศษจะรันตามจำนวนบริการที่มี"
-                    headers={specialServiceHeaders}
-                    onDataChange={onSpecialServiceChange}
-                    onDeleteService={onDeleteSpecialService}
-                    onSubmit={onSubmit}
-                />
-            </div>
-
-            <div className="border border-black mt-15 mb-8"></div>
-
-            {/* Pet Care Services Table */}
-            <div className="mt-8">
-                <RoomServiceForm
-                    data={defaultPetCareServicesData}
-                    showDefaultData={true}
-                    title="รูปแบบบริการรับฝาก"
-                    description="รหัสบริการรับฝากจะรันตามจำนวนบริการที่มี"
-                    headers={petCareServiceHeaders}
-                    onDataChange={onPetCareServiceChange}
-                    onDeleteService={onDeletePetCareService}
-                    onSubmit={onSubmit}
-                />
-            </div>
+            {showPetCareService && (
+                <div className="mt-8">
+                    <RoomServiceForm
+                        data={defaultPetCareServicesData}
+                        showDefaultData={true}
+                        title="รูปแบบบริการรับฝาก"
+                        description="รหัสบริการรับฝากจะรันตามจำนวนบริการที่มี"
+                        headers={petCareServiceHeaders}
+                        onDataChange={onPetCareServiceChange}
+                        onDeleteService={onDeletePetCareService}
+                        onSubmit={onSubmit}
+                        onRoomDetailsChange={onPetCareServiceDetailsChange}
+                    />
+                </div>
+            )}
         </div>
     );
 }

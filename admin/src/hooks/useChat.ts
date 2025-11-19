@@ -84,6 +84,8 @@ export function useChat(options: UseChatOptions = {}) {
             console.log('[Chat] WebSocket connected');
             setIsConnected(true);
             reconnectAttempts.current = 0;
+            // Store socket globally for access in components
+            (window as any).socket = socket;
         });
 
         socket.on('disconnect', () => {

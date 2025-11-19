@@ -20,6 +20,7 @@ import HotelServiceConfigSection from '@/components/partner/dataEntry/HotelServi
 import RoomServiceManagementSection from '@/components/partner/dataEntry/RoomServiceManagementSection';
 import AccommodationPhotosSection from '@/components/partner/dataEntry/AccommodationPhotosSection';
 import type { RoomServiceRow } from '@/components/partner/dataEntry/RoomServiceConfigSection';
+import type { RoomDetailRow } from '@/components/partner/dataEntry/RoomSettingsModal';
 import { DownOutlined, UpOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 
@@ -48,100 +49,6 @@ const formatTimeForInput = (time: string | null | undefined): string => {
     return '00:00';
 };
 
-// Service Form Component for Step 4 - Moved outside to prevent rebuilds
-const ServiceForm = ({
-    data = [],
-    title,
-    headers,
-    titleColor = "#1F4173",
-    onFieldChange
-}: {
-    data: { id: number; code: string; name: string; openTime: string; closeTime: string; price: string }[];
-    title: string;
-    headers: { [key: string]: string };
-    titleColor?: string;
-    onFieldChange: (rowId: number, field: string, value: string) => void;
-}) => {
-    const [isExpanded, setIsExpanded] = useState(true);
-    
-    return (
-        <div className="mb-8">
-            <div
-                className="px-4 py-2 rounded-lg w-[300px] flex items-center justify-between mb-2 cursor-pointer"
-                style={{ backgroundColor: titleColor }}
-                onClick={() => setIsExpanded(!isExpanded)}
-            >
-                <span style={{ color: '#FFFFFF' }}>{title}</span>
-                <div className="border-white border-2 rounded-lg pt-0.5 pb-0.25 px-1">
-                    {isExpanded ?
-                        <UpOutlined style={{ fontSize: '14px', color: 'white' }} /> :
-                        <DownOutlined style={{ fontSize: '14px', color: 'white' }} />
-                    }
-                </div>
-            </div>
-
-            <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-                }`}
-            >
-                <div className="space-y-4 pt-4">
-                    {/* Header Row */}
-                    <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
-                        {Object.entries(headers).map(([key, value]) => (
-                            <div key={key} className="bg-teal-500 px-4 py-2 rounded-lg" style={{ color: '#FFFFFF' }}>
-                                <span className="text-sm">{value}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Data Rows */}
-                    {data.map((row) => (
-                        <div key={row.id} className="grid gap-4 items-center" style={{ gridTemplateColumns: `repeat(${Object.keys(headers).length}, minmax(0, 1fr))` }}>
-                            {Object.keys(headers).map((fieldKey) => {
-                                const isEditable = fieldKey === 'openTime' || fieldKey === 'closeTime' || fieldKey === 'price' || fieldKey === 'code' || fieldKey === 'name';
-                                return (
-                                    <div key={fieldKey} className="border rounded-lg px-2 py-2 text-center">
-                                        <Input
-                                            type={fieldKey.includes('Time') ? 'time' : 'text'}
-                                            value={row[fieldKey as keyof typeof row] as string}
-                                            className="border-0 p-0 text-center text-sm"
-                                            readOnly={!isEditable}
-                                            onChange={(e) => {
-                                                if (isEditable) {
-                                                    onFieldChange(row.id, fieldKey, e.target.value);
-                                                }
-                                            }}
-                                            suffix={fieldKey.includes('price') ? 'บาท' : undefined}
-                                            style={{
-                                                backgroundColor: isEditable ? '#FFFFFF' : '#F9FAFB',
-                                                cursor: isEditable ? 'text' : 'default'
-                                            }}
-                                        />
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Service type interfaces
-interface DynamicServiceForm {
-    id: string;
-    title: string;
-    data: {
-        id: number;
-        code: string;
-        name: string;
-        openTime: string;
-        closeTime: string;
-        price: string;
-    }[];
-}
 interface ApiRoomService {
     id?: string; // Backend ID (UUID)
     room_type: string;
@@ -237,8 +144,6 @@ export default function CreateService() {
     const [accommodationDescription, setAccommodationDescription] = useState('');
     const [roomServiceData, setRoomServiceData] = useState<RoomServiceRow[]>([
         { id: 1, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
-        { id: 2, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
-        { id: 3, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
     ]);
     const [specialServicesData, setSpecialServicesData] = useState<RoomServiceRow[]>([
         { id: 1, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
@@ -247,10 +152,10 @@ export default function CreateService() {
         { id: 1, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
     ]);
 
-    // Step 4: Dynamic Service Forms State
-    const [dynamicRoomServices, setDynamicRoomServices] = useState<DynamicServiceForm[]>([]);
-    const [dynamicSpecialServices, setDynamicSpecialServices] = useState<DynamicServiceForm[]>([]);
-    const [dynamicPetCareServices, setDynamicPetCareServices] = useState<DynamicServiceForm[]>([]);
+    // Room Details State (replaces Step 4)
+    const [roomDetailsMap, setRoomDetailsMap] = useState<Map<number, RoomDetailRow[]>>(new Map());
+    const [specialServiceDetailsMap, setSpecialServiceDetailsMap] = useState<Map<number, RoomDetailRow[]>>(new Map());
+    const [petCareServiceDetailsMap, setPetCareServiceDetailsMap] = useState<Map<number, RoomDetailRow[]>>(new Map());
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -503,60 +408,94 @@ export default function CreateService() {
                     }
 
                     // console.log("data.data.sub_room_details", data.data.sub_room_details);
-                    // Populate Step 4: Sub-Room Details
+                    // Populate Room Details (from sub_room_details)
+                    // IMPORTANT: Use data directly from API response, not from state variables
+                    // because state updates are asynchronous
                     if (data.data.sub_room_details) {
                         const subRoomDetails = data.data.sub_room_details;
                         
-                        // Populate room services Step 4 forms
-                        if (subRoomDetails.room_services && subRoomDetails.room_services.length > 0) {
-                            const roomForms: DynamicServiceForm[] = subRoomDetails.room_services.map((roomServiceGroup: any, index: number) => ({
-                                id: `room-service-${index}`,
-                                title: `${roomServiceGroup.room_type} (${roomServiceGroup.sub_rooms?.length || 0} ห้อง)`,
-                                data: (roomServiceGroup.sub_rooms || []).map((subRoom: any, i: number) => ({
-                                    id: i + 1,
-                                    code: subRoom.code || '',
-                                    name: subRoom.name || roomServiceGroup.room_type,
-                                    openTime: formatTimeForInput(subRoom.open_time) || '00:00',
-                                    closeTime: formatTimeForInput(subRoom.close_time) || '00:00',
-                                    price: subRoom.price?.toString() || '0'
-                                }))
-                            }));
-                            console.log("roomForms", roomForms);
-                            setDynamicRoomServices(roomForms);
+                        // Handle room_services - use data.data.room_services directly
+                        if (subRoomDetails.room_services && subRoomDetails.room_services.length > 0 && 
+                            data.data.room_services && data.data.room_services.length > 0) {
+                            const newRoomDetailsMap = new Map<number, RoomDetailRow[]>();
+                            
+                            // Use API data directly instead of state
+                            data.data.room_services.forEach((apiService: ApiRoomService, index: number) => {
+                                const localServiceId = index + 1; // Match the ID assigned in setRoomServiceData
+                                const matchingRoomService = subRoomDetails.room_services.find((rs: any) => 
+                                    rs.room_type === apiService.room_type
+                                );
+                                
+                                if (matchingRoomService && matchingRoomService.sub_rooms && matchingRoomService.sub_rooms.length > 0) {
+                                    const roomDetails: RoomDetailRow[] = matchingRoomService.sub_rooms.map((subRoom: any, i: number) => ({
+                                        id: i + 1,
+                                        code: subRoom.code || '',
+                                        name: subRoom.name || apiService.room_type,
+                                        openTime: formatTimeForInput(subRoom.open_time) || '00:00',
+                                        closeTime: formatTimeForInput(subRoom.close_time) || '00:00',
+                                        price: subRoom.price?.toString() || '0',
+                                        images: subRoom.images || []
+                                    }));
+                                    newRoomDetailsMap.set(localServiceId, roomDetails);
+                                }
+                            });
+                            setRoomDetailsMap(newRoomDetailsMap);
                         }
                         
-                        // Populate special services Step 4 forms
-                        if (subRoomDetails.special_services && subRoomDetails.special_services.length > 0) {
-                            const specialForms: DynamicServiceForm[] = subRoomDetails.special_services.map((specialServiceGroup: any, index: number) => ({
-                                id: `special-service-${index}`,
-                                title: specialServiceGroup.service_type || '',
-                                data: (specialServiceGroup.sub_services || []).map((subService: any, i: number) => ({
-                                    id: i + 1,
-                                    code: subService.code || '',
-                                    name: subService.name || specialServiceGroup.service_type,
-                                    openTime: formatTimeForInput(subService.open_time) || '00:00',
-                                    closeTime: formatTimeForInput(subService.close_time) || '00:00',
-                                    price: subService.price?.toString() || '0'
-                                }))
-                            }));
-                            setDynamicSpecialServices(specialForms);
+                        // Handle special_services - use data.data.special_services directly
+                        if (subRoomDetails.special_services && subRoomDetails.special_services.length > 0 &&
+                            data.data.special_services && data.data.special_services.length > 0) {
+                            const newSpecialServiceDetailsMap = new Map<number, RoomDetailRow[]>();
+                            
+                            // Use API data directly instead of state
+                            data.data.special_services.forEach((apiService: ApiSpecialService, index: number) => {
+                                const localServiceId = index + 1; // Match the ID assigned in setSpecialServicesData
+                                const matchingSpecialService = subRoomDetails.special_services.find((ss: any) => 
+                                    ss.service_type === apiService.service_type
+                                );
+                                
+                                if (matchingSpecialService && matchingSpecialService.sub_services && matchingSpecialService.sub_services.length > 0) {
+                                    const serviceDetails: RoomDetailRow[] = matchingSpecialService.sub_services.map((subService: any, i: number) => ({
+                                        id: i + 1,
+                                        code: subService.code || '',
+                                        name: subService.name || apiService.service_type,
+                                        openTime: formatTimeForInput(subService.open_time) || '00:00',
+                                        closeTime: formatTimeForInput(subService.close_time) || '00:00',
+                                        price: subService.price?.toString() || '0',
+                                        images: subService.images || []
+                                    }));
+                                    newSpecialServiceDetailsMap.set(localServiceId, serviceDetails);
+                                }
+                            });
+                            setSpecialServiceDetailsMap(newSpecialServiceDetailsMap);
                         }
                         
-                        // Populate pet care services Step 4 forms
-                        if (subRoomDetails.pet_care_services && subRoomDetails.pet_care_services.length > 0) {
-                            const petCareForms: DynamicServiceForm[] = subRoomDetails.pet_care_services.map((petCareServiceGroup: any, index: number) => ({
-                                id: `pet-care-service-${index}`,
-                                title: petCareServiceGroup.service_type || '',
-                                data: (petCareServiceGroup.sub_services || []).map((subService: any, i: number) => ({
-                                    id: i + 1,
-                                    code: subService.code || '',
-                                    name: subService.name || petCareServiceGroup.service_type,
-                                    openTime: formatTimeForInput(subService.open_time) || '00:00',
-                                    closeTime: formatTimeForInput(subService.close_time) || '00:00',
-                                    price: subService.price?.toString() || '0'
-                                }))
-                            }));
-                            setDynamicPetCareServices(petCareForms);
+                        // Handle pet_care_services - use data.data.pet_care_services directly
+                        if (subRoomDetails.pet_care_services && subRoomDetails.pet_care_services.length > 0 &&
+                            data.data.pet_care_services && data.data.pet_care_services.length > 0) {
+                            const newPetCareServiceDetailsMap = new Map<number, RoomDetailRow[]>();
+                            
+                            // Use API data directly instead of state
+                            data.data.pet_care_services.forEach((apiService: ApiPetCareService, index: number) => {
+                                const localServiceId = index + 1; // Match the ID assigned in setPetCareServicesData
+                                const matchingPetCareService = subRoomDetails.pet_care_services.find((pcs: any) => 
+                                    pcs.service_type === apiService.service_type
+                                );
+                                
+                                if (matchingPetCareService && matchingPetCareService.sub_services && matchingPetCareService.sub_services.length > 0) {
+                                    const serviceDetails: RoomDetailRow[] = matchingPetCareService.sub_services.map((subService: any, i: number) => ({
+                                        id: i + 1,
+                                        code: subService.code || '',
+                                        name: subService.name || apiService.service_type,
+                                        openTime: formatTimeForInput(subService.open_time) || '00:00',
+                                        closeTime: formatTimeForInput(subService.close_time) || '00:00',
+                                        price: subService.price?.toString() || '0',
+                                        images: subService.images || []
+                                    }));
+                                    newPetCareServiceDetailsMap.set(localServiceId, serviceDetails);
+                                }
+                            });
+                            setPetCareServiceDetailsMap(newPetCareServiceDetailsMap);
                         }
                     }
                 }
@@ -823,88 +762,18 @@ export default function CreateService() {
         }
     };
 
-    // Generate dynamic forms from Step 3 data if Step 4 data doesn't exist
-    // Only run once when data is first loaded, not on every state change
-    // Note: If sub_room_details exist in API response, they are already loaded in fetchServiceData()
-    useEffect(() => {
-        // Only generate if we have Step 3 data but no Step 4 data
-        // This means user has never saved Step 4 before (sub_room_details arrays were empty)
-        console.log("isFetching",isFetching);
-        if (
-            (roomServiceData.length > 0 || specialServicesData.length > 0 || petCareServicesData.length > 0) &&
-            dynamicRoomServices.length === 0 &&
-            dynamicSpecialServices.length === 0 &&
-            dynamicPetCareServices.length === 0 &&
-            !isFetching
-        ) {
-            // Process room services - Generate from Step 3 data
-            if (roomServiceData && roomServiceData.length > 0) {
-                const roomForms: DynamicServiceForm[] = roomServiceData
-                    .filter(service => service.roomType && service.quantity) // Only include filled rows
-                    .map((service, index) => ({
-                        id: `room-service-${index}`,
-                        title: `${service.roomType} (${service.quantity} ห้อง)`,
-                        data: Array.from({ length: parseInt(service.quantity) || 1 }, (_, i) => ({
-                            id: i + 1,
-                            code: `${service.roomType.substring(0, 2).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
-                            name: service.roomType,
-                            openTime: service.openTime || '00:00',
-                            closeTime: service.closeTime || '00:00',
-                            price: service.price || '0'
-                        }))
-                    }));
-                    console.log("555555");
-                setDynamicRoomServices(roomForms);
-            }
-            
-            // Process special services - Generate from Step 3 data
-            if (specialServicesData && specialServicesData.length > 0) {
-                const specialForms: DynamicServiceForm[] = specialServicesData
-                    .filter(service => service.roomType) // Only include filled rows
-                    .map((service, index) => ({
-                        id: `special-service-${index}`,
-                        title: service.roomType,
-                        data: [{
-                            id: 1,
-                            code: `SP-${String(index + 1).padStart(3, '0')}`,
-                            name: service.roomType,
-                            openTime: service.openTime || '00:00',
-                            closeTime: service.closeTime || '00:00',
-                            price: service.price || '0'
-                        }]
-                    }));
-                setDynamicSpecialServices(specialForms);
-            }
-            
-            // Process pet care services - Generate from Step 3 data
-            if (petCareServicesData && petCareServicesData.length > 0) {
-                const petCareForms: DynamicServiceForm[] = petCareServicesData
-                    .filter(service => service.roomType) // Only include filled rows
-                    .map((service, index) => ({
-                        id: `pet-care-service-${index}`,
-                        title: service.roomType,
-                        data: [{
-                            id: 1,
-                            code: `PC-${String(index + 1).padStart(3, '0')}`,
-                            name: service.roomType,
-                            openTime: service.openTime || '00:00',
-                            closeTime: service.closeTime || '00:00',
-                            price: service.price || '0'
-                        }]
-                    }));
-                setDynamicPetCareServices(petCareForms);
-            }
-        }
-        // Only depend on isFetching and the existence of Step 3 data, not the dynamic arrays themselves
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isFetching]);
 
     // Delete handlers for backend services
-    const handleDeleteRoomService = async (backendId: string): Promise<boolean> => {
+    const handleDeleteRoomService = async (backendId: string | undefined): Promise<boolean> => {
+        // If no backendId, it's a new service not yet saved - just return true to allow local deletion
+        if (!backendId) {
+            return true;
+        }
+
         const token = localStorage.getItem('accessToken');
         
         try {
-            const response = await fetch(`${API_BASE_URL}/api/partner/services/${backendId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/partner/room-services/${backendId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -949,11 +818,16 @@ export default function CreateService() {
         }
     };
 
-    const handleDeleteSpecialService = async (backendId: string): Promise<boolean> => {
+    const handleDeleteSpecialService = async (backendId: string | undefined): Promise<boolean> => {
+        // If no backendId, it's a new service not yet saved - just return true to allow local deletion
+        if (!backendId) {
+            return true;
+        }
+
         const token = localStorage.getItem('accessToken');
         
         try {
-            const response = await fetch(`${API_BASE_URL}/api/partner/services/${backendId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/partner/special-services/${backendId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -998,11 +872,16 @@ export default function CreateService() {
         }
     };
 
-    const handleDeletePetCareService = async (backendId: string): Promise<boolean> => {
+    const handleDeletePetCareService = async (backendId: string | undefined): Promise<boolean> => {
+        // If no backendId, it's a new service not yet saved - just return true to allow local deletion
+        if (!backendId) {
+            return true;
+        }
+
         const token = localStorage.getItem('accessToken');
         
         try {
-            const response = await fetch(`${API_BASE_URL}/api/partner/services/${backendId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/partner/pet-care-services/${backendId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -1258,64 +1137,157 @@ export default function CreateService() {
                     description: accommodationDescription
                 },
 
-                // Step 3: Room Services
-                room_services: roomServiceData.map(service => ({
-                    room_type: service.roomType,
-                    quantity: parseInt(service.quantity) || 0,
-                    open_time: service.openTime,
-                    close_time: service.closeTime,
-                    price: parseFloat(service.price) || 0
-                })),
+                // Step 3: Room Services (only include if enabled in Step 2)
+                // Calculate quantity, open_time, close_time from sub_room_details
+                ...(hotelServiceConfig.roomService ? {
+                    room_services: roomServiceData
+                        .filter(service => {
+                            // Include service if it has roomType AND price, OR if it has configured sub-rooms
+                            const hasBasicData = service.roomType && service.price;
+                            const hasRoomDetails = roomDetailsMap.has(service.id) && (roomDetailsMap.get(service.id) || []).length > 0;
+                            return hasBasicData || hasRoomDetails;
+                        })
+                        .map(service => {
+                            const roomDetails = roomDetailsMap.get(service.id) || [];
+                            // Calculate quantity from sub_rooms count
+                            const quantity = roomDetails.length;
+                            // Use first room's data as defaults
+                            const firstRoom = roomDetails[0];
+                            return {
+                                room_type: service.roomType || firstRoom?.name || 'Room',
+                                quantity: quantity,
+                                open_time: firstRoom?.openTime || service.openTime || '00:00',
+                                close_time: firstRoom?.closeTime || service.closeTime || '00:00',
+                                price: parseFloat(service.price) || (firstRoom ? parseFloat(firstRoom.price) : 0)
+                            };
+                        })
+                } : {}),
 
-                // Step 3: Special Services
-                special_services: specialServicesData.map(service => ({
-                    service_type: service.roomType,
-                    quantity: service.quantity,
-                    open_time: service.openTime,
-                    close_time: service.closeTime,
-                    price: parseFloat(service.price) || 0
-                })),
+                // Step 3: Special Services (only include if enabled in Step 2)
+                ...(hotelServiceConfig.specialService ? {
+                    special_services: specialServicesData
+                        .filter(service => {
+                            // Include service if it has roomType AND price, OR if it has configured sub-services
+                            const hasBasicData = service.roomType && service.price;
+                            const hasServiceDetails = specialServiceDetailsMap.has(service.id) && (specialServiceDetailsMap.get(service.id) || []).length > 0;
+                            return hasBasicData || hasServiceDetails;
+                        })
+                        .map(service => {
+                            const serviceDetails = specialServiceDetailsMap.get(service.id) || [];
+                            // Calculate quantity from sub_services count
+                            const quantity = serviceDetails.length;
+                            // Use first service's data as defaults
+                            const firstService = serviceDetails[0];
+                            return {
+                                service_type: service.roomType || firstService?.name || 'Service',
+                                quantity: quantity.toString(),
+                                open_time: firstService?.openTime || service.openTime || '00:00',
+                                close_time: firstService?.closeTime || service.closeTime || '00:00',
+                                price: parseFloat(service.price) || (firstService ? parseFloat(firstService.price) : 0)
+                            };
+                        })
+                } : {}),
 
-                // Step 3: Pet Care Services
-                pet_care_services: petCareServicesData.map(service => ({
-                    service_type: service.roomType,
-                    quantity: service.quantity,
-                    open_time: service.openTime,
-                    close_time: service.closeTime,
-                    price: parseFloat(service.price) || 0
-                })),
-                // Step 4: Sub-Room Details (individual room/service configurations)
+                // Step 3: Pet Care Services (only include if enabled in Step 2)
+                ...(hotelServiceConfig.petCareService ? {
+                    pet_care_services: petCareServicesData
+                        .filter(service => {
+                            // Include service if it has roomType AND price, OR if it has configured sub-services
+                            const hasBasicData = service.roomType && service.price;
+                            const hasServiceDetails = petCareServiceDetailsMap.has(service.id) && (petCareServiceDetailsMap.get(service.id) || []).length > 0;
+                            return hasBasicData || hasServiceDetails;
+                        })
+                        .map(service => {
+                            const serviceDetails = petCareServiceDetailsMap.get(service.id) || [];
+                            // Calculate quantity from sub_services count
+                            const quantity = serviceDetails.length;
+                            // Use first service's data as defaults
+                            const firstService = serviceDetails[0];
+                            return {
+                                service_type: service.roomType || firstService?.name || 'Service',
+                                quantity: quantity.toString(),
+                                open_time: firstService?.openTime || service.openTime || '00:00',
+                                close_time: firstService?.closeTime || service.closeTime || '00:00',
+                                price: parseFloat(service.price) || (firstService ? parseFloat(firstService.price) : 0)
+                            };
+                        })
+                } : {}),
+                // Sub-Room Details (individual room configurations from modal) - only include enabled services
                 sub_room_details: {
-                    room_services: dynamicRoomServices.map(roomService => ({
-                        room_type: roomService.data[0]?.name || '',
-                        sub_rooms: roomService.data.map(subRoom => ({
-                            code: subRoom.code,
-                            name: subRoom.name,
-                            open_time: subRoom.openTime,
-                            close_time: subRoom.closeTime,
-                            price: parseFloat(subRoom.price) || 0
-                        }))
-                    })),
-                    special_services: dynamicSpecialServices.map(specialService => ({
-                        service_type: specialService.data[0]?.name || '',
-                        sub_services: specialService.data.map(subService => ({
-                            code: subService.code,
-                            name: subService.name,
-                            open_time: subService.openTime,
-                            close_time: subService.closeTime,
-                            price: parseFloat(subService.price) || 0
-                        }))
-                    })),
-                    pet_care_services: dynamicPetCareServices.map(petCareService => ({
-                        service_type: petCareService.data[0]?.name || '',
-                        sub_services: petCareService.data.map(subService => ({
-                            code: subService.code,
-                            name: subService.name,
-                            open_time: subService.openTime || '',
-                            close_time: subService.closeTime || '',
-                            price: parseFloat(subService.price) || 0
-                        }))
-                    }))
+                    ...(hotelServiceConfig.roomService ? {
+                        room_services: roomServiceData
+                            .filter(service => {
+                                // Include if has basic data OR has room details configured
+                                const hasBasicData = service.roomType && service.price;
+                                const hasRoomDetails = roomDetailsMap.has(service.id) && (roomDetailsMap.get(service.id) || []).length > 0;
+                                return hasBasicData || hasRoomDetails;
+                            })
+                            .map((service) => {
+                                const roomDetails = roomDetailsMap.get(service.id) || [];
+                                const firstRoom = roomDetails[0];
+                                return {
+                                    room_type: service.roomType || firstRoom?.name || 'Room',
+                                    sub_rooms: roomDetails.map(room => ({
+                                        code: room.code,
+                                        name: room.name,
+                                        open_time: room.openTime,
+                                        close_time: room.closeTime,
+                                        price: parseFloat(room.price) || 0,
+                                        images: room.images || []
+                                    }))
+                                };
+                            }).filter(service => service.sub_rooms.length > 0)
+                    } : { room_services: [] }),
+                    
+                    ...(hotelServiceConfig.specialService ? {
+                        special_services: specialServicesData
+                            .filter(service => {
+                                // Include if has basic data OR has service details configured
+                                const hasBasicData = service.roomType && service.price;
+                                const hasServiceDetails = specialServiceDetailsMap.has(service.id) && (specialServiceDetailsMap.get(service.id) || []).length > 0;
+                                return hasBasicData || hasServiceDetails;
+                            })
+                            .map((service) => {
+                                const serviceDetails = specialServiceDetailsMap.get(service.id) || [];
+                                const firstService = serviceDetails[0];
+                                return {
+                                    service_type: service.roomType || firstService?.name || 'Service',
+                                    sub_services: serviceDetails.map(detail => ({
+                                        code: detail.code,
+                                        name: detail.name,
+                                        open_time: detail.openTime,
+                                        close_time: detail.closeTime,
+                                        price: parseFloat(detail.price) || 0,
+                                        images: detail.images || []
+                                    }))
+                                };
+                            }).filter(service => service.sub_services.length > 0)
+                    } : { special_services: [] }),
+                    
+                    ...(hotelServiceConfig.petCareService ? {
+                        pet_care_services: petCareServicesData
+                            .filter(service => {
+                                // Include if has basic data OR has service details configured
+                                const hasBasicData = service.roomType && service.price;
+                                const hasServiceDetails = petCareServiceDetailsMap.has(service.id) && (petCareServiceDetailsMap.get(service.id) || []).length > 0;
+                                return hasBasicData || hasServiceDetails;
+                            })
+                            .map((service) => {
+                                const serviceDetails = petCareServiceDetailsMap.get(service.id) || [];
+                                const firstService = serviceDetails[0];
+                                return {
+                                    service_type: service.roomType || firstService?.name || 'Service',
+                                    sub_services: serviceDetails.map(detail => ({
+                                        code: detail.code,
+                                        name: detail.name,
+                                        open_time: detail.openTime,
+                                        close_time: detail.closeTime,
+                                        price: parseFloat(detail.price) || 0,
+                                        images: detail.images || []
+                                    }))
+                                };
+                            }).filter(service => service.sub_services.length > 0)
+                    } : { pet_care_services: [] })
                 }
             };
 
@@ -1498,117 +1470,6 @@ export default function CreateService() {
         handleServiceConfigChange('services', currentServices);
     };
 
-    // Generate dynamic service forms for Step 4 based on Step 3 data
-    const generateDynamicServiceForms = () => {
-        // Process room services - create forms based on number of rooms
-        console.log("roomServiceData", roomServiceData);
-        if (roomServiceData && roomServiceData.length > 0) {
-            const roomForms: DynamicServiceForm[] = roomServiceData
-                .filter(service => service.roomType && service.quantity) // Only include filled rows
-                .map((service, index) => ({
-                    id: `room-service-${index}`,
-                    title: `${service.roomType} (${service.quantity} ห้อง)`,
-                    data: Array.from({ length: parseInt(service.quantity) || 1 }, (_, i) => ({
-                        id: i + 1,
-                        code: `${service.roomType.substring(0, 2).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
-                        name: service.roomType,
-                        openTime: service.openTime || '00:00',
-                        closeTime: service.closeTime || '00:00',
-                        price: service.price || '0'
-                    }))
-                }));
-                console.log("77777");
-            setDynamicRoomServices(roomForms);
-        }
-        
-        // Process special services - create separate forms for each type
-        if (specialServicesData && specialServicesData.length > 0) {
-            const specialForms: DynamicServiceForm[] = specialServicesData
-                .filter(service => service.roomType) // Only include filled rows
-                .map((service, index) => ({
-                    id: `special-service-${index}`,
-                    title: service.roomType,
-                    data: [{
-                        id: 1,
-                        code: `SP-${String(index + 1).padStart(3, '0')}`,
-                        name: service.roomType,
-                        openTime: service.openTime || '00:00',
-                        closeTime: service.closeTime || '00:00',
-                        price: service.price || '0'
-                    }]
-                }));
-            setDynamicSpecialServices(specialForms);
-        }
-        
-        // Process pet care services - create separate forms for each type
-        if (petCareServicesData && petCareServicesData.length > 0) {
-            const petCareForms: DynamicServiceForm[] = petCareServicesData
-                .filter(service => service.roomType) // Only include filled rows
-                .map((service, index) => ({
-                    id: `pet-care-service-${index}`,
-                    title: service.roomType,
-                    data: [{
-                        id: 1,
-                        code: `PC-${String(index + 1).padStart(3, '0')}`,
-                        name: service.roomType,
-                        openTime: service.openTime || '00:00',
-                        closeTime: service.closeTime || '00:00',
-                        price: service.price || '0'
-                    }]
-                }));
-            setDynamicPetCareServices(petCareForms);
-        }
-    };
-
-    // Handler for Step 4 field changes
-    const handleStep4FieldChange = (
-        serviceType: 'room' | 'special' | 'petcare',
-        formId: string,
-        rowId: number,
-        field: string,
-        value: string
-    ) => {
-        if (serviceType === 'room') {
-            setDynamicRoomServices(prev =>
-                prev.map(form =>
-                    form.id === formId
-                        ? {
-                              ...form,
-                              data: form.data.map(row =>
-                                  row.id === rowId ? { ...row, [field]: value } : row
-                              )
-                          }
-                        : form
-                )
-            );
-        } else if (serviceType === 'special') {
-            setDynamicSpecialServices(prev =>
-                prev.map(form =>
-                    form.id === formId
-                        ? {
-                              ...form,
-                              data: form.data.map(row =>
-                                  row.id === rowId ? { ...row, [field]: value } : row
-                              )
-                          }
-                        : form
-                )
-            );
-        } else if (serviceType === 'petcare') {
-            setDynamicPetCareServices(prev =>
-                prev.map(form =>
-                    form.id === formId
-                        ? {
-                              ...form,
-                              data: form.data.map(row =>
-                                  row.id === rowId ? { ...row, [field]: value } : row
-                              )
-                          }
-                        : form
-                )
-            );
-        }
-    };
 
 
     const renderStepContent = () => {
@@ -1670,10 +1531,31 @@ export default function CreateService() {
                                 defaultPetCareServicesData={petCareServicesData}
                                 roomServiceHeaders={{
                             roomType: "รูปแบบห้องพักที่คุณเลือก",
-                            quantity: "จำนวนห้องพัก",
+                            quantity: "ตั้งค่าห้องพัก",
                             openTime: "เวลาเปิด",
                             closeTime: "เวลาปิด",
                             price: "ราคาที่กำหนด"
+                        }}
+                        onRoomDetailsChange={(rowId, rooms) => {
+                            setRoomDetailsMap(prev => {
+                                const newMap = new Map(prev);
+                                newMap.set(rowId, rooms);
+                                return newMap;
+                            });
+                        }}
+                        onSpecialServiceDetailsChange={(rowId, rooms) => {
+                            setSpecialServiceDetailsMap(prev => {
+                                const newMap = new Map(prev);
+                                newMap.set(rowId, rooms);
+                                return newMap;
+                            });
+                        }}
+                        onPetCareServiceDetailsChange={(rowId, rooms) => {
+                            setPetCareServiceDetailsMap(prev => {
+                                const newMap = new Map(prev);
+                                newMap.set(rowId, rooms);
+                                return newMap;
+                            });
                         }}
                         specialServiceHeaders={{
                             roomType: "รูปแบบบริการ",
@@ -1696,101 +1578,12 @@ export default function CreateService() {
                         onDeleteSpecialService={handleDeleteSpecialService}
                         onDeletePetCareService={handleDeletePetCareService}
                         onSubmit={handleStep3Save}
+                        showRoomService={hotelServiceConfig.roomService}
+                        showSpecialService={hotelServiceConfig.specialService}
+                        showPetCareService={hotelServiceConfig.petCareService}
                     />
                         </div>
                     </>
-                );
-            case 4:
-                return (
-                    <div className="py-6">
-                        {/* Dynamic Room Services Section */}
-                        {dynamicRoomServices.length > 0 && (
-                            <>
-                                <div className="flex justify-center items-center rounded-lg py-1.5 mb-5 w-[220px]" style={{ backgroundColor: '#00B6AA' }}>
-                                    <span className="text-lg" style={{ color: '#FFFFFF' }}>รูปแบบห้องพักของคุณ</span>
-                                </div>
-                                {dynamicRoomServices.map((roomService) => (
-                                    <ServiceForm
-                                        key={roomService.id}
-                                        data={roomService.data}
-                                        title={roomService.title}
-                                        headers={{
-                                            code: "รหัสห้องพัก",
-                                            name: "รูปแบบห้องพักที่คุณเลือก",
-                                            openTime: "เวลาเปิด",
-                                            closeTime: "เวลาปิด",
-                                            price: "ราคาที่กำหนด"
-                                        }}
-                                        onFieldChange={(rowId, field, value) => 
-                                            handleStep4FieldChange('room', roomService.id, rowId, field, value)
-                                        }
-                                    />
-                                ))}
-                                <div className="border border-black mt-15 mb-8"></div>
-                            </>
-                        )}
-
-                        {/* Dynamic Special Services Section */}
-                        {dynamicSpecialServices.length > 0 && (
-                            <>
-                                <div className="flex justify-center items-center rounded-lg py-1.5 mb-5 w-[220px]" style={{ backgroundColor: '#00B6AA' }}>
-                                    <span className="text-lg" style={{ color: '#FFFFFF' }}>รูปแบบบริการพิเศษ</span>
-                                </div>
-                                {dynamicSpecialServices.map((specialService) => (
-                                    <ServiceForm
-                                        key={specialService.id}
-                                        data={specialService.data}
-                                        title={specialService.title}
-                                        headers={{
-                                            code: "รหัสบริการ",
-                                            name: "ประเภทบริการ",
-                                            openTime: "เวลาเปิด",
-                                            closeTime: "เวลาปิด",
-                                            price: "ราคาที่กำหนด"
-                                        }}
-                                        onFieldChange={(rowId, field, value) => 
-                                            handleStep4FieldChange('special', specialService.id, rowId, field, value)
-                                        }
-                                    />
-                                ))}
-                                <div className="border border-black mt-15 mb-8"></div>
-                            </>
-                        )}
-
-                        {/* Dynamic Pet Care Services Section */}
-                        {dynamicPetCareServices.length > 0 && (
-                            <>
-                                <div className="flex justify-center items-center rounded-lg py-1.5 mb-5 w-[300px]" style={{ backgroundColor: '#00B6AA' }}>
-                                    <span className="text-lg" style={{ color: '#FFFFFF' }}>รูปแบบบริการรับฝากสัตว์เลี้ยง</span>
-                                </div>
-                                {dynamicPetCareServices.map((petCareService) => (
-                                    <ServiceForm
-                                        key={petCareService.id}
-                                        data={petCareService.data}
-                                        title={petCareService.title}
-                                        headers={{
-                                            code: "รหัสบริการ",
-                                            name: "ประเภทบริการ",
-                                            openTime: "เวลาเปิด",
-                                            closeTime: "เวลาปิด",
-                                            price: "ราคาที่กำหนด"
-                                        }}
-                                        onFieldChange={(rowId, field, value) => 
-                                            handleStep4FieldChange('petcare', petCareService.id, rowId, field, value)
-                                        }
-                                    />
-                                ))}
-                            </>
-                        )}
-
-                        {/* Show message if no services configured */}
-                        {dynamicRoomServices.length === 0 && dynamicSpecialServices.length === 0 && dynamicPetCareServices.length === 0 && (
-                            <div className="text-center py-8">
-                                <p className="text-gray-600 text-lg">ไม่พบข้อมูลบริการ</p>
-                                <p className="text-gray-500 text-sm mt-2">กรุณากลับไปกรอกข้อมูลในขั้นตอนที่ 3</p>
-                            </div>
-                        )}
-                    </div>
                 );
             default:
                 return null;
@@ -1800,8 +1593,7 @@ export default function CreateService() {
     const stepTitles = [
         'ข้อมูลส่วนตัวและธุรกิจ',
         'การกำหนดค่าบริการโรงแรม',
-        'รูปภาพที่พักและรายละเอียดบริการ',
-        'ยืนยันข้อมูลบริการ'
+        'รูปภาพที่พักและรายละเอียดบริการ'
     ];
 
     return (
@@ -1842,7 +1634,7 @@ export default function CreateService() {
                     {/* Step Indicator */}
                     <div className="flex justify-center mb-8">
                         <div className="flex items-center space-x-4">
-                            {[1, 2, 3, 4].map((step) => (
+                            {[1, 2, 3].map((step) => (
                                 <div key={step} className="flex items-center">
                                     <div
                                         className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
@@ -1855,7 +1647,7 @@ export default function CreateService() {
                                     >
                                         {step}
                                     </div>
-                                    {step < 4 && (
+                                    {step < 3 && (
                                         <div
                                             className={`w-20 h-1 ${
                                                 currentStep > step ? 'bg-green-500' : 'bg-gray-300'
@@ -1897,18 +1689,14 @@ export default function CreateService() {
                         </Button>
 
                         <div className="text-sm text-gray-600">
-                            ขั้นตอน {currentStep} จาก 4
+                            ขั้นตอน {currentStep} จาก 3
                         </div>
 
                         <Button
                             size="large"
                             type="primary"
                             onClick={() => {
-                                if (currentStep < 4) {
-                                    if (currentStep === 3) {
-                                        // Generate dynamic service forms before moving to Step 4
-                                        generateDynamicServiceForms();
-                                    }
+                                if (currentStep < 3) {
                                     setCurrentStep(currentStep + 1);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                 } else {
@@ -1920,7 +1708,7 @@ export default function CreateService() {
                             loading={isSubmitting}
                             disabled={isSubmitting}
                         >
-                            {currentStep === 4 ? (isSubmitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล') : 'ถัดไป'}
+                            {currentStep === 3 ? (isSubmitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล') : 'ถัดไป'}
                         </Button>
                     </div>
                         </>

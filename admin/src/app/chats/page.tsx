@@ -77,6 +77,11 @@ export default function AdminChats() {
         setSelectedConversationId(conversationId);
         await fetchMessages(conversationId);
         await markAsRead(conversationId);
+        
+        // Join conversation room for WebSocket
+        if (isConnected && (window as any).socket) {
+            (window as any).socket.emit('join:conversation', { conversation_id: conversationId });
+        }
     };
     
     const handleInputChange = (value: string) => {
@@ -519,7 +524,7 @@ export default function AdminChats() {
                                                 borderRadius: '20px',
                                                 padding: '8px 16px'
                                             }}
-                                            disabled={isSending || !isConnected}
+                                            disabled={isSending}
                                         />
                                         <div
                                             onClick={handleSendMessage}
@@ -531,8 +536,8 @@ export default function AdminChats() {
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 borderRadius: '50%',
-                                                backgroundColor: (!inputValue.trim() || isSending || !isConnected) ? '#F5F5F5' : '#1890FF',
-                                                pointerEvents: (!inputValue.trim() || isSending || !isConnected) ? 'none' : 'auto'
+                                                backgroundColor: (!inputValue.trim() || isSending) ? '#F5F5F5' : '#1890FF',
+                                                pointerEvents: (!inputValue.trim() || isSending) ? 'none' : 'auto'
                                             }}
                                         >
                                             {isSending ? (
@@ -540,7 +545,7 @@ export default function AdminChats() {
                                             ) : (
                                                 <SendOutlined style={{ 
                                                     fontSize: 18, 
-                                                    color: (!inputValue.trim() || !isConnected) ? '#999999' : '#FFFFFF' 
+                                                    color: (!inputValue.trim()) ? '#999999' : '#FFFFFF' 
                                                 }} />
                                             )}
                                         </div>
