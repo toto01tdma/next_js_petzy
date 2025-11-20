@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Modal, Input, Button, Upload } from 'antd';
 import { DownOutlined, UpOutlined, PlusOutlined } from '@ant-design/icons';
-import type { UploadFile, UploadProps } from 'antd';
+import type { UploadProps } from 'antd';
 import { API_BASE_URL } from '@/config/api';
 
 const { TextArea } = Input;

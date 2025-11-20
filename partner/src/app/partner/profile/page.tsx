@@ -9,7 +9,6 @@ import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import ApprovalModal from '@/components/partner/shared/ApprovalModal';
-import Image from 'next/image';
 import { checkAuthError } from '@/utils/api';
 
 interface ProfileData {
@@ -38,7 +37,6 @@ export default function UserProfile() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(true);
-    const [accommodationType, setAccommodationType] = useState('โรงแรมสัตว์เลี้ยง');
     const [approvalStatus, setApprovalStatus] = useState('APPROVED');
     const [accommodationName, setAccommodationName] = useState('');
     

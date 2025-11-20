@@ -21,8 +21,6 @@ import RoomServiceManagementSection from '@/components/partner/dataEntry/RoomSer
 import AccommodationPhotosSection from '@/components/partner/dataEntry/AccommodationPhotosSection';
 import type { RoomServiceRow } from '@/components/partner/dataEntry/RoomServiceConfigSection';
 import type { RoomDetailRow } from '@/components/partner/dataEntry/RoomSettingsModal';
-import { DownOutlined, UpOutlined } from '@ant-design/icons';
-import { Input } from 'antd';
 
 // Helper function to format time from backend (Date string or HH:mm format) to HH:mm for input
 const formatTimeForInput = (time: string | null | undefined): string => {
@@ -39,7 +37,7 @@ const formatTimeForInput = (time: string | null | undefined): string => {
             const minutes = String(date.getMinutes()).padStart(2, '0');
             return `${hours}:${minutes}`;
         }
-    } catch (e) {
+    } catch {
         // If parsing fails, try to extract time from string
         const match = time.match(/(\d{2}):(\d{2})/);
         if (match) {
@@ -156,7 +154,11 @@ export default function CreateService() {
     const [petCareServiceDetailsMap, setPetCareServiceDetailsMap] = useState<Map<number, RoomDetailRow[]>>(new Map());
     
     // Store sub_room_details data from API for modal population
-    const [subRoomDetailsData, setSubRoomDetailsData] = useState<any>(null);
+    const [subRoomDetailsData, setSubRoomDetailsData] = useState<{
+        room_services?: Array<{ room_type: string; sub_rooms?: Array<{ code: string; name: string; open_time: string; close_time: string; price: number; images: string[] }> }>;
+        special_services?: Array<{ service_type: string; sub_services?: Array<{ code: string; name: string; open_time: string; close_time: string; price: number; images: string[] }> }>;
+        pet_care_services?: Array<{ service_type: string; sub_services?: Array<{ code: string; name: string; open_time: string; close_time: string; price: number; images: string[] }> }>;
+    } | null>(null);
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -441,11 +443,11 @@ export default function CreateService() {
                             };
                             
                             // Generate room details from sub_room_details.room_services
-                            subRoomDetails.room_services.forEach((roomService: any, index: number) => {
+                            subRoomDetails.room_services.forEach((roomService: { room_type: string; sub_rooms?: Array<{ code: string; name: string; open_time: string; close_time: string; price: number; images: string[] }> }, index: number) => {
                                 const localServiceId = index + 1; // Match the ID assigned in setRoomServiceData
                                 
                                 if (roomService.sub_rooms && roomService.sub_rooms.length > 0) {
-                                    const roomDetails: RoomDetailRow[] = roomService.sub_rooms.map((subRoom: any, i: number) => ({
+                                    const roomDetails: RoomDetailRow[] = roomService.sub_rooms.map((subRoom: { code: string; name: string; open_time: string; close_time: string; price: number; images: string[] }, i: number) => ({
                                         id: i + 1,
                                         code: subRoom.code || '',
                                         name: subRoom.name || roomService.room_type,
@@ -477,12 +479,12 @@ export default function CreateService() {
                             // Use API data directly instead of state
                             data.data.special_services.forEach((apiService: ApiSpecialService, index: number) => {
                                 const localServiceId = index + 1; // Match the ID assigned in setSpecialServicesData
-                                const matchingSpecialService = subRoomDetails.special_services.find((ss: any) => 
+                                const matchingSpecialService = subRoomDetails.special_services.find((ss: { service_type: string; sub_services?: Array<{ code: string; name: string; open_time: string; close_time: string; price: number; images: string[] }> }) => 
                                     ss.service_type === apiService.service_type
                                 );
                                 
                                 if (matchingSpecialService && matchingSpecialService.sub_services && matchingSpecialService.sub_services.length > 0) {
-                                    const serviceDetails: RoomDetailRow[] = matchingSpecialService.sub_services.map((subService: any, i: number) => ({
+                                    const serviceDetails: RoomDetailRow[] = matchingSpecialService.sub_services.map((subService: { code: string; name: string; open_time: string; close_time: string; price: number; images: string[] }, i: number) => ({
                                         id: i + 1,
                                         code: subService.code || '',
                                         name: subService.name || apiService.service_type,
@@ -505,12 +507,12 @@ export default function CreateService() {
                             // Use API data directly instead of state
                             data.data.pet_care_services.forEach((apiService: ApiPetCareService, index: number) => {
                                 const localServiceId = index + 1; // Match the ID assigned in setPetCareServicesData
-                                const matchingPetCareService = subRoomDetails.pet_care_services.find((pcs: any) => 
+                                const matchingPetCareService = subRoomDetails.pet_care_services.find((pcs: { service_type: string; sub_services?: Array<{ code: string; name: string; open_time: string; close_time: string; price: number; images: string[] }> }) => 
                                     pcs.service_type === apiService.service_type
                                 );
                                 
                                 if (matchingPetCareService && matchingPetCareService.sub_services && matchingPetCareService.sub_services.length > 0) {
-                                    const serviceDetails: RoomDetailRow[] = matchingPetCareService.sub_services.map((subService: any, i: number) => ({
+                                    const serviceDetails: RoomDetailRow[] = matchingPetCareService.sub_services.map((subService: { code: string; name: string; open_time: string; close_time: string; price: number; images: string[] }, i: number) => ({
                                         id: i + 1,
                                         code: subService.code || '',
                                         name: subService.name || apiService.service_type,
@@ -1584,17 +1586,11 @@ export default function CreateService() {
                         }}
                         specialServiceHeaders={{
                             roomType: "รูปแบบบริการ",
-                            quantity: "ประเภทบริการ",
-                            openTime: "เวลาเปิด",
-                            closeTime: "เวลาปิด",
-                            price: "ราคาที่กำหนด"
+                            quantity: "ประเภทบริการ"
                         }}
                         petCareServiceHeaders={{
                             roomType: "รูปแบบบริการ",
-                            quantity: "ประเภทบริการ",
-                            openTime: "เวลาเปิด",
-                            closeTime: "เวลาปิด",
-                            price: "ราคาที่กำหนด"
+                            quantity: "ประเภทบริการ"
                         }}
                         onRoomServiceChange={setRoomServiceData}
                         onSpecialServiceChange={setSpecialServicesData}

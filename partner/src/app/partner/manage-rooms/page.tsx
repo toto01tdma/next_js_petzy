@@ -184,11 +184,11 @@ export default function ManageRooms() {
                 const formattedRooms: RoomDetail[] = [];
                 let roomIndex = 0;
                 
-                roomServices.forEach((roomService: any) => {
+                roomServices.forEach((roomService: { room_type?: string; sub_rooms?: Array<{ code?: string; name?: string; open_time?: string; close_time?: string; price?: number; images?: string[] }> }) => {
                     const roomType = roomService.room_type || 'Unknown';
                     const subRooms = roomService.sub_rooms || [];
                     
-                    subRooms.forEach((subRoom: any) => {
+                    subRooms.forEach((subRoom: { code?: string; name?: string; open_time?: string; close_time?: string; price?: number; images?: string[] }) => {
                         roomIndex++;
                         formattedRooms.push({
                             key: `room-${roomIndex}`,

@@ -1,24 +1,151 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Sidebar from '@/components/partner/shared/Sidebar';
 import { MenuOutlined, CalendarOutlined, SearchOutlined, CheckCircleOutlined, HomeOutlined } from '@ant-design/icons';
-import { Input, Select, Button } from 'antd';
+import { Input, Select, Button, Spin, message, DatePicker } from 'antd';
 import DataTable from '@/components/partner/shared/DataTable';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import ApprovalModal from '@/components/partner/shared/ApprovalModal';
+import { API_BASE_URL } from '@/config/api';
+import type { Dayjs } from 'dayjs';
 
 const { Option } = Select;
+const { RangePicker } = DatePicker;
+
+// Interfaces moved from partner.service.ts
+interface BookingData {
+  [key: string]: unknown;
+  key: string;
+  bookingCode: string;
+  customerName: string;
+  price: string;
+  budget: string;
+  checkInDate: string;
+  dailyIncome: string;
+  paymentStatus: string;
+  updateStatus: string;
+  paymentMethod: string;
+  bookingId: string;
+}
+
+interface BookingsResponse {
+  success: boolean;
+  data: BookingData[];
+  total: number;
+  limit: number;
+  offset: number;
+}
 
 export default function Dashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [bookingsData, setBookingsData] = useState<BookingData[]>([]);
+    const [isLoadingBookings, setIsLoadingBookings] = useState(false);
+    const [searchText, setSearchText] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
     
     // Approval status check
     const { isApproved, isLoading: isLoadingApproval } = useApprovalStatus();
 
+    // Function moved from partner.service.ts
+    const getBookings = useCallback(async (params?: {
+        search?: string;
+        status?: string;
+        startDate?: string;
+        endDate?: string;
+        limit?: number;
+        offset?: number;
+    }): Promise<BookingsResponse> => {
+        try {
+            const queryParams = new URLSearchParams();
+            
+            if (params?.search) queryParams.append('search', params.search);
+            if (params?.status) queryParams.append('status', params.status);
+            if (params?.startDate) queryParams.append('startDate', params.startDate);
+            if (params?.endDate) queryParams.append('endDate', params.endDate);
+            if (params?.limit) queryParams.append('limit', params.limit.toString());
+            if (params?.offset) queryParams.append('offset', params.offset.toString());
+
+            const url = `${API_BASE_URL}/api/partner/bookings${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+            throw error;
+        }
+    }, []);
+
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
     };
+
+    // Fetch bookings data
+    const fetchBookings = useCallback(async () => {
+        setIsLoadingBookings(true);
+        try {
+            const params: any = {
+                limit: 100,
+                offset: 0,
+            };
+
+            // Add search if there's search text
+            if (searchText.trim()) {
+                params.search = searchText.trim();
+            }
+
+            // Add status filter if not 'all'
+            if (statusFilter !== 'all') {
+                const statusMap: Record<string, string> = {
+                    'pending': 'PENDING',
+                    'paid': 'PAID',
+                };
+                params.status = statusMap[statusFilter];
+            }
+
+            // Add date range filter if selected
+            if (dateRange && dateRange[0] && dateRange[1]) {
+                params.startDate = dateRange[0].format('YYYY-MM-DD');
+                params.endDate = dateRange[1].format('YYYY-MM-DD');
+            }
+
+            const response = await getBookings(params);
+            
+            if (response.success) {
+                setBookingsData(response.data);
+            } else {
+                message.error('ไม่สามารถโหลดข้อมูลการจองได้');
+            }
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+            message.error('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+        } finally {
+            setIsLoadingBookings(false);
+        }
+    }, [searchText, statusFilter, dateRange, getBookings]);
+
+    // Load bookings on mount
+    useEffect(() => {
+        fetchBookings();
+    }, [fetchBookings]);
+
+    // Handle search button click
+    const handleSearch = useCallback(() => {
+        fetchBookings();
+    }, [fetchBookings]);
 
     // Dashboard table columns configuration
     const dashboardColumns = [
@@ -104,56 +231,6 @@ export default function Dashboard() {
         },
     ];
 
-    const data = [
-        {
-            key: '1',
-            bookingCode: 'S00053',
-            customerName: 'สมชาย นิตยา',
-            price: '500.-(promo)',
-            budget: '11.30 น',
-            checkInDate: '1/06/25-2/06/25',
-            dailyIncome: '400บาท',
-            paymentStatus: 'รอดำเนินการ',
-            updateStatus: 'ชำระแล้ว',
-            paymentMethod: 'โอนเงินออนไลน์',
-        },
-        {
-            key: '2',
-            bookingCode: 'S00053',
-            customerName: 'สมชาย นิตยา',
-            price: '500.-(promo)',
-            budget: '11.30 น',
-            checkInDate: '1/06/25-2/06/25',
-            dailyIncome: '400บาท',
-            paymentStatus: 'ชำระแล้ว',
-            updateStatus: 'รอชำระ',
-            paymentMethod: 'โอนเงินออนไลน์',
-        },
-        {
-            key: '3',
-            bookingCode: 'S00053',
-            customerName: 'สมชาย นิตยา',
-            price: '500.-(promo)',
-            budget: '11.30 น',
-            checkInDate: '1/06/25-2/06/25',
-            dailyIncome: '400บาท',
-            paymentStatus: 'ชำระแล้ว',
-            updateStatus: 'สมาชิกสำคัญ',
-            paymentMethod: 'สมาชิกสำคัญ',
-        },
-        {
-            key: '4',
-            bookingCode: 'S00053',
-            customerName: 'สมชาย นิตยา',
-            price: '500.-(promo)',
-            budget: '11.30 น',
-            checkInDate: '1/06/25-2/06/25',
-            dailyIncome: '400บาท',
-            paymentStatus: 'ชำระแล้ว',
-            updateStatus: 'สมาชิกสำคัญ',
-            paymentMethod: 'โอนเงินออนไลน์',
-        },
-    ];
 
     return (
         <div className="flex h-screen bg-gray-100">
@@ -221,16 +298,35 @@ export default function Dashboard() {
                             <div className="flex flex-wrap gap-4 items-center">
                                 <div className="flex-1 min-w-64">
                                     <Input
-                                        placeholder="ค้นหา..."
+                                        placeholder="ค้นหาจากชื่อหรือรหัสการจอง..."
                                         prefix={<SearchOutlined />}
                                         className="w-full min-h-[40px]"
+                                        value={searchText}
+                                        onChange={(e) => setSearchText(e.target.value)}
+                                        onPressEnter={handleSearch}
                                     />
                                 </div>
-                                <Select defaultValue="ค้นหาจากชื่อ" className="w-40 min-h-[40px]">
-                                    <Option value="name">ค้นหาจากชื่อ</Option>
-                                    <Option value="code">รหัสการจอง</Option>
-                                </Select>
-                                <Select defaultValue="ค้นหาสถานะ" className="w-40 min-h-[40px]">
+                                <RangePicker
+                                    className="min-h-[40px]"
+                                    format="DD/MM/YYYY"
+                                    placeholder={['วันที่เริ่มต้น', 'วันที่สิ้นสุด']}
+                                    value={dateRange}
+                                    onChange={(dates) => setDateRange(dates as [Dayjs | null, Dayjs | null] | null)}
+                                />
+                                <Button 
+                                    type="primary" 
+                                    icon={<SearchOutlined />}
+                                    className="min-h-[40px] px-6"
+                                    onClick={handleSearch}
+                                    loading={isLoadingBookings}
+                                >
+                                    ค้นหา
+                                </Button>
+                                <Select 
+                                    value={statusFilter}
+                                    onChange={(value) => setStatusFilter(value)}
+                                    className="w-40 min-h-[40px]"
+                                >
                                     <Option value="all">ค้นหาสถานะ</Option>
                                     <Option value="pending">รอดำเนินการ</Option>
                                     <Option value="paid">ชำระแล้ว</Option>
@@ -239,10 +335,16 @@ export default function Dashboard() {
                         </div>
 
                         <div className="">
-                            <DataTable
-                                columns={dashboardColumns}
-                                data={data}
-                            />
+                            {isLoadingBookings ? (
+                                <div className="flex justify-center items-center py-20">
+                                    <Spin size="large" tip="กำลังโหลดข้อมูล..." />
+                                </div>
+                            ) : (
+                                <DataTable
+                                    columns={dashboardColumns}
+                                    data={bookingsData}
+                                />
+                            )}
                         </div>
                     </div>
                 </main>

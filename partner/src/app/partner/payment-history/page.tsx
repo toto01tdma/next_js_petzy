@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Sidebar from '@/components/partner/shared/Sidebar';
-import { MenuOutlined, UploadOutlined, RightOutlined } from '@ant-design/icons';
-import { Input, Button, Spin, Image } from 'antd';
+import { MenuOutlined, UploadOutlined, RightOutlined, CloseOutlined, PlusOutlined } from '@ant-design/icons';
+import { Input, Button, Spin, Image, Modal } from 'antd';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import ApprovalModal from '@/components/partner/shared/ApprovalModal';
 import Swal from 'sweetalert2';
@@ -11,6 +11,108 @@ import { checkAuthError } from '@/utils/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
 const USE_API_MODE = process.env.NEXT_PUBLIC_USE_API_MODE === 'true';
+
+// Bank Account Form Component
+interface BankAccountFormProps {
+    accountHolderName: string;
+    bankName: string;
+    accountNumber: string;
+    bankBookPreview: string | null;
+    onAccountHolderNameChange: (value: string) => void;
+    onBankNameChange: (value: string) => void;
+    onAccountNumberChange: (value: string) => void;
+    onBankBookUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+function BankAccountForm({
+    accountHolderName,
+    bankName,
+    accountNumber,
+    bankBookPreview,
+    onAccountHolderNameChange,
+    onBankNameChange,
+    onAccountNumberChange,
+    onBankBookUpload,
+}: BankAccountFormProps) {
+    return (
+        <div className="flex px-10 mb-16">
+            {/* ด้านซ้าย 1 ส่วน */}
+            <div className="w-2/5">
+                <input
+                    type="file"
+                    id="bank-book-upload-modal"
+                    accept="image/*"
+                    onChange={onBankBookUpload}
+                    className="hidden"
+                />
+                <label
+                    htmlFor="bank-book-upload-modal"
+                    className="rounded-lg p-4 w-full flex flex-col items-center justify-center h-[300px] cursor-pointer hover:opacity-80 transition-opacity"
+                    style={{ backgroundColor: '#E0E2E6' }}
+                >
+                    {bankBookPreview ? (
+                        <Image
+                            src={bankBookPreview}
+                            alt="Bank Book Preview"
+                            width={200}
+                            height={250}
+                            style={{ maxHeight: '280px', objectFit: 'contain' }}
+                        />
+                    ) : (
+                        <>
+                            <UploadOutlined className="text-6xl mb-5" style={{ color: '#484848' }} />
+                            <p className="mt-2 text-center" style={{ color: '#484848' }}>
+                                อัพโหลดรูปหน้าสมุดบัญชีธนาคารของคุณ
+                            </p>
+                        </>
+                    )}
+                </label>
+            </div>
+
+            {/* ด้านขวา 3 ส่วน */}
+            <div className="w-3/5 px-6">
+                {/* Right Side - Form Fields */}
+                <div className="space-y-5">
+                    <div>
+                        <label className="block text-lg font-medium text-gray-800 mb-2">
+                            ชื่อ บัญชีธนาคาร
+                        </label>
+                        <Input
+                            value={accountHolderName}
+                            onChange={(e) => onAccountHolderNameChange(e.target.value)}
+                            placeholder="นายสมชาย ใจดี"
+                            className="w-full py-3 text-lg h-[40px]"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-lg font-medium text-gray-800 mb-2">
+                            ระบุธนาคาร
+                        </label>
+                        <Input
+                            value={bankName}
+                            onChange={(e) => onBankNameChange(e.target.value)}
+                            placeholder="ธนาคารไทยพาณิชย์"
+                            className="w-full py-3 text-lg h-[40px]"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-lg font-medium text-gray-800 mb-2">
+                            ระบุเลขบัญชี ธนาคาร
+                        </label>
+                        <Input
+                            value={accountNumber}
+                            onChange={(e) => onAccountNumberChange(e.target.value)}
+                            placeholder="401-1414-258"
+                            className="w-full py-3 text-lg h-[40px]"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 interface BankAccount {
     id: string;
@@ -54,6 +156,9 @@ export default function PaymentHistory() {
     const [accountNumber, setAccountNumber] = useState('');
     const [bankBookFile, setBankBookFile] = useState<File | null>(null);
     const [bankBookPreview, setBankBookPreview] = useState<string | null>(null);
+    
+    // Modal state
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     // Approval status check
     const { isApproved, isLoading: isLoadingApproval } = useApprovalStatus();
@@ -270,7 +375,7 @@ export default function PaymentHistory() {
                 return;
             }
 
-            if (result.success) {
+                if (result.success) {
                 await Swal.fire({
                     icon: 'success',
                     title: 'สำเร็จ',
@@ -280,6 +385,10 @@ export default function PaymentHistory() {
 
                 // Refresh data
                 fetchData();
+                resetForm();
+                if (isModalVisible) {
+                    setIsModalVisible(false);
+                }
             } else {
                 await Swal.fire({
                     icon: 'error',
@@ -308,6 +417,89 @@ export default function PaymentHistory() {
             case 'CYAN': return '#13C2C2';
             case 'RED': return '#FF4D4F';
             default: return '#FDB930';
+        }
+    };
+
+    const handleDeleteBankAccount = async (accountId: string) => {
+        const result = await Swal.fire({
+            title: 'ยืนยันการลบบัญชีธนาคาร',
+            text: 'คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีธนาคารนี้?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ลบ',
+            cancelButtonText: 'ยกเลิก',
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        const token = localStorage.getItem('accessToken');
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/partner/bank-account/${accountId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (checkAuthError(response, data)) {
+                return;
+            }
+
+            if (data.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'ลบบัญชีธนาคารสำเร็จ',
+                    confirmButtonColor: '#28A7CB'
+                });
+
+                // Refresh data
+                fetchData();
+            } else {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: data.message || 'ไม่สามารถลบบัญชีธนาคารได้',
+                    confirmButtonColor: '#28A7CB'
+                });
+            }
+        } catch (error) {
+            console.error('Error deleting bank account:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถลบบัญชีธนาคารได้',
+                confirmButtonColor: '#28A7CB'
+            });
+        }
+    };
+
+    const resetForm = () => {
+        setAccountHolderName('');
+        setBankName('');
+        setAccountNumber('');
+        setBankBookFile(null);
+        setBankBookPreview(null);
+    };
+
+    const handleModalCancel = () => {
+        setIsModalVisible(false);
+        resetForm();
+    };
+
+    const handleModalSubmit = async () => {
+        await handleSubmit();
+        if (bankAccount) {
+            setIsModalVisible(false);
+            resetForm();
         }
     };
 
@@ -457,15 +649,33 @@ export default function PaymentHistory() {
                         <>
                             {/* Bank Account Section - 3 Column Grid */}
                             <div className="mb-8">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-bold">บัญชีธนาคาร</h2>
+                                    <Button
+                                        type="primary"
+                                        icon={<PlusOutlined />}
+                                        onClick={() => setIsModalVisible(true)}
+                                        className="min-h-[40px]"
+                                    >
+                                        เพิ่มบัญชีธนาคาร
+                                    </Button>
+                                </div>
                                 {/* Grid Layout - 3 columns */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {/* Bank Account Card */}
                                     <div
-                                        className="p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                                        className="p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow relative"
                                         style={{
                                             background: 'linear-gradient(135deg, #5B3CE8 0%, #7F5CE8 50%, #9F7FE8 100%)'
                                         }}
                                     >
+                                        <button
+                                            onClick={() => handleDeleteBankAccount(bankAccount.id)}
+                                            className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
+                                            style={{ color: '#FFFFFF' }}
+                                        >
+                                            <CloseOutlined />
+                                        </button>
                                         <h2 className="text-xl font-bold mb-3" style={{ color: '#FFFFFF' }}>
                                             บัญชีธนาคารที่จะรับการชำระเงิน
                                         </h2>
@@ -475,18 +685,6 @@ export default function PaymentHistory() {
                                         <p className="text-lg" style={{ color: '#FFFFFF', marginBottom: '0px' }}>
                                             {bankAccount.bank_name} {bankAccount.account_number}
                                         </p>
-                                        {/* <div className="flex items-center justify-between pt-3 border-t border-white border-opacity-30">
-                                        <span className="text-sm" style={{ color: '#FFFFFF' }}>
-                                            {bankAccount.status === 'ACTIVE' ? 'ใช้งานอยู่' : bankAccount.status}
-                                        </span>
-                                        <span className="text-xs" style={{ color: '#FFFFFF', opacity: 0.8 }}>
-                                            {new Date(bankAccount.created_at).toLocaleDateString('th-TH', { 
-                                                day: 'numeric', 
-                                                month: 'short', 
-                                                year: '2-digit' 
-                                            })}
-                                        </span>
-                                    </div> */}
                                     </div>
 
                                     {/* Add more bank account cards here when API supports multiple accounts */}
@@ -568,6 +766,54 @@ export default function PaymentHistory() {
 
             {/* Approval Status Modal */}
             <ApprovalModal isOpen={!isLoadingApproval && !isApproved} />
+
+            {/* Add Bank Account Modal */}
+            <Modal
+                title="เพิ่มบัญชีธนาคาร"
+                open={isModalVisible}
+                onCancel={handleModalCancel}
+                footer={[
+                    <Button key="cancel" onClick={handleModalCancel}>
+                        ยกเลิก
+                    </Button>,
+                    <Button
+                        key="submit"
+                        type="primary"
+                        onClick={handleModalSubmit}
+                        loading={isSaving}
+                        disabled={isSaving}
+                        style={{ backgroundColor: '#0D263B', border: 'none' }}
+                    >
+                        บันทึก
+                    </Button>,
+                ]}
+                width={800}
+            >
+                <div className="flex mb-3">
+                    <h2 className="text-xl font-semibold text-black me-3" style={{ marginBottom: '0px' }}>
+                        สร้างบัญชีการรับชำระเงิน
+                    </h2>
+                    <div className="rounded-md flex items-center justify-center py-2 px-6 mx-1 cursor-pointer" style={{ backgroundColor: '#0D263B' }}>
+                        <span style={{ color: '#FFFFFF' }}>ติดต่อฝ่ายสนับสนุน</span>
+                    </div>
+                    <div className="rounded-md flex items-center justify-center py-2 px-6 mx-1 cursor-pointer" style={{ backgroundColor: '#0D263B' }}>
+                        <span style={{ color: '#FFFFFF' }}>อ่านนโยบายการชำระเงิน</span>
+                    </div>
+                </div>
+                <div className="flex mb-6">
+                    <p>การสร้างบัญชีธนาคารจะไม่สามารถเปลี่ยนแปลงได้ หากมีการเปลี่ยนแปลงจะต้องแจ้งคำร้องกลับมาทางเรา</p>
+                </div>
+                <BankAccountForm
+                    accountHolderName={accountHolderName}
+                    bankName={bankName}
+                    accountNumber={accountNumber}
+                    bankBookPreview={bankBookPreview}
+                    onAccountHolderNameChange={setAccountHolderName}
+                    onBankNameChange={setBankName}
+                    onAccountNumberChange={setAccountNumber}
+                    onBankBookUpload={handleBankBookUpload}
+                />
+            </Modal>
         </div>
     );
 }
