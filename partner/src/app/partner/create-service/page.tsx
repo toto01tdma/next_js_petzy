@@ -142,9 +142,7 @@ export default function CreateService() {
     // Accommodation Photos State
     const [uploadedPhotos, setUploadedPhotos] = useState<{ [key: number]: UploadFile }>({});
     const [accommodationDescription, setAccommodationDescription] = useState('');
-    const [roomServiceData, setRoomServiceData] = useState<RoomServiceRow[]>([
-        { id: 1, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
-    ]);
+    const [roomServiceData, setRoomServiceData] = useState<RoomServiceRow[]>([]);
     const [specialServicesData, setSpecialServicesData] = useState<RoomServiceRow[]>([
         { id: 1, roomType: '', quantity: '', openTime: '', closeTime: '', price: '' },
     ]);
@@ -156,6 +154,9 @@ export default function CreateService() {
     const [roomDetailsMap, setRoomDetailsMap] = useState<Map<number, RoomDetailRow[]>>(new Map());
     const [specialServiceDetailsMap, setSpecialServiceDetailsMap] = useState<Map<number, RoomDetailRow[]>>(new Map());
     const [petCareServiceDetailsMap, setPetCareServiceDetailsMap] = useState<Map<number, RoomDetailRow[]>>(new Map());
+    
+    // Store sub_room_details data from API for modal population
+    const [subRoomDetailsData, setSubRoomDetailsData] = useState<any>(null);
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -322,17 +323,27 @@ export default function CreateService() {
                         });
                     }
 
-                    // Populate room services
+                    // Store sub_room_details data for later use in modal
+                    if (data.data.sub_room_details) {
+                        setSubRoomDetailsData(data.data.sub_room_details);
+                    } else {
+                        setSubRoomDetailsData(null);
+                    }
+                    
+                    // Populate room services from data.data.room_services (not from sub_room_details)
                     if (data.data.room_services && data.data.room_services.length > 0) {
                         setRoomServiceData(data.data.room_services.map((service: ApiRoomService, index: number) => ({
-                            id: index + 1, // Local ID for React keys
-                            backendId: service.id, // Backend UUID for DELETE operations
+                            id: index + 1,
+                            backendId: service.id,
                             roomType: service.room_type || '',
                             quantity: service.quantity?.toString() || '',
                             openTime: service.open_time || '',
                             closeTime: service.close_time || '',
                             price: service.price?.toString() || ''
                         })));
+                    } else {
+                        // If no room_services data, keep empty
+                        setRoomServiceData([]);
                     }
 
                     // Populate special services
@@ -414,32 +425,48 @@ export default function CreateService() {
                     if (data.data.sub_room_details) {
                         const subRoomDetails = data.data.sub_room_details;
                         
-                        // Handle room_services - use data.data.room_services directly
-                        if (subRoomDetails.room_services && subRoomDetails.room_services.length > 0 && 
-                            data.data.room_services && data.data.room_services.length > 0) {
+                        // Handle room_services - generate from sub_room_details.room_services
+                        if (subRoomDetails.room_services && subRoomDetails.room_services.length > 0) {
                             const newRoomDetailsMap = new Map<number, RoomDetailRow[]>();
                             
-                            // Use API data directly instead of state
-                            data.data.room_services.forEach((apiService: ApiRoomService, index: number) => {
+                            // Helper function to ensure image URLs are properly formatted
+                            const formatImageUrl = (url: string) => {
+                                if (!url) return '';
+                                // If already a full URL, return as is
+                                if (url.startsWith('http://') || url.startsWith('https://')) {
+                                    return url;
+                                }
+                                // If relative path, ensure it starts with /
+                                return url.startsWith('/') ? url : `/${url}`;
+                            };
+                            
+                            // Generate room details from sub_room_details.room_services
+                            subRoomDetails.room_services.forEach((roomService: any, index: number) => {
                                 const localServiceId = index + 1; // Match the ID assigned in setRoomServiceData
-                                const matchingRoomService = subRoomDetails.room_services.find((rs: any) => 
-                                    rs.room_type === apiService.room_type
-                                );
                                 
-                                if (matchingRoomService && matchingRoomService.sub_rooms && matchingRoomService.sub_rooms.length > 0) {
-                                    const roomDetails: RoomDetailRow[] = matchingRoomService.sub_rooms.map((subRoom: any, i: number) => ({
+                                if (roomService.sub_rooms && roomService.sub_rooms.length > 0) {
+                                    const roomDetails: RoomDetailRow[] = roomService.sub_rooms.map((subRoom: any, i: number) => ({
                                         id: i + 1,
                                         code: subRoom.code || '',
-                                        name: subRoom.name || apiService.room_type,
+                                        name: subRoom.name || roomService.room_type,
                                         openTime: formatTimeForInput(subRoom.open_time) || '00:00',
                                         closeTime: formatTimeForInput(subRoom.close_time) || '00:00',
                                         price: subRoom.price?.toString() || '0',
-                                        images: subRoom.images || []
+                                        // Format image URLs properly - ensure they're arrays and URLs are formatted
+                                        images: Array.isArray(subRoom.images) 
+                                            ? subRoom.images.map((img: string) => formatImageUrl(img)).filter((img: string) => img !== '')
+                                            : []
                                     }));
                                     newRoomDetailsMap.set(localServiceId, roomDetails);
+                                } else {
+                                    // If sub_rooms exists but is empty, set empty array to indicate API data exists but is empty
+                                    newRoomDetailsMap.set(localServiceId, []);
                                 }
                             });
                             setRoomDetailsMap(newRoomDetailsMap);
+                        } else {
+                            // If no sub_room_details.room_services, clear the room details map
+                            setRoomDetailsMap(new Map());
                         }
                         
                         // Handle special_services - use data.data.special_services directly
@@ -1531,11 +1558,9 @@ export default function CreateService() {
                                 defaultPetCareServicesData={petCareServicesData}
                                 roomServiceHeaders={{
                             roomType: "รูปแบบห้องพักที่คุณเลือก",
-                            quantity: "ตั้งค่าห้องพัก",
-                            openTime: "เวลาเปิด",
-                            closeTime: "เวลาปิด",
-                            price: "ราคาที่กำหนด"
+                            quantity: "ตั้งค่าห้องพัก"
                         }}
+                        subRoomDetailsData={subRoomDetailsData}
                         onRoomDetailsChange={(rowId, rooms) => {
                             setRoomDetailsMap(prev => {
                                 const newMap = new Map(prev);

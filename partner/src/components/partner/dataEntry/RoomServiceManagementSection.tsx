@@ -31,6 +31,7 @@ interface RoomServiceFormProps {
     onDeleteService?: (backendId: string | undefined) => Promise<boolean>; // Handler for backend deletion
     onSubmit?: () => void;
     onRoomDetailsChange?: (rowId: number, rooms: RoomDetailRow[]) => void; // Handler for room details changes
+    subRoomDetailsData?: any; // Sub room details data from API
 }
 
 // Room Service Form Component
@@ -43,7 +44,8 @@ function RoomServiceForm({
     onDataChange,
     onDeleteService,
     onSubmit,
-    onRoomDetailsChange
+    onRoomDetailsChange,
+    subRoomDetailsData
 }: RoomServiceFormProps) {
     const [localRoomServiceRows, setLocalRoomServiceRows] = useState<RoomServiceRow[]>(
         showDefaultData ? data : []
@@ -123,6 +125,89 @@ function RoomServiceForm({
 
     const handleSettingClick = (rowId: number) => {
         setSelectedRowId(rowId);
+        
+        // Find the selected row to get its room_type
+        const selectedRow = localRoomServiceRows.find(row => row.id === rowId);
+        
+        // If sub_room_details data exists, find matching room service and populate roomDetailsMap
+        if (subRoomDetailsData && subRoomDetailsData.room_services && selectedRow) {
+            const matchingRoomService = subRoomDetailsData.room_services.find((rs: any) => 
+                rs.room_type === selectedRow.roomType
+            );
+            
+            if (matchingRoomService && matchingRoomService.sub_rooms) {
+                // Helper function to format time
+                const formatTimeForInput = (time: string | null | undefined): string => {
+                    if (!time) return '00:00';
+                    if (typeof time === 'string' && /^\d{2}:\d{2}$/.test(time)) {
+                        return time;
+                    }
+                    try {
+                        const date = new Date(time);
+                        if (!isNaN(date.getTime())) {
+                            const hours = String(date.getHours()).padStart(2, '0');
+                            const minutes = String(date.getMinutes()).padStart(2, '0');
+                            return `${hours}:${minutes}`;
+                        }
+                    } catch (e) {
+                        const match = time.match(/(\d{2}):(\d{2})/);
+                        if (match) {
+                            return `${match[1]}:${match[2]}`;
+                        }
+                    }
+                    return '00:00';
+                };
+                
+                // Helper function to format image URLs
+                const formatImageUrl = (url: string) => {
+                    if (!url) return '';
+                    if (url.startsWith('http://') || url.startsWith('https://')) {
+                        return url;
+                    }
+                    return url.startsWith('/') ? url : `/${url}`;
+                };
+                
+                // Populate room details from sub_rooms
+                const roomDetails: RoomDetailRow[] = matchingRoomService.sub_rooms.map((subRoom: any, i: number) => ({
+                    id: i + 1,
+                    code: subRoom.code || '',
+                    name: subRoom.name || matchingRoomService.room_type,
+                    openTime: formatTimeForInput(subRoom.open_time) || '00:00',
+                    closeTime: formatTimeForInput(subRoom.close_time) || '00:00',
+                    price: subRoom.price?.toString() || '0',
+                    images: Array.isArray(subRoom.images) 
+                        ? subRoom.images.map((img: string) => formatImageUrl(img)).filter((img: string) => img !== '')
+                        : []
+                }));
+                
+                // Update roomDetailsMap with the sub_rooms data
+                setRoomDetailsMap(prev => {
+                    const newMap = new Map(prev);
+                    newMap.set(rowId, roomDetails);
+                    return newMap;
+                });
+                
+                // Also notify parent component
+                if (onRoomDetailsChange) {
+                    onRoomDetailsChange(rowId, roomDetails);
+                }
+            } else {
+                // No matching data found - clear the map entry to indicate no API data
+                setRoomDetailsMap(prev => {
+                    const newMap = new Map(prev);
+                    newMap.delete(rowId);
+                    return newMap;
+                });
+            }
+        } else {
+            // No sub_room_details data - clear the map entry
+            setRoomDetailsMap(prev => {
+                const newMap = new Map(prev);
+                newMap.delete(rowId);
+                return newMap;
+            });
+        }
+        
         setIsModalVisible(true);
     };
 
@@ -248,6 +333,7 @@ function RoomServiceForm({
                             defaultCloseTime={getSelectedRow()?.closeTime || '00:00'}
                             defaultPrice={getSelectedRow()?.price || '0'}
                             existingRooms={roomDetailsMap.get(selectedRowId)}
+                            hasApiData={roomDetailsMap.has(selectedRowId) && subRoomDetailsData !== null && subRoomDetailsData !== undefined} // Check if API data exists
                             onClose={handleModalClose}
                             onSave={handleModalSave}
                         />
@@ -291,6 +377,8 @@ interface RoomServiceManagementSectionProps {
     showRoomService?: boolean;
     showSpecialService?: boolean;
     showPetCareService?: boolean;
+    // NEW: Sub room details data from API
+    subRoomDetailsData?: any;
 }
 
 export default function RoomServiceManagementSection({
@@ -312,7 +400,8 @@ export default function RoomServiceManagementSection({
     onPetCareServiceDetailsChange,
     showRoomService = true, // Default to true for backward compatibility
     showSpecialService = true,
-    showPetCareService = true
+    showPetCareService = true,
+    subRoomDetailsData
 }: RoomServiceManagementSectionProps) {
     return (
         <div className="space-y-6">
@@ -330,6 +419,7 @@ export default function RoomServiceManagementSection({
                         onDeleteService={onDeleteRoomService}
                         onSubmit={onSubmit}
                         onRoomDetailsChange={onRoomDetailsChange}
+                        subRoomDetailsData={subRoomDetailsData}
                     />
                     {(showSpecialService || showPetCareService) && (
                         <div className="border border-black mt-15 mb-8"></div>

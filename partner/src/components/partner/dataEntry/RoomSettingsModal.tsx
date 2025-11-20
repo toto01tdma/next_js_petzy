@@ -29,6 +29,7 @@ interface RoomSettingsModalProps {
     existingRooms?: RoomDetailRow[];
     onClose: () => void;
     onSave: (rooms: RoomDetailRow[]) => void;
+    hasApiData?: boolean; // Flag to indicate if API data exists (if false, don't generate defaults)
 }
 
 export default function RoomSettingsModal({
@@ -40,22 +41,33 @@ export default function RoomSettingsModal({
     defaultPrice,
     existingRooms = [],
     onClose,
-    onSave
+    onSave,
+    hasApiData = false
 }: RoomSettingsModalProps) {
     const [roomDetails, setRoomDetails] = useState<RoomDetailRow[]>([]);
     const [isExpanded, setIsExpanded] = useState(true);
     const prevVisibleRef = useRef(false);
     const initializedRef = useRef(false);
 
-    // Initialize room details only when modal first opens (not on every render)
+    // Initialize room details when modal opens or when existingRooms changes
     useEffect(() => {
-        // Only initialize when modal becomes visible for the first time
+        // When modal becomes visible for the first time
+        console.log('existingRooms', existingRooms);
+        console.log('prevVisibleRef.current', prevVisibleRef.current);
         if (visible && !prevVisibleRef.current) {
             if (existingRooms && Array.isArray(existingRooms) && existingRooms.length > 0) {
                 // Use existing rooms if available - create a deep copy to avoid reference issues
+                console.log('📦 Using existingRooms from API:', existingRooms);
                 setRoomDetails(existingRooms.map(room => ({ ...room })));
-            } else {
-                // Generate rooms based on quantity
+                initializedRef.current = true;
+            } else if (hasApiData && existingRooms && Array.isArray(existingRooms) && existingRooms.length === 0) {
+                // API data exists but is empty array - don't generate anything
+                console.log('📭 API data exists but is empty - showing empty state');
+                setRoomDetails([]);
+                initializedRef.current = true;
+            } else if (!hasApiData) {
+                // No API data - generate rooms based on quantity (normal flow for new entries)
+                console.log('🆕 Generating new rooms with defaults');
                 const generatedRooms: RoomDetailRow[] = Array.from({ length: roomQuantity || 1 }, (_, i) => ({
                     id: i + 1,
                     code: `${roomType.substring(0, 2).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
@@ -66,8 +78,31 @@ export default function RoomSettingsModal({
                     images: []
                 }));
                 setRoomDetails(generatedRooms);
+                initializedRef.current = true;
+            } else {
+                // Fallback: show empty if hasApiData is true but no existingRooms
+                console.log('📭 No existing rooms and hasApiData is true - showing empty');
+                setRoomDetails([]);
+                initializedRef.current = true;
             }
-            initializedRef.current = true;
+        }
+        
+        // Update room details when existingRooms changes (e.g., after API loads)
+        // This handles the case where API data arrives after modal opens
+        if (visible && prevVisibleRef.current && existingRooms && Array.isArray(existingRooms) && existingRooms.length > 0) {
+            // Check if current roomDetails are just defaults (by checking if all have same openTime/closeTime/price)
+            const areDefaultValues = roomDetails.length > 0 && roomDetails.every(room => 
+                room.openTime === defaultOpenTime && 
+                room.closeTime === defaultCloseTime && 
+                room.price === defaultPrice
+            );
+            
+            // Update if we haven't initialized properly OR if current data is just defaults
+            if (!initializedRef.current || roomDetails.length === 0 || areDefaultValues) {
+                console.log('🔄 Updating with API data that arrived late:', existingRooms);
+                setRoomDetails(existingRooms.map(room => ({ ...room })));
+                initializedRef.current = true;
+            }
         }
         
         // Reset when modal closes
@@ -78,7 +113,7 @@ export default function RoomSettingsModal({
         
         prevVisibleRef.current = visible;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [visible]); // Only depend on visible to prevent unnecessary re-initializations
+    }, [visible, existingRooms]); // Watch both visible and existingRooms
 
     const addRoom = (e?: React.MouseEvent) => {
         e?.preventDefault();
@@ -119,7 +154,11 @@ export default function RoomSettingsModal({
         // Reset to original state
         if (existingRooms && existingRooms.length > 0) {
             setRoomDetails(existingRooms);
+        } else if (hasApiData) {
+            // If API data exists but is empty, reset to empty
+            setRoomDetails([]);
         } else {
+            // No API data - reset to generated defaults
             const generatedRooms: RoomDetailRow[] = Array.from({ length: roomQuantity || 1 }, (_, i) => ({
                 id: i + 1,
                 code: `${roomType.substring(0, 2).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
@@ -208,9 +247,9 @@ export default function RoomSettingsModal({
 
                                 try {
                                     const formData = new FormData();
-                                    formData.append('room_image', file);
+                                    formData.append('images', file);
 
-                                    const response = await fetch(`${API_BASE_URL}/api/upload/accommodation-photos`, {
+                                    const response = await fetch(`${API_BASE_URL}/api/upload/rooms`, {
                                         method: 'POST',
                                         headers: {
                                             'Authorization': `Bearer ${token}`
@@ -219,10 +258,11 @@ export default function RoomSettingsModal({
                                     });
 
                                     const result = await response.json();
-                                    if (result.success && result.data?.room_image_url) {
-                                        const relativePath = result.data.room_image_url.startsWith('/uploads/') 
-                                            ? result.data.room_image_url 
-                                            : `/uploads/${result.data.room_image_url}`;
+                                    if (result.success && result.data?.images && result.data.images.length > 0) {
+                                        const uploadedImageUrl = result.data.images[0]; // Get first image from array
+                                        const relativePath = uploadedImageUrl.startsWith('/uploads/') 
+                                            ? uploadedImageUrl 
+                                            : `/uploads/${uploadedImageUrl}`;
                                         
                                         setRoomDetails(prev => prev.map(r => 
                                             r.id === roomId 
