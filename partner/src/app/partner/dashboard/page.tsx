@@ -97,7 +97,14 @@ export default function Dashboard() {
     const fetchBookings = useCallback(async () => {
         setIsLoadingBookings(true);
         try {
-            const params: any = {
+            const params: { 
+                limit: number; 
+                offset: number; 
+                search?: string; 
+                status?: string;
+                startDate?: string;
+                endDate?: string;
+            } = {
                 limit: 100,
                 offset: 0,
             };

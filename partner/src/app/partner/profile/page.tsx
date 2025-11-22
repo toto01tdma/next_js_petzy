@@ -97,7 +97,6 @@ export default function UserProfile() {
                     profileImage: null,
                     coverImages: Array(7).fill(null)
                 });
-                setAccommodationType('โรงแรมสัตว์เลี้ยง');
                 setApprovalStatus('APPROVED');
             } else {
                 const token = localStorage.getItem('accessToken');
@@ -120,6 +119,22 @@ export default function UserProfile() {
                 
                 if (result.success) {
                     const data = result.data;
+                    
+                    // Helper function to get full image URL
+                    const getFullImageUrl = (path: string | null | undefined) => {
+                        if (!path) return null;
+                        // If path already starts with http:// or https://, return as is
+                        if (path.startsWith('http://') || path.startsWith('https://')) {
+                            return path;
+                        }
+                        // If it's a blob URL (preview), return as is
+                        if (path.startsWith('blob:')) {
+                            return path;
+                        }
+                        // Otherwise, prepend the API base URL
+                        return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+                    };
+                    
                     setProfileData({
                         fullName: data.fullNameTh || data.fullName || '',
                         fullNameTh: data.fullNameTh || data.fullName || '',
@@ -132,12 +147,11 @@ export default function UserProfile() {
                         backupPhoneNumber: data.backupPhoneNumber || '',
                         currentPassword: '',
                         newPassword: '',
-                        profileImage: data.profileImage || null,
+                        profileImage: getFullImageUrl(data.profileImage),
                         coverImages: Array.isArray(data.coverImages) && data.coverImages.length === 7 
-                            ? data.coverImages 
+                            ? data.coverImages.map(img => getFullImageUrl(img))
                             : Array(7).fill(null)
                     });
-                    setAccommodationType(data.accommodationType || 'โรงแรมสัตว์เลี้ยง');
                     setAccommodationName(data.accommodationName || '');
                     setApprovalStatus(data.approvalStatus || 'DRAFT');
                 } else {
@@ -478,6 +492,23 @@ export default function UserProfile() {
                         profileImage: fullImageUrl
                     }));
 
+                    // Update avatarUrl in localStorage user data so Sidebar can display it
+                    const userDataStr = localStorage.getItem('user');
+                    if (userDataStr) {
+                        try {
+                            const userData = JSON.parse(userDataStr);
+                            if (userData.profile) {
+                                userData.profile.avatarUrl = uploadedUrls.profileImage; // Store relative URL
+                                localStorage.setItem('user', JSON.stringify(userData));
+                                
+                                // Dispatch custom event to notify Sidebar of the update
+                                window.dispatchEvent(new Event('profileImageUpdated'));
+                            }
+                        } catch (error) {
+                            console.error('Error updating user data in localStorage:', error);
+                        }
+                    }
+
                     // Clear uploaded file
                     setUploadedFiles(prev => ({
                         ...prev,
@@ -647,144 +678,6 @@ export default function UserProfile() {
                 icon: 'error',
                 title: 'เกิดข้อผิดพลาด',
                 text: error instanceof Error ? error.message : 'ไม่สามารถบันทึกรูปภาพหน้าปกได้',
-                confirmButtonColor: '#0D263B'
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleSubmit = async () => {
-        setIsLoading(true);
-        try {
-            if (!USE_API_MODE) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'บันทึกข้อมูลสำเร็จ',
-                    text: 'ข้อมูลโปรไฟล์ของคุณได้รับการอัปเดตแล้ว',
-                    showConfirmButton: false,
-                    timer: 2000,
-                    timerProgressBar: true
-                });
-            } else {
-                const token = localStorage.getItem('accessToken');
-                const user = localStorage.getItem('user');
-                const userData = user ? JSON.parse(user) : null;
-
-                if (!userData?.id) {
-                    throw new Error('User ID not found. Please login again.');
-                }
-
-                // Upload images if there are any new files
-                let profileImageUrl = profileData.profileImage;
-                let coverImageUrls: (string | null)[] = profileData.coverImages.filter(img => img !== null);
-
-                // Upload profile image if exists
-                if (uploadedFiles.profileImageFile) {
-                    const profileUploadResult = await uploadProfileImage();
-                    if (profileUploadResult.profileImage) {
-                        profileImageUrl = profileUploadResult.profileImage;
-                    }
-                }
-
-                // Upload cover images if they exist
-                const hasCoverImages = uploadedFiles.coverImageFiles.some(file => file !== null);
-                if (hasCoverImages) {
-                    const coverUploadResult = await uploadCoverImages();
-                    if (coverUploadResult.coverImages && coverUploadResult.coverImages.length > 0) {
-                        coverImageUrls = coverUploadResult.coverImages;
-                    }
-                }
-
-                // Prepare the payload - only include fields that have values
-                const payload: Record<string, unknown> = {
-                    userId: userData.id, // Use the actual UUID from localStorage
-                };
-
-                // Only include fields that have been changed or have values
-                if (profileData.fullName) payload.fullName = profileData.fullName;
-                if (profileData.nameEn) payload.nameEn = profileData.nameEn;
-                if (profileData.phoneNumber) payload.phoneNumber = profileData.phoneNumber;
-                if (profileData.backupPhoneNumber) payload.backupPhoneNumber = profileData.backupPhoneNumber;
-                
-                // Only include password if user wants to change it
-                if (profileData.currentPassword && profileData.newPassword) {
-                    payload.currentPassword = profileData.currentPassword;
-                    payload.newPassword = profileData.newPassword;
-                }
-                
-                // Include uploaded image URLs
-                if (profileImageUrl) {
-                    payload.profileImage = profileImageUrl;
-                }
-                
-                if (coverImageUrls && coverImageUrls.length > 0) {
-                    payload.coverImages = coverImageUrls;
-                }
-
-                const response = await fetch(`${API_BASE_URL}/api/partner/profile`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                });
-
-                const result = await response.json();
-
-                // Check for authentication error
-                if (checkAuthError(response, result)) {
-                    return;
-                }
-
-                if (!response.ok) {
-                    // Handle validation errors
-                    if (result.details && Array.isArray(result.details)) {
-                        const errorMessages = result.details.map((d: { field: string; message: string }) => 
-                            `${d.field}: ${d.message}`
-                        ).join('\n');
-                        throw new Error(errorMessages);
-                    }
-                    throw new Error(result.error || result.message || 'Failed to save profile');
-                }
-
-                if (result.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'บันทึกข้อมูลสำเร็จ',
-                        text: 'ข้อมูลโปรไฟล์ของคุณได้รับการอัปเดตแล้ว',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true
-                    });
-
-                    // Clear password fields and uploaded files after successful update
-                    setProfileData(prev => ({
-                        ...prev,
-                        currentPassword: '',
-                        newPassword: ''
-                    }));
-                    
-                    setUploadedFiles({
-                        profileImageFile: null,
-                        coverImageFiles: Array(7).fill(null)
-                    });
-
-                    // Refresh profile data
-                    await fetchProfile();
-                } else {
-                    throw new Error(result.error || 'Failed to save profile');
-                }
-            }
-        } catch (error) {
-            console.error('Error saving profile:', error);
-            const errorMessage = error instanceof Error ? error.message : 'ไม่สามารถบันทึกข้อมูลได้';
-            await Swal.fire({
-                icon: 'error',
-                title: 'เกิดข้อผิดพลาด',
-                text: errorMessage,
                 confirmButtonColor: '#0D263B'
             });
         } finally {

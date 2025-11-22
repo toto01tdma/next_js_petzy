@@ -546,7 +546,12 @@ export default function DataEntry() {
             const data: SaveDataResponse = await response.json();
 
             // Check for authentication error
-            if (checkAuthError(response, data)) {
+            // Normalize message to string for type compatibility
+            const normalizedData = {
+                ...data,
+                message: Array.isArray(data.message) ? data.message.join('\n') : data.message
+            };
+            if (checkAuthError(response, normalizedData)) {
                 return;
             }
 

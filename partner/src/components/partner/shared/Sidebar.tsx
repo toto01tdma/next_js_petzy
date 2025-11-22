@@ -24,13 +24,69 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     const router = useRouter();
     const pathname = usePathname();
     const [accommodationName, setAccommodationName] = useState('โรงแรมของคุณ');
+    const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
-    // Load accommodation name from localStorage
+    // Helper function to get full image URL
+    const getFullImageUrl = (path: string | null | undefined) => {
+        if (!path) return null;
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path;
+        }
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+        return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+    };
+
+    // Function to load profile image from localStorage
+    const loadProfileImage = () => {
+        const userDataStr = localStorage.getItem('user');
+        if (userDataStr) {
+            try {
+                const userData = JSON.parse(userDataStr);
+                const avatarUrl = userData?.profile?.avatarUrl || null;
+                setProfileImageUrl(getFullImageUrl(avatarUrl));
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+            }
+        }
+    };
+
+    // Load accommodation name and profile image from localStorage
     useEffect(() => {
         const storedName = localStorage.getItem('accommodationName');
         if (storedName) {
             setAccommodationName(storedName);
         }
+        
+        // Load profile image
+        loadProfileImage();
+
+        // Listen for storage changes to update profile image in real-time
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'user') {
+                loadProfileImage();
+            }
+            if (e.key === 'accommodationName') {
+                setAccommodationName(e.newValue || 'โรงแรมของคุณ');
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        // Also listen for custom event for same-window updates
+        const handleCustomStorageChange = () => {
+            loadProfileImage();
+            const storedName = localStorage.getItem('accommodationName');
+            if (storedName) {
+                setAccommodationName(storedName);
+            }
+        };
+
+        window.addEventListener('profileImageUpdated', handleCustomStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('profileImageUpdated', handleCustomStorageChange);
+        };
     }, []);
 
     const menuItems = [
@@ -89,7 +145,14 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                     <div className="p-4 border-b border-gray-700">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <Avatar size={40} src="/api/placeholder/40/40" />
+                                <Avatar 
+                                    size={40} 
+                                    src={profileImageUrl || undefined}
+                                    icon={!profileImageUrl ? <UserOutlined /> : undefined}
+                                    style={{
+                                        backgroundColor: profileImageUrl ? 'transparent' : '#1890ff'
+                                    }}
+                                />
                                 <div>
                                     <p className="font-medium">Partner</p>
                                     <p className="text-sm text-gray-400">{accommodationName}</p>
