@@ -10,6 +10,7 @@ import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import ApprovalModal from '@/components/partner/shared/ApprovalModal';
 import { checkAuthError } from '@/utils/api';
+import { getProfileImageUrl } from '@/utils/profileImageUrl';
 
 interface ProfileData {
     fullName: string;
@@ -120,21 +121,6 @@ export default function UserProfile() {
                 if (result.success) {
                     const data = result.data;
                     
-                    // Helper function to get full image URL
-                    const getFullImageUrl = (path: string | null | undefined) => {
-                        if (!path) return null;
-                        // If path already starts with http:// or https://, return as is
-                        if (path.startsWith('http://') || path.startsWith('https://')) {
-                            return path;
-                        }
-                        // If it's a blob URL (preview), return as is
-                        if (path.startsWith('blob:')) {
-                            return path;
-                        }
-                        // Otherwise, prepend the API base URL
-                        return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-                    };
-                    
                     setProfileData({
                         fullName: data.fullNameTh || data.fullName || '',
                         fullNameTh: data.fullNameTh || data.fullName || '',
@@ -147,9 +133,9 @@ export default function UserProfile() {
                         backupPhoneNumber: data.backupPhoneNumber || '',
                         currentPassword: '',
                         newPassword: '',
-                        profileImage: getFullImageUrl(data.profileImage),
+                        profileImage: getProfileImageUrl(data.profileImage),
                         coverImages: Array.isArray(data.coverImages) && data.coverImages.length === 7 
-                            ? data.coverImages.map(img => getFullImageUrl(img))
+                            ? data.coverImages.map((img: string | null) => img) // Cover images are not profile images, keep as is for now
                             : Array(7).fill(null)
                     });
                     setAccommodationName(data.accommodationName || '');
@@ -453,6 +439,9 @@ export default function UserProfile() {
 
             // Save profile image URL
             if (uploadedUrls.profileImage) {
+                // Extract only filename (in case it's a path, get just the filename)
+                const filename = uploadedUrls.profileImage.split('/').pop() || uploadedUrls.profileImage;
+                
                 const response = await fetch(`${API_BASE_URL}/api/partner/profile-image`, {
                     method: 'POST',
                     headers: {
@@ -460,7 +449,7 @@ export default function UserProfile() {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        profileImage: uploadedUrls.profileImage
+                        profileImage: filename
                     }),
                 });
 
@@ -471,20 +460,9 @@ export default function UserProfile() {
                 }
 
                 if (result.success) {
-                    // Helper function to get full image URL
-                    const getFullImageUrl = (path: string) => {
-                        if (!path) return null;
-                        if (path.startsWith('http://') || path.startsWith('https://')) {
-                            return path;
-                        }
-                        if (path.startsWith('data:')) {
-                            return path; // Keep data URLs as-is for previews
-                        }
-                        return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-                    };
-
-                    // Convert relative URL to full URL
-                    const fullImageUrl = getFullImageUrl(uploadedUrls.profileImage);
+                    // Extract filename and convert to full URL using API endpoint
+                    const filename = uploadedUrls.profileImage.split('/').pop() || uploadedUrls.profileImage;
+                    const fullImageUrl = getProfileImageUrl(filename);
 
                     // Update local state with new image URL (full URL)
                     setProfileData(prev => ({
@@ -498,7 +476,9 @@ export default function UserProfile() {
                         try {
                             const userData = JSON.parse(userDataStr);
                             if (userData.profile) {
-                                userData.profile.avatarUrl = uploadedUrls.profileImage; // Store relative URL
+                                // Store only filename (not full path)
+                                const filename = uploadedUrls.profileImage.split('/').pop() || uploadedUrls.profileImage;
+                                userData.profile.avatarUrl = filename;
                                 localStorage.setItem('user', JSON.stringify(userData));
                                 
                                 // Dispatch custom event to notify Sidebar of the update

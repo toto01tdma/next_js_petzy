@@ -6,6 +6,7 @@ import { Avatar, Input, Tabs, Spin } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { useChat } from '@/hooks/useChat';
 import { API_BASE_URL } from '@/config/api';
+import { getProfileImageUrl } from '@/utils/profileImageUrl';
 
 const { TextArea } = Input;
 
@@ -159,8 +160,8 @@ export default function AdminChats() {
     
     const getAvatarUrl = (avatarPath?: string) => {
         if (!avatarPath) return '/assets/default-avatar.png';
-        if (avatarPath.startsWith('http')) return avatarPath;
-        return `${API_BASE_URL}${avatarPath}`;
+        // Use the profile image API endpoint for secure access
+        return getProfileImageUrl(avatarPath) || '/assets/default-avatar.png';
     };
     
     // Get selected conversation details

@@ -3,6 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation';
 import { Avatar } from 'antd';
 import { useState, useEffect } from 'react';
+import { getProfileImageUrl } from '@/utils/profileImageUrl';
 import { 
     HomeOutlined, 
     UserOutlined, 
@@ -26,16 +27,6 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     const [accommodationName, setAccommodationName] = useState('โรงแรมของคุณ');
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
-    // Helper function to get full image URL
-    const getFullImageUrl = (path: string | null | undefined) => {
-        if (!path) return null;
-        if (path.startsWith('http://') || path.startsWith('https://')) {
-            return path;
-        }
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
-        return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-    };
-
     // Function to load profile image from localStorage
     const loadProfileImage = () => {
         const userDataStr = localStorage.getItem('user');
@@ -43,7 +34,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
             try {
                 const userData = JSON.parse(userDataStr);
                 const avatarUrl = userData?.profile?.avatarUrl || null;
-                setProfileImageUrl(getFullImageUrl(avatarUrl));
+                setProfileImageUrl(getProfileImageUrl(avatarUrl));
             } catch (error) {
                 console.error('Error parsing user data:', error);
             }
