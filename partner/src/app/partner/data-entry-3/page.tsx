@@ -233,7 +233,8 @@ export default function DataEntry3() {
 
                 const coverResult = await coverResponse.json();
                 if (coverResult.success && coverResult.data?.cover_url) {
-                    coverImageUrl = coverResult.data.cover_url;
+                    // Extract only filename (upload service now returns only filename)
+                    coverImageUrl = coverResult.data.cover_url.split('/').pop() || coverResult.data.cover_url;
                 }
             }
 
@@ -254,7 +255,9 @@ export default function DataEntry3() {
 
                     const roomResult = await roomResponse.json();
                     if (roomResult.success && roomResult.data?.room_image_url) {
-                        roomImageUrls.push(roomResult.data.room_image_url);
+                        // Extract only filename (upload service now returns only filename)
+                        const filename = roomResult.data.room_image_url.split('/').pop() || roomResult.data.room_image_url;
+                        roomImageUrls.push(filename);
                     }
                 }
             }

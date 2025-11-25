@@ -91,7 +91,7 @@ export function useChat(options: UseChatOptions = {}) {
             setIsConnected(false);
         });
 
-        socket.on('connect_error', (error) => {
+        socket.on('connect_error', (error: Error) => {
             console.error('[Chat] WebSocket connection error:', error);
             reconnectAttempts.current++;
             

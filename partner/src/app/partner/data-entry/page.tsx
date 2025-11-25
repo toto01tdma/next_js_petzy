@@ -180,16 +180,12 @@ export default function DataEntry() {
                     });
 
                     // Set uploaded images if URLs exist
-                    // Helper function to get full image URL
-                    const getFullImageUrl = (path: string) => {
-                        if (!path) return '';
-                        // If path already starts with http:// or https://, return as is
-                        if (path.startsWith('http://') || path.startsWith('https://')) {
-                            return path;
-                        }
-                        // Otherwise, prepend the API base URL
-                        return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-                    };
+                    // Import file image URL utilities
+                    const { 
+                        getDocumentFileUrl, 
+                        getBankBookFileUrl, 
+                        getServiceImageUrl 
+                    } = await import('@/utils/fileImageUrl');
 
                     const newUploadedImages: { [key: number]: UploadFile } = {};
                     if (data.data.national_id_card_url) {
@@ -197,7 +193,7 @@ export default function DataEntry() {
                             uid: '0',
                             name: 'national_id_card',
                             status: 'done',
-                            url: getFullImageUrl(data.data.national_id_card_url)
+                            url: getDocumentFileUrl(data.data.national_id_card_url) || ''
                         };
                     }
                     if (data.data.trade_registration_cert_url) {
@@ -205,7 +201,7 @@ export default function DataEntry() {
                             uid: '1',
                             name: 'trade_registration_cert',
                             status: 'done',
-                            url: getFullImageUrl(data.data.trade_registration_cert_url)
+                            url: getDocumentFileUrl(data.data.trade_registration_cert_url) || ''
                         };
                     }
                     if (data.data.tax_documents_url) {
@@ -213,7 +209,7 @@ export default function DataEntry() {
                             uid: '2',
                             name: 'tax_documents',
                             status: 'done',
-                            url: getFullImageUrl(data.data.tax_documents_url)
+                            url: getDocumentFileUrl(data.data.tax_documents_url) || ''
                         };
                     }
                     if (data.data.house_registration_url) {
@@ -221,7 +217,7 @@ export default function DataEntry() {
                             uid: '3',
                             name: 'house_registration',
                             status: 'done',
-                            url: getFullImageUrl(data.data.house_registration_url)
+                            url: getDocumentFileUrl(data.data.house_registration_url) || ''
                         };
                     }
                     if (data.data.additional_documents_url && data.data.additional_documents_url.length > 0) {
@@ -229,7 +225,7 @@ export default function DataEntry() {
                             uid: '4',
                             name: 'additional_documents',
                             status: 'done',
-                            url: getFullImageUrl(data.data.additional_documents_url[0])
+                            url: getDocumentFileUrl(data.data.additional_documents_url[0]) || ''
                         };
                     }
                     if (data.data.bank_account_book_url) {
@@ -237,7 +233,7 @@ export default function DataEntry() {
                             uid: '5',
                             name: 'bank_account_book',
                             status: 'done',
-                            url: getFullImageUrl(data.data.bank_account_book_url)
+                            url: getBankBookFileUrl(data.data.bank_account_book_url) || ''
                         };
                     }
                     if (data.data.service_location_photos_url && data.data.service_location_photos_url.length > 0) {
@@ -245,7 +241,7 @@ export default function DataEntry() {
                             uid: '6',
                             name: 'service_location_photos',
                             status: 'done',
-                            url: getFullImageUrl(data.data.service_location_photos_url[0])
+                            url: getServiceImageUrl(data.data.service_location_photos_url[0]) || ''
                         };
                     }
                     setUploadedImages(newUploadedImages);
@@ -501,7 +497,17 @@ export default function DataEntry() {
             // Step 1: Upload documents first
             const uploadedUrls = await uploadDocuments();
 
+            // Helper function to extract filename from path
+            const extractFilename = (path: string | string[] | undefined): string | string[] | undefined => {
+                if (!path) return path;
+                if (Array.isArray(path)) {
+                    return path.map(p => p ? p.split('/').pop() || p : p);
+                }
+                return path.split('/').pop() || path;
+            };
+
             // Build the payload according to API requirements
+            // Extract only filenames from paths
             const payload = {
                 first_name: formData.firstName,
                 last_name: formData.lastName,
@@ -524,13 +530,13 @@ export default function DataEntry() {
                 google_maps_link: formData.googleMapsLink,
                 mobile_phone: formData.mobilePhone,
                 business_additional_details: formData.businessAdditionalDetails,
-                national_id_card_url: uploadedUrls.national_id_card_url,
-                trade_registration_cert_url: uploadedUrls.trade_registration_cert_url,
-                tax_documents_url: uploadedUrls.tax_documents_url,
-                house_registration_url: uploadedUrls.house_registration_url,
-                additional_documents_url: uploadedUrls.additional_documents_url,
-                bank_account_book_url: uploadedUrls.bank_account_book_url,
-                service_location_photos_url: uploadedUrls.service_location_photos_url,
+                national_id_card_url: extractFilename(uploadedUrls.national_id_card_url) as string,
+                trade_registration_cert_url: extractFilename(uploadedUrls.trade_registration_cert_url) as string,
+                tax_documents_url: extractFilename(uploadedUrls.tax_documents_url) as string,
+                house_registration_url: extractFilename(uploadedUrls.house_registration_url) as string,
+                additional_documents_url: extractFilename(uploadedUrls.additional_documents_url) as string[],
+                bank_account_book_url: extractFilename(uploadedUrls.bank_account_book_url) as string,
+                service_location_photos_url: extractFilename(uploadedUrls.service_location_photos_url) as string[],
                 approval_status: 'pending'
             };
 

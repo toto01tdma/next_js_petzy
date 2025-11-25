@@ -5,6 +5,7 @@ import { Modal, Input, Button, Upload } from 'antd';
 import { DownOutlined, UpOutlined, PlusOutlined } from '@ant-design/icons';
 import type { UploadProps } from 'antd';
 import { API_BASE_URL } from '@/config/api';
+import { getRoomImageUrl } from '@/utils/fileImageUrl';
 
 const { TextArea } = Input;
 
@@ -238,7 +239,8 @@ export default function RoomSettingsModal({
                             const getFullImageUrl = (url: string) => {
                                 if (!url) return '';
                                 if (url.startsWith('http://') || url.startsWith('https://')) return url;
-                                return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+                                if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+                                return getRoomImageUrl(url) || '';
                             };
 
                             const handleImageUpload = async (file: File, roomId: number) => {
@@ -259,14 +261,13 @@ export default function RoomSettingsModal({
 
                                     const result = await response.json();
                                     if (result.success && result.data?.images && result.data.images.length > 0) {
+                                        // Extract only filename (upload service now returns only filename)
                                         const uploadedImageUrl = result.data.images[0]; // Get first image from array
-                                        const relativePath = uploadedImageUrl.startsWith('/uploads/') 
-                                            ? uploadedImageUrl 
-                                            : `/uploads/${uploadedImageUrl}`;
+                                        const filename = uploadedImageUrl.split('/').pop() || uploadedImageUrl;
                                         
                                         setRoomDetails(prev => prev.map(r => 
                                             r.id === roomId 
-                                                ? { ...r, images: [...(r.images || []), relativePath] }
+                                                ? { ...r, images: [...(r.images || []), filename] }
                                                 : r
                                         ));
                                         return false; // Prevent default upload

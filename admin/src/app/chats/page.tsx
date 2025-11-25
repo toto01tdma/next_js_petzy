@@ -5,7 +5,6 @@ import Sidebar from '@/components/admin/shared/Sidebar';
 import { Avatar, Input, Tabs, Spin } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { useChat } from '@/hooks/useChat';
-import { API_BASE_URL } from '@/config/api';
 import { getProfileImageUrl } from '@/utils/profileImageUrl';
 
 const { TextArea } = Input;
@@ -80,9 +79,8 @@ export default function AdminChats() {
         await markAsRead(conversationId);
         
         // Join conversation room for WebSocket
-        if (isConnected && (window as any).socket) {
-            (window as any).socket.emit('join:conversation', { conversation_id: conversationId });
-        }
+        // Note: Socket connection is managed by useChat hook
+        // If direct socket access is needed, it should be exposed from the hook
     };
     
     const handleInputChange = (value: string) => {

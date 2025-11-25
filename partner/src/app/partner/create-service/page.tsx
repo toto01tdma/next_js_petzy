@@ -10,6 +10,7 @@ import type { UploadFile } from 'antd';
 import Swal from 'sweetalert2';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import { checkAuthError } from '@/utils/api';
+import { getCoverImageUrl, getRoomImageUrl, getDocumentFileUrl, getBankBookFileUrl, getServiceImageUrl } from '@/utils/fileImageUrl';
 
 // Import all the separated components
 import PersonalInformationSection from '@/components/partner/dataEntry/PersonalInformationSection';
@@ -234,22 +235,13 @@ export default function CreateService() {
                         const docs = data.data.documents;
                         const newUploadedDocs: { [key: number]: UploadFile } = {};
 
-                        // Helper function to get full image URL
-                        const getFullImageUrl = (path: string) => {
-                            if (!path) return '';
-                            if (path.startsWith('http://') || path.startsWith('https://')) {
-                                return path;
-                            }
-                            return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-                        };
-
                         // Map document URLs to uploadedDocs state (indices 0-6)
                         if (docs.national_id_card_url) {
                             newUploadedDocs[0] = {
                                 uid: '0',
                                 name: 'national_id_card',
                                 status: 'done',
-                                url: getFullImageUrl(docs.national_id_card_url)
+                                url: getDocumentFileUrl(docs.national_id_card_url) || ''
                             };
                         }
                         if (docs.trade_registration_cert_url) {
@@ -257,7 +249,7 @@ export default function CreateService() {
                                 uid: '1',
                                 name: 'trade_registration_cert',
                                 status: 'done',
-                                url: getFullImageUrl(docs.trade_registration_cert_url)
+                                url: getDocumentFileUrl(docs.trade_registration_cert_url) || ''
                             };
                         }
                         if (docs.tax_documents_url) {
@@ -265,7 +257,7 @@ export default function CreateService() {
                                 uid: '2',
                                 name: 'tax_documents',
                                 status: 'done',
-                                url: getFullImageUrl(docs.tax_documents_url)
+                                url: getDocumentFileUrl(docs.tax_documents_url) || ''
                             };
                         }
                         if (docs.house_registration_url) {
@@ -273,7 +265,7 @@ export default function CreateService() {
                                 uid: '3',
                                 name: 'house_registration',
                                 status: 'done',
-                                url: getFullImageUrl(docs.house_registration_url)
+                                url: getDocumentFileUrl(docs.house_registration_url) || ''
                             };
                         }
                         if (docs.additional_documents_url && docs.additional_documents_url.length > 0) {
@@ -281,7 +273,7 @@ export default function CreateService() {
                                 uid: '4',
                                 name: 'additional_documents',
                                 status: 'done',
-                                url: getFullImageUrl(docs.additional_documents_url[0])
+                                url: getDocumentFileUrl(docs.additional_documents_url[0]) || ''
                             };
                         }
                         if (docs.bank_account_book_url) {
@@ -289,7 +281,7 @@ export default function CreateService() {
                                 uid: '5',
                                 name: 'bank_account_book',
                                 status: 'done',
-                                url: getFullImageUrl(docs.bank_account_book_url)
+                                url: getBankBookFileUrl(docs.bank_account_book_url) || ''
                             };
                         }
                         if (docs.service_location_photos_url && docs.service_location_photos_url.length > 0) {
@@ -297,7 +289,7 @@ export default function CreateService() {
                                 uid: '6',
                                 name: 'service_location_photos',
                                 status: 'done',
-                                url: getFullImageUrl(docs.service_location_photos_url[0])
+                                url: getServiceImageUrl(docs.service_location_photos_url[0]) || ''
                             };
                         }
 
@@ -379,26 +371,17 @@ export default function CreateService() {
                         const photos = data.data.accommodation_photos;
                         const newPhotos: { [key: number]: UploadFile } = {};
 
-                        // Helper function to get full image URL
-                        const getFullImageUrl = (path: string) => {
-                            if (!path) return '';
-                            if (path.startsWith('http://') || path.startsWith('https://')) {
-                                return path;
-                            }
-                            return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-                        };
-
-                        // Cover image (index 0)
+                        // Cover image (index 0) - use services endpoint
                         if (photos.cover_image_url) {
                             newPhotos[0] = {
                                 uid: '0',
                                 name: 'cover_image',
                                 status: 'done',
-                                url: getFullImageUrl(photos.cover_image_url)
+                                url: getServiceImageUrl(photos.cover_image_url) || ''
                             };
                         }
 
-                        // Room images (indices 1-6)
+                        // Room images (indices 1-6) - use services endpoint
                         if (photos.room_image_urls && Array.isArray(photos.room_image_urls)) {
                             photos.room_image_urls.forEach((url: string, index: number) => {
                                 if (url) {
@@ -406,7 +389,7 @@ export default function CreateService() {
                                         uid: `${index + 1}`,
                                         name: `room_image_${index + 1}`,
                                         status: 'done',
-                                        url: getFullImageUrl(url)
+                                        url: getServiceImageUrl(url) || ''
                                     };
                                 }
                             });
@@ -431,15 +414,15 @@ export default function CreateService() {
                         if (subRoomDetails.room_services && subRoomDetails.room_services.length > 0) {
                             const newRoomDetailsMap = new Map<number, RoomDetailRow[]>();
                             
-                            // Helper function to ensure image URLs are properly formatted
+                            // Helper function to format image URLs using API endpoints
                             const formatImageUrl = (url: string) => {
                                 if (!url) return '';
                                 // If already a full URL, return as is
                                 if (url.startsWith('http://') || url.startsWith('https://')) {
                                     return url;
                                 }
-                                // If relative path, ensure it starts with /
-                                return url.startsWith('/') ? url : `/${url}`;
+                                // Use API endpoint for room images
+                                return getRoomImageUrl(url) || '';
                             };
                             
                             // Generate room details from sub_room_details.room_services
@@ -588,38 +571,24 @@ export default function CreateService() {
                 const coverResult = await coverResponse.json();
                 if (coverResult.success && coverResult.data?.cover_url) {
                     savedCount++;
-                    coverImageUrl = coverResult.data.cover_url;
+                    // Extract only filename (upload service now returns only filename)
+                    const filename = coverResult.data.cover_url.split('/').pop() || coverResult.data.cover_url;
+                    coverImageUrl = filename;
                     
-                    // Update the uploadedPhotos state with the new URL
-                    const getFullImageUrl = (path: string) => {
-                        if (!path) return '';
-                        if (path.startsWith('http://') || path.startsWith('https://')) {
-                            return path;
-                        }
-                        return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-                    };
-
+                    // Update the uploadedPhotos state with the new URL using API endpoint
                     setUploadedPhotos(prev => ({
                         ...prev,
                         0: {
                             ...prev[0],
-                            url: getFullImageUrl(coverResult.data.cover_url),
+                            url: getServiceImageUrl(filename) || '',
                             status: 'done',
                             originFileObj: undefined // Clear the file object since it's now saved
                         }
                     }));
                 }
             } else if (uploadedPhotos[0]?.url) {
-                // Use existing cover image URL
-                const getRelativePath = (url: string) => {
-                    if (!url) return '';
-                    if (url.startsWith('/uploads/')) return url;
-                    if (url.includes('/uploads/')) {
-                        return url.substring(url.indexOf('/uploads/'));
-                    }
-                    return url;
-                };
-                coverImageUrl = getRelativePath(uploadedPhotos[0].url);
+                // Use existing cover image URL - extract filename
+                coverImageUrl = uploadedPhotos[0].url.split('/').pop() || uploadedPhotos[0].url;
             }
 
             // Upload room images if they're new files
@@ -641,46 +610,25 @@ export default function CreateService() {
                     const roomResult = await roomResponse.json();
                     if (roomResult.success && roomResult.data?.room_image_url) {
                         savedCount++;
-                        const getRelativePath = (url: string) => {
-                            if (!url) return '';
-                            if (url.startsWith('/uploads/')) return url;
-                            if (url.includes('/uploads/')) {
-                                return url.substring(url.indexOf('/uploads/'));
-                            }
-                            return url;
-                        };
-                        roomImageUrls.push(getRelativePath(roomResult.data.room_image_url));
+                        // Extract only filename from the response (upload service now returns only filename)
+                        const filename = roomResult.data.room_image_url.split('/').pop() || roomResult.data.room_image_url;
+                        roomImageUrls.push(filename);
                         
-                        // Update the uploadedPhotos state with the new URL
-                        const getFullImageUrl = (path: string) => {
-                            if (!path) return '';
-                            if (path.startsWith('http://') || path.startsWith('https://')) {
-                                return path;
-                            }
-                            return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-                        };
-
+                        // Update the uploadedPhotos state with the new URL using API endpoint
                         setUploadedPhotos(prev => ({
                             ...prev,
                             [i]: {
                                 ...prev[i],
-                                url: getFullImageUrl(roomResult.data.room_image_url),
+                                url: getServiceImageUrl(filename) || '',
                                 status: 'done',
                                 originFileObj: undefined // Clear the file object since it's now saved
                             }
                         }));
                     }
                 } else if (image?.url) {
-                    // Use existing room image URL
-                    const getRelativePath = (url: string) => {
-                        if (!url) return '';
-                        if (url.startsWith('/uploads/')) return url;
-                        if (url.includes('/uploads/')) {
-                            return url.substring(url.indexOf('/uploads/'));
-                        }
-                        return url;
-                    };
-                    roomImageUrls.push(getRelativePath(image.url));
+                    // Use existing room image URL - extract filename
+                    const filename = image.url.split('/').pop() || image.url;
+                    roomImageUrls.push(filename);
                 }
             }
 
@@ -1017,36 +965,32 @@ export default function CreateService() {
                 }
 
                 // Preserve existing URLs for documents that weren't re-uploaded
-                // Convert full URLs back to relative paths if needed
-                const getRelativePath = (url: string) => {
+                // Extract only filenames from URLs
+                const extractFilename = (url: string) => {
                     if (!url) return '';
-                    if (url.startsWith('/uploads/')) return url;
-                    if (url.includes('/uploads/')) {
-                        return url.substring(url.indexOf('/uploads/'));
-                    }
-                    return url;
+                    return url.split('/').pop() || url;
                 };
 
                 if (uploadedDocs[0]?.url && !uploadedDocs[0]?.originFileObj) {
-                    documentUrls.national_id_card_url = getRelativePath(uploadedDocs[0].url);
+                    documentUrls.national_id_card_url = extractFilename(uploadedDocs[0].url);
                 }
                 if (uploadedDocs[1]?.url && !uploadedDocs[1]?.originFileObj) {
-                    documentUrls.trade_registration_cert_url = getRelativePath(uploadedDocs[1].url);
+                    documentUrls.trade_registration_cert_url = extractFilename(uploadedDocs[1].url);
                 }
                 if (uploadedDocs[2]?.url && !uploadedDocs[2]?.originFileObj) {
-                    documentUrls.tax_documents_url = getRelativePath(uploadedDocs[2].url);
+                    documentUrls.tax_documents_url = extractFilename(uploadedDocs[2].url);
                 }
                 if (uploadedDocs[3]?.url && !uploadedDocs[3]?.originFileObj) {
-                    documentUrls.house_registration_url = getRelativePath(uploadedDocs[3].url);
+                    documentUrls.house_registration_url = extractFilename(uploadedDocs[3].url);
                 }
                 if (uploadedDocs[4]?.url && !uploadedDocs[4]?.originFileObj) {
-                    documentUrls.additional_documents_url = [getRelativePath(uploadedDocs[4].url)];
+                    documentUrls.additional_documents_url = [extractFilename(uploadedDocs[4].url)];
                 }
                 if (uploadedDocs[5]?.url && !uploadedDocs[5]?.originFileObj) {
-                    documentUrls.bank_account_book_url = getRelativePath(uploadedDocs[5].url);
+                    documentUrls.bank_account_book_url = extractFilename(uploadedDocs[5].url);
                 }
                 if (uploadedDocs[6]?.url && !uploadedDocs[6]?.originFileObj) {
-                    documentUrls.service_location_photos_url = [getRelativePath(uploadedDocs[6].url)];
+                    documentUrls.service_location_photos_url = [extractFilename(uploadedDocs[6].url)];
                 }
             }
 
@@ -1054,38 +998,35 @@ export default function CreateService() {
             let coverImageUrl = '';
             const roomImageUrls: string[] = [];
 
-            // Helper function to get relative path from URL
-            const getRelativePath = (url: string) => {
+            // Helper function to extract filename from URL
+            const extractFilename = (url: string) => {
                 if (!url) return '';
-                if (url.startsWith('/uploads/')) return url;
-                if (url.includes('/uploads/')) {
-                    return url.substring(url.indexOf('/uploads/'));
-                }
-                return url;
+                return url.split('/').pop() || url;
             };
 
             if (USE_API_MODE) {
-                // Upload cover image if it's a new file
-                if (uploadedPhotos[0]?.originFileObj) {
-                    const coverFormData = new FormData();
-                    coverFormData.append('cover', uploadedPhotos[0].originFileObj as Blob);
+            // Upload cover image if it's a new file
+            if (uploadedPhotos[0]?.originFileObj) {
+                const coverFormData = new FormData();
+                coverFormData.append('cover', uploadedPhotos[0].originFileObj as Blob);
 
-                    const coverResponse = await fetch(`${API_BASE_URL}/api/upload/accommodation-photos`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: coverFormData
-                    });
+                const coverResponse = await fetch(`${API_BASE_URL}/api/upload/accommodation-photos`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: coverFormData
+                });
 
-                    const coverResult = await coverResponse.json();
-                    if (coverResult.success && coverResult.data?.cover_url) {
-                        coverImageUrl = coverResult.data.cover_url;
-                    }
-                } else if (uploadedPhotos[0]?.url) {
-                    // Use existing cover image URL if no new file was uploaded
-                    coverImageUrl = getRelativePath(uploadedPhotos[0].url);
+                const coverResult = await coverResponse.json();
+                if (coverResult.success && coverResult.data?.cover_url) {
+                    // Extract only filename (upload service now returns only filename)
+                    coverImageUrl = coverResult.data.cover_url.split('/').pop() || coverResult.data.cover_url;
                 }
+            } else if (uploadedPhotos[0]?.url) {
+                // Use existing cover image URL - extract filename
+                coverImageUrl = uploadedPhotos[0].url.split('/').pop() || uploadedPhotos[0].url;
+            }
 
                 // Upload room images if they're new files, otherwise use existing URLs
                 for (let i = 1; i <= 6; i++) {
@@ -1104,11 +1045,14 @@ export default function CreateService() {
 
                         const roomResult = await roomResponse.json();
                         if (roomResult.success && roomResult.data?.room_image_url) {
-                            roomImageUrls.push(roomResult.data.room_image_url);
+                            // Extract only filename (upload service now returns only filename)
+                            const filename = roomResult.data.room_image_url.split('/').pop() || roomResult.data.room_image_url;
+                            roomImageUrls.push(filename);
                         }
                     } else if (image?.url) {
-                        // Use existing room image URL if no new file was uploaded
-                        roomImageUrls.push(getRelativePath(image.url));
+                        // Use existing room image URL - extract filename
+                        const filename = image.url.split('/').pop() || image.url;
+                        roomImageUrls.push(filename);
                     }
                 }
             }
@@ -1262,7 +1206,7 @@ export default function CreateService() {
                                         open_time: room.openTime,
                                         close_time: room.closeTime,
                                         price: parseFloat(room.price) || 0,
-                                        images: room.images || []
+                                        images: (room.images || []).map((img: string) => img.split('/').pop() || img)
                                     }))
                                 };
                             }).filter(service => service.sub_rooms.length > 0)
@@ -1287,7 +1231,7 @@ export default function CreateService() {
                                         open_time: detail.openTime,
                                         close_time: detail.closeTime,
                                         price: parseFloat(detail.price) || 0,
-                                        images: detail.images || []
+                                        images: (detail.images || []).map((img: string) => img.split('/').pop() || img)
                                     }))
                                 };
                             }).filter(service => service.sub_services.length > 0)
@@ -1312,7 +1256,7 @@ export default function CreateService() {
                                         open_time: detail.openTime,
                                         close_time: detail.closeTime,
                                         price: parseFloat(detail.price) || 0,
-                                        images: detail.images || []
+                                        images: (detail.images || []).map((img: string) => img.split('/').pop() || img)
                                     }))
                                 };
                             }).filter(service => service.sub_services.length > 0)

@@ -186,28 +186,22 @@ export default function UserProfile() {
             if (result.success && result.data?.accommodation_photos) {
                 const photos = result.data.accommodation_photos;
 
-                // Helper function to get full image URL
-                const getFullImageUrl = (path: string) => {
-                    if (!path) return '';
-                    if (path.startsWith('http://') || path.startsWith('https://')) {
-                        return path;
-                    }
-                    return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-                };
+                // Import cover image URL utility
+                const { getCoverImageUrl, getRoomImageUrl } = await import('@/utils/fileImageUrl');
 
                 // Update cover images array
                 const newCoverImages = Array(7).fill(null);
 
                 // Cover image (index 0)
                 if (photos.cover_image_url) {
-                    newCoverImages[0] = getFullImageUrl(photos.cover_image_url);
+                    newCoverImages[0] = getCoverImageUrl(photos.cover_image_url);
                 }
 
                 // Room images (indices 1-6)
                 if (photos.room_image_urls && Array.isArray(photos.room_image_urls)) {
                     photos.room_image_urls.forEach((url: string, index: number) => {
                         if (url && index < 6) {
-                            newCoverImages[index + 1] = getFullImageUrl(url);
+                            newCoverImages[index + 1] = getRoomImageUrl(url);
                         }
                     });
                 }
@@ -560,6 +554,11 @@ export default function UserProfile() {
 
             // Save cover images URLs with index tracking
             if (uploadedUrls.coverImages && uploadedUrls.coverImages.length > 0 && uploadedUrls.imageIndices && uploadedUrls.imageIndices.length > 0) {
+                // Extract only filenames from paths
+                const coverImageFilenames = uploadedUrls.coverImages.map((path: string) => 
+                    path.split('/').pop() || path
+                );
+                
                 const response = await fetch(`${API_BASE_URL}/api/partner/cover-images`, {
                     method: 'POST',
                     headers: {
@@ -567,7 +566,7 @@ export default function UserProfile() {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        coverImages: uploadedUrls.coverImages,
+                        coverImages: coverImageFilenames,
                         imageIndices: uploadedUrls.imageIndices // Send which slots to update
                     }),
                 });
@@ -579,29 +578,20 @@ export default function UserProfile() {
                 }
 
                 if (result.success) {
-                    // Helper function to get full image URL
-                    const getFullImageUrl = (path: string) => {
-                        if (!path) return null;
-                        if (path.startsWith('http://') || path.startsWith('https://')) {
-                            return path;
-                        }
-                        if (path.startsWith('data:')) {
-                            return path; // Keep data URLs as-is for previews
-                        }
-                        return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-                    };
+                    // Import cover image URL utility
+                    const { getCoverImageUrl } = await import('@/utils/fileImageUrl');
 
                     // Use the response from the save endpoint which contains the updated cover images
                     // This ensures we have the latest state from the database
                     const updatedCoverImages = result.data?.coverImages || [];
 
                     // Update local state with the updated cover images from the backend
-                    // Convert all URLs to full URLs
+                    // Convert all filenames to full API URLs
                     setProfileData(prev => {
                         const newCoverImages = Array(7).fill(null);
-                        updatedCoverImages.forEach((url: string | null, index: number) => {
-                            if (index < 7 && url) {
-                                newCoverImages[index] = getFullImageUrl(url);
+                        updatedCoverImages.forEach((filename: string | null, index: number) => {
+                            if (index < 7 && filename) {
+                                newCoverImages[index] = getCoverImageUrl(filename);
                             }
                         });
 

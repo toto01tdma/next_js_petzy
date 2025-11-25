@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Upload, Button, Spin, message } from 'antd';
 import { UploadOutlined, FileImageOutlined, FilePdfOutlined, DeleteOutlined } from '@ant-design/icons';
-import Image from 'next/image';
 import Sidebar from '@/components/admin/shared/Sidebar';
 import { showError, showSuccess, showConfirmation } from '@/utils/apiErrorHandler';
 import { checkAuthError } from '@/utils/api';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
+import { getPolicyFileUrl } from '@/utils/fileImageUrl';
 
 interface PolicyData {
     id: string;
@@ -196,9 +196,7 @@ export default function AdminPolicy() {
     const renderPolicyPreview = () => {
         if (!policyData) return null;
 
-        const fullUrl = policyData.file_url.startsWith('http') 
-            ? policyData.file_url 
-            : `${API_BASE_URL}${policyData.file_url}`;
+        const fullUrl = getPolicyFileUrl(policyData.file_url) || policyData.file_url;
 
         if (policyData.file_type === 'application/pdf') {
             return (

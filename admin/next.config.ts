@@ -7,6 +7,19 @@ const nextConfig: NextConfig = {
         protocol: 'http',
         hostname: 'localhost',
         port: '3001',
+        pathname: '/api/images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+        port: '3001',
+        pathname: '/api/images/**',
+      },
+      // Keep /uploads/** for backward compatibility during migration
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3001',
         pathname: '/uploads/**',
       },
       {
