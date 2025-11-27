@@ -61,13 +61,14 @@ export default function AdminPetzyApp() {
             }
 
             if (result.success && result.data) {
-                // Banner exists
-                const fullUrl = result.data.banner_url.startsWith('http') 
-                    ? result.data.banner_url 
-                    : `${API_BASE_URL}${result.data.banner_url}`;
+                // Banner exists - use API endpoint for banner image
+                const { getBannerImageUrl } = await import('@/utils/fileImageUrl');
+                const bannerUrl = getBannerImageUrl(result.data.banner_url);
                 
                 setCurrentBannerUrl(result.data.banner_url);
-                setBannerPreview(fullUrl);
+                if (bannerUrl) {
+                    setBannerPreview(bannerUrl);
+                }
                 setIsAppEnabled(result.data.is_active);
                 setToggleDisabled(false); // Enable toggle
             } else {
@@ -166,12 +167,14 @@ export default function AdminPetzyApp() {
             }
 
             if (result.success) {
-                const fullUrl = result.data.banner_url.startsWith('http') 
-                    ? result.data.banner_url 
-                    : `${API_BASE_URL}${result.data.banner_url}`;
+                // Use API endpoint for banner image
+                const { getBannerImageUrl } = await import('@/utils/fileImageUrl');
+                const bannerUrl = getBannerImageUrl(result.data.banner_url);
 
                 setCurrentBannerUrl(result.data.banner_url);
-                setBannerPreview(fullUrl);
+                if (bannerUrl) {
+                    setBannerPreview(bannerUrl);
+                }
                 setIsAppEnabled(result.data.is_active);
                 setToggleDisabled(false); // Enable toggle after upload
                 setBannerFile(null); // Clear file input
@@ -326,13 +329,11 @@ export default function AdminPetzyApp() {
                         >
                             {bannerPreview ? (
                                 <div className="relative w-full h-auto">
-                                    <Image 
+                                    <img 
                                         src={bannerPreview} 
                                         alt="Banner preview" 
-                                        width={600}
-                                        height={400}
                                         className="w-full h-auto rounded-lg"
-                                        style={{ objectFit: 'contain' }}
+                                        style={{ objectFit: 'contain', maxWidth: '600px', maxHeight: '400px' }}
                                     />
                                 </div>
                             ) : (

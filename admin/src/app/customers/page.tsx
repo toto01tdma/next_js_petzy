@@ -67,7 +67,7 @@ export default function AdminCustomers() {
         
         fetchCustomers();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router, activeTab, pagination.current, pagination.pageSize, searchText]);
+    }, [router, activeTab, pagination.current, pagination.pageSize, searchText, selectedMonth]);
 
     const fetchCustomers = async () => {
         setIsLoading(true);
@@ -120,6 +120,14 @@ export default function AdminCustomers() {
                 
                 if (searchText) {
                     params.append('name', searchText);
+                }
+
+                // Add month and year filtering if selected
+                if (selectedMonth) {
+                    const month = selectedMonth.month() + 1; // dayjs months are 0-indexed
+                    const year = selectedMonth.year();
+                    params.append('month', month.toString());
+                    params.append('year', year.toString());
                 }
 
                 const response = await fetch(
@@ -178,14 +186,19 @@ export default function AdminCustomers() {
         {
             title: 'รายชื่อ ลูกค้า',
             key: 'fullName',
-            render: (record: CustomerData) => (
-                <div>
-                    <div style={{ color: '#2C62D8', fontWeight: 500 }}>
-                        โรงแรมสัตว์เลี้ยง
+            render: (record: CustomerData) => {
+                const fullName = record.profile.fullName || 
+                    `${record.profile.firstName || ''} ${record.profile.lastName || ''}`.trim() || 
+                    'ไม่มีชื่อ';
+                return (
+                    <div>
+                        <div style={{ color: '#2C62D8', fontWeight: 500 }}>
+                            โรงแรมสัตว์เลี้ยง
+                        </div>
+                        <div style={{ color: '#333333' }}>{fullName}</div>
                     </div>
-                    <div style={{ color: '#333333' }}>{record.profile.fullName}</div>
-                </div>
-            ),
+                );
+            },
         },
         {
             title: 'ข้อมูลติดต่อ',
@@ -250,14 +263,19 @@ export default function AdminCustomers() {
         {
             title: 'รายชื่อ ลูกค้า',
             key: 'fullName',
-            render: (record: CustomerData) => (
-                <div>
-                    <div style={{ color: '#2C62D8', fontWeight: 500 }}>
-                        โรงแรมสัตว์เลี้ยง
+            render: (record: CustomerData) => {
+                const fullName = record.profile.fullName || 
+                    `${record.profile.firstName || ''} ${record.profile.lastName || ''}`.trim() || 
+                    'ไม่มีชื่อ';
+                return (
+                    <div>
+                        <div style={{ color: '#2C62D8', fontWeight: 500 }}>
+                            โรงแรมสัตว์เลี้ยง
+                        </div>
+                        <div style={{ color: '#333333' }}>{fullName}</div>
                     </div>
-                    <div style={{ color: '#333333' }}>{record.profile.fullName}</div>
-                </div>
-            ),
+                );
+            },
         },
         {
             title: 'ข้อมูลติดต่อ',
@@ -316,6 +334,48 @@ export default function AdminCustomers() {
             current: page,
             pageSize: pageSize,
         }));
+    };
+
+    const handleExport = () => {
+        // Prepare data for export
+        const exportData = customers.map((customer, index) => ({
+            'ลำดับ': index + 1,
+            'ชื่อ-นามสกุล': customer.profile.fullName || `${customer.profile.firstName} ${customer.profile.lastName}`,
+            'อีเมล': customer.user.email,
+            'เบอร์โทร': customer.user.phone,
+            'สถานะ': customer.user.status,
+            'วันที่สมัคร': dayjs(customer.user.createdAt).format('DD/MM/YYYY'),
+        }));
+
+        // Convert to CSV
+        const headers = Object.keys(exportData[0] || {});
+        const csvContent = [
+            headers.join(','),
+            ...exportData.map(row => 
+                headers.map(header => {
+                    const value = row[header as keyof typeof row];
+                    // Escape commas and quotes in CSV
+                    if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return value || '';
+                }).join(',')
+            )
+        ].join('\n');
+
+        // Add BOM for UTF-8 to support Thai characters in Excel
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        const fileName = `customers_${selectedMonth ? selectedMonth.format('YYYY-MM') : dayjs().format('YYYY-MM')}_${dayjs().format('DDMMYYYY')}.csv`;
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     return (
@@ -403,6 +463,7 @@ export default function AdminCustomers() {
                         </div>
                         <Button
                             icon={<DownloadOutlined />}
+                            onClick={handleExport}
                             style={{
                                 height: '45px',
                                 borderRadius: '8px',

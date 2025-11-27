@@ -128,11 +128,47 @@ export const getCoverImageUrl = (path: string | null | undefined): string | null
 };
 
 /**
+ * Get banner image URL
+ */
+export const getBannerImageUrl = (path: string | null | undefined): string | null => {
+  if (!path) return null;
+  
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  if (path.startsWith('data:') || path.startsWith('blob:')) {
+    return path;
+  }
+  
+  const filename = extractFilename(path);
+  return `${API_BASE_URL}/api/images/banners/${filename}`;
+};
+
+/**
+ * Get promotion image URL
+ */
+export const getPromotionImageUrl = (path: string | null | undefined): string | null => {
+  if (!path) return null;
+  
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  if (path.startsWith('data:') || path.startsWith('blob:')) {
+    return path;
+  }
+  
+  const filename = extractFilename(path);
+  return `${API_BASE_URL}/api/images/promotions/${filename}`;
+};
+
+/**
  * Generic function to get file URL based on type
  */
 export const getFileImageUrl = (
   path: string | null | undefined,
-  type: 'rooms' | 'services' | 'policies' | 'documents' | 'bank-books' | 'cover'
+  type: 'rooms' | 'services' | 'policies' | 'documents' | 'bank-books' | 'cover' | 'banners' | 'promotions'
 ): string | null => {
   if (!path) return null;
   

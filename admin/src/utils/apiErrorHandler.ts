@@ -37,8 +37,7 @@ const getCurrentSystem = (): 'partner' | 'admin' => {
  * Get appropriate login page based on current system
  */
 const getLoginPage = (): string => {
-    const system = getCurrentSystem();
-    return system === 'admin' ? '/admin/login' : '/partner/login';
+    return '/login'
 };
 
 /**

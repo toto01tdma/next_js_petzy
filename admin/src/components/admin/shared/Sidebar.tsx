@@ -4,11 +4,18 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 
+interface MenuItem {
+    title: string;
+    path: string;
+    icon: string;
+    submenu?: MenuItem[];
+}
+
 const Sidebar = () => {
     const pathname = usePathname();
     const router = useRouter();
 
-    const menuItems = [
+    const menuItems: MenuItem[] = [
         {
             title: 'หน้ารวมรายการ',
             path: '/dashboard',
@@ -53,6 +60,23 @@ const Sidebar = () => {
             title: 'ตั้งค่าโปรไฟล์ผู้ใช้',
             path: '/profile',
             icon: '👤'
+        },
+        {
+            title: 'Manage',
+            path: '/manage/location',
+            icon: '⚙️',
+        },
+        {
+            title: 'Manage',
+            path: '/manage',
+            icon: '⚙️',
+            submenu: [
+                {
+                    title: 'Location',
+                    path: '/manage/location',
+                    icon: '📍'
+                }
+            ]
         }
     ];
 
@@ -80,24 +104,53 @@ const Sidebar = () => {
 
             {/* Menu Items */}
             <div className="flex-1 overflow-y-auto py-4">
-                {menuItems.map((item, index) => (
-                    <Link
-                        key={index}
-                        href={item.path}
-                        className="block px-6 py-3 transition-all cursor-pointer"
-                        style={{
-                            backgroundColor: isActive(item.path) ? '#3D50DF' : 'transparent',
-                            color: '#FFFFFF',
-                            borderLeft: isActive(item.path) ? '4px solid #FFFFFF' : '4px solid transparent',
-                            fontWeight: isActive(item.path) ? '600' : '400'
-                        }}
-                    >
-                        <div className="flex items-center">
-                            <span className="mr-3 text-xl">{item.icon}</span>
-                            <span className="text-sm">{item.title}</span>
+                {menuItems.map((item, index) => {
+                    const hasSubmenu = item.submenu && item.submenu.length > 0;
+                    const isManageActive = item.path === '/manage' && (pathname.startsWith('/manage'));
+                    const isItemActive = isActive(item.path) || isManageActive;
+                    
+                    return (
+                        <div key={index}>
+                            <Link
+                                href={item.path}
+                                className="block px-6 py-3 transition-all cursor-pointer"
+                                style={{
+                                    backgroundColor: isItemActive ? '#3D50DF' : 'transparent',
+                                    color: '#FFFFFF',
+                                    borderLeft: isItemActive ? '4px solid #FFFFFF' : '4px solid transparent',
+                                    fontWeight: isItemActive ? '600' : '400'
+                                }}
+                            >
+                                <div className="flex items-center">
+                                    <span className="mr-3 text-xl">{item.icon}</span>
+                                    <span className="text-sm">{item.title}</span>
+                                </div>
+                            </Link>
+                            {hasSubmenu && isManageActive && (
+                                <div className="pl-8">
+                                    {item.submenu!.map((subItem, subIndex) => (
+                                        <Link
+                                            key={subIndex}
+                                            href={subItem.path}
+                                            className="block px-6 py-2 transition-all cursor-pointer"
+                                            style={{
+                                                backgroundColor: isActive(subItem.path) ? '#3D50DF' : 'transparent',
+                                                color: '#FFFFFF',
+                                                borderLeft: isActive(subItem.path) ? '4px solid #FFFFFF' : '4px solid transparent',
+                                                fontWeight: isActive(subItem.path) ? '600' : '400'
+                                            }}
+                                        >
+                                            <div className="flex items-center">
+                                                <span className="mr-3 text-lg">{subItem.icon}</span>
+                                                <span className="text-sm">{subItem.title}</span>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    </Link>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Logout Button */}
