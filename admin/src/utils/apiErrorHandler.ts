@@ -25,15 +25,6 @@ export interface ApiResponse<T = unknown> {
 }
 
 /**
- * Detect current system (partner or admin) based on URL pathname
- */
-const getCurrentSystem = (): 'partner' | 'admin' => {
-    if (typeof window === 'undefined') return 'partner';
-    const pathname = window.location.pathname;
-    return pathname.startsWith('/admin') ? 'admin' : 'partner';
-};
-
-/**
  * Get appropriate login page based on current system
  */
 const getLoginPage = (): string => {

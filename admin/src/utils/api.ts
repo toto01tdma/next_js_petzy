@@ -14,15 +14,6 @@ import { USE_API_MODE } from '@/config/api';
 import { getMockResponse } from './mockApi';
 
 /**
- * Detect current system (partner or admin) based on URL pathname
- */
-const getCurrentSystem = (): 'partner' | 'admin' => {
-    if (typeof window === 'undefined') return 'partner';
-    const pathname = window.location.pathname;
-    return pathname.startsWith('/admin') ? 'admin' : 'partner';
-};
-
-/**
  * Get appropriate login page based on current system
  */
 const getLoginPage = (): string => {

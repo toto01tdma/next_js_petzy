@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/admin/shared/Sidebar';
-import { Input, Button, Table, Space, Upload, DatePicker, InputNumber, message } from 'antd';
+import { Input, Button, Table, Space, DatePicker, InputNumber, message } from 'antd';
+import Image from 'next/image';
 import { SearchOutlined, DownloadOutlined, EyeOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import type { ColumnsType } from 'antd/es/table';
@@ -54,6 +55,7 @@ export default function AdminPromotions() {
         imageUrl: null as string | null,
         imageFile: null as File | null,
         imagePreview: null as string | null,
+        color: '#5283FF' as string,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -253,6 +255,7 @@ export default function AdminPromotions() {
                         validFrom: newPromotion.validFrom.toISOString(),
                         validUntil: newPromotion.validUntil.toISOString(),
                         imageUrl: imageUrl,
+                        color: newPromotion.color,
                     }),
                 }
             );
@@ -274,6 +277,7 @@ export default function AdminPromotions() {
                     imageUrl: null,
                     imageFile: null,
                     imagePreview: null,
+                    color: '#5283FF',
                 });
                 // Refresh list
                 fetchPromotions();
@@ -288,6 +292,7 @@ export default function AdminPromotions() {
         }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const appColumns: ColumnsType<AppPromotion> = [
         {
             title: '',
@@ -598,15 +603,29 @@ export default function AdminPromotions() {
                                                             position: 'relative'
                                                         }}
                                                     >
-                                                        <img 
-                                                            src={imageUrl} 
-                                                            alt="Promotion" 
-                                                            style={{
-                                                                width: '100%',
-                                                                height: '100%',
-                                                                objectFit: 'cover'
-                                                            }}
-                                                        />
+                                                        {imageUrl.startsWith('data:') || imageUrl.startsWith('blob:') ? (
+                                                            <img 
+                                                                src={imageUrl} 
+                                                                alt="Promotion" 
+                                                                style={{
+                                                                    width: '100%',
+                                                                    height: '100%',
+                                                                    objectFit: 'cover'
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <Image 
+                                                                src={imageUrl} 
+                                                                alt="Promotion" 
+                                                                width={200}
+                                                                height={200}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    height: '100%',
+                                                                    objectFit: 'cover'
+                                                                }}
+                                                            />
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <div 
@@ -742,18 +761,29 @@ export default function AdminPromotions() {
                                             }}
                                         >
                                             {newPromotion.imagePreview ? (
-                                                <img 
-                                                    src={newPromotion.imagePreview} 
-                                                    alt="Preview" 
-                                                    style={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        objectFit: 'cover',
-                                                        position: 'absolute',
-                                                        top: 0,
-                                                        left: 0
-                                                    }}
-                                                />
+                                                newPromotion.imagePreview.startsWith('data:') || newPromotion.imagePreview.startsWith('blob:') ? (
+                                                    <img 
+                                                        src={newPromotion.imagePreview} 
+                                                        alt="Preview" 
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            objectFit: 'cover',
+                                                            position: 'absolute',
+                                                            top: 0,
+                                                            left: 0
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <Image 
+                                                        src={newPromotion.imagePreview} 
+                                                        alt="Preview" 
+                                                        fill
+                                                        style={{
+                                                            objectFit: 'cover'
+                                                        }}
+                                                    />
+                                                )
                                             ) : (
                                                 <>
                                                     <UploadOutlined style={{ fontSize: '48px', color: '#999999', marginBottom: '12px' }} />
@@ -835,6 +865,33 @@ export default function AdminPromotions() {
                                                         value={newPromotion.validUntil}
                                                         onChange={(date) => setNewPromotion(prev => ({ ...prev, validUntil: date }))}
                                                         format="DD/MM/YY"
+                                                        style={{
+                                                            borderRadius: '8px',
+                                                            border: '1px solid #D9D9D9',
+                                                            flex: 1
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-medium mb-2" style={{ color: '#333333' }}>สีพื้นหลัง</div>
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="color"
+                                                        value={newPromotion.color}
+                                                        onChange={(e) => setNewPromotion(prev => ({ ...prev, color: e.target.value }))}
+                                                        style={{
+                                                            width: '60px',
+                                                            height: '40px',
+                                                            borderRadius: '8px',
+                                                            border: '1px solid #D9D9D9',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    />
+                                                    <Input
+                                                        placeholder="#5283FF"
+                                                        value={newPromotion.color}
+                                                        onChange={(e) => setNewPromotion(prev => ({ ...prev, color: e.target.value }))}
                                                         style={{
                                                             borderRadius: '8px',
                                                             border: '1px solid #D9D9D9',

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/admin/shared/Sidebar';
 import { Button, Table, Space, Modal, Form, Input, Select, message, Tabs } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import type { ColumnsType } from 'antd/es/table';
 import { checkAuthError } from '@/utils/api';
@@ -45,10 +45,12 @@ interface Subdistrict {
     district?: District;
 }
 
+type LocationItem = Country | Province | District | Subdistrict;
+
 export default function LocationManagement() {
     const [activeTab, setActiveTab] = useState('countries');
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [editingItem, setEditingItem] = useState<any>(null);
+    const [editingItem, setEditingItem] = useState<LocationItem | null>(null);
     const [form] = Form.useForm();
     
     // Data states
@@ -208,7 +210,7 @@ export default function LocationManagement() {
         setIsModalVisible(true);
     };
 
-    const handleEdit = (record: any) => {
+    const handleEdit = (record: LocationItem) => {
         setEditingItem(record);
         form.setFieldsValue(record);
         setIsModalVisible(true);
@@ -256,7 +258,7 @@ export default function LocationManagement() {
         });
     };
 
-    const handleSubmit = async (values: any) => {
+    const handleSubmit = async (values: Record<string, unknown>) => {
         if (!USE_API_MODE) {
             message.info('API mode is disabled');
             return;
@@ -435,18 +437,18 @@ export default function LocationManagement() {
         },
     ];
 
-    const getCurrentColumns = () => {
+    const getCurrentColumns = (): ColumnsType<LocationItem> => {
         switch (activeTab) {
             case 'countries':
-                return countryColumns;
+                return countryColumns as ColumnsType<LocationItem>;
             case 'provinces':
-                return provinceColumns;
+                return provinceColumns as ColumnsType<LocationItem>;
             case 'districts':
-                return districtColumns;
+                return districtColumns as ColumnsType<LocationItem>;
             case 'subdistricts':
-                return subdistrictColumns;
+                return subdistrictColumns as ColumnsType<LocationItem>;
             default:
-                return countryColumns;
+                return countryColumns as ColumnsType<LocationItem>;
         }
     };
 

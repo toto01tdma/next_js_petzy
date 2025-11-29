@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import Sidebar from '@/components/admin/shared/Sidebar';
+import Image from 'next/image';
 import { Button, Switch, Spin } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
@@ -329,9 +329,11 @@ export default function AdminPetzyApp() {
                         >
                             {bannerPreview ? (
                                 <div className="relative w-full h-auto">
-                                    <img 
+                                    <Image 
                                         src={bannerPreview} 
                                         alt="Banner preview" 
+                                        width={600}
+                                        height={400}
                                         className="w-full h-auto rounded-lg"
                                         style={{ objectFit: 'contain', maxWidth: '600px', maxHeight: '400px' }}
                                     />

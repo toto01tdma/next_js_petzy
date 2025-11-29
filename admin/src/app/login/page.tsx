@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LogoFirstPage from "@/components/first_page/logo";
 import { MailOutlined, PhoneOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone, ArrowRightOutlined } from "@ant-design/icons";
 import { Switch } from "antd";
@@ -18,6 +18,19 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
+
+    // Load saved credentials on mount
+    useEffect(() => {
+        const savedRememberMe = localStorage.getItem('rememberMe');
+        const savedEmail = localStorage.getItem('savedEmail');
+        const savedPassword = localStorage.getItem('savedPassword');
+        
+        if (savedRememberMe === 'true' && savedEmail && savedPassword) {
+            setRememberMe(true);
+            setInputValue(savedEmail);
+            setPassword(savedPassword);
+        }
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -69,6 +82,11 @@ export default function Login() {
                 if (rememberMe) {
                     localStorage.setItem('rememberMe', 'true');
                     localStorage.setItem('savedEmail', inputValue);
+                    localStorage.setItem('savedPassword', password);
+                } else {
+                    localStorage.removeItem('rememberMe');
+                    localStorage.removeItem('savedEmail');
+                    localStorage.removeItem('savedPassword');
                 }
 
                 await Swal.fire({
@@ -116,6 +134,11 @@ export default function Login() {
                 if (rememberMe) {
                     localStorage.setItem('rememberMe', 'true');
                     localStorage.setItem('savedEmail', inputValue);
+                    localStorage.setItem('savedPassword', password);
+                } else {
+                    localStorage.removeItem('rememberMe');
+                    localStorage.removeItem('savedEmail');
+                    localStorage.removeItem('savedPassword');
                 }
 
                 // Show success message
