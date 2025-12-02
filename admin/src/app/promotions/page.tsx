@@ -765,7 +765,7 @@ export default function AdminPromotions() {
                                                     <img 
                                                         src={newPromotion.imagePreview} 
                                                         alt="Preview" 
-                                                        style={{
+                            style={{
                                                             width: '100%',
                                                             height: '100%',
                                                             objectFit: 'cover',

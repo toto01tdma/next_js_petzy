@@ -45,7 +45,26 @@ interface Subdistrict {
     district?: District;
 }
 
-type LocationItem = Country | Province | District | Subdistrict;
+interface LocationType {
+    id: number;
+    nameTh: string;
+    nameEn?: string;
+}
+
+interface Location {
+    id: string;
+    name: string;
+    provinceId: string;
+    districtId: string;
+    subdistrictId: string;
+    locationTypeId: number;
+    province?: Province;
+    district?: District;
+    subdistrict?: Subdistrict;
+    locationType?: LocationType;
+}
+
+type LocationItem = Country | Province | District | Subdistrict | LocationType | Location;
 
 export default function LocationManagement() {
     const [activeTab, setActiveTab] = useState('countries');
@@ -58,6 +77,8 @@ export default function LocationManagement() {
     const [provinces, setProvinces] = useState<Province[]>([]);
     const [districts, setDistricts] = useState<District[]>([]);
     const [subdistricts, setSubdistricts] = useState<Subdistrict[]>([]);
+    const [locationTypes, setLocationTypes] = useState<LocationType[]>([]);
+    const [locations, setLocations] = useState<Location[]>([]);
     
     // Loading states
     const [loading, setLoading] = useState(false);
@@ -66,12 +87,17 @@ export default function LocationManagement() {
     const [selectedCountryId, setSelectedCountryId] = useState<string | undefined>();
     const [selectedProvinceId, setSelectedProvinceId] = useState<string | undefined>();
     const [selectedDistrictId, setSelectedDistrictId] = useState<string | undefined>();
+    const [selectedSubdistrictProvinceId, setSelectedSubdistrictProvinceId] = useState<string | undefined>();
+    const [selectedLocationTypeId, setSelectedLocationTypeId] = useState<string | undefined>();
+    const [selectedLocationProvinceId, setSelectedLocationProvinceId] = useState<string | undefined>();
 
     useEffect(() => {
         fetchCountries();
         fetchProvinces();
         fetchDistricts();
         fetchSubdistricts();
+        fetchLocationTypes();
+        fetchLocations();
     }, []);
 
     useEffect(() => {
@@ -80,9 +106,13 @@ export default function LocationManagement() {
         } else if (activeTab === 'districts') {
             fetchDistricts(selectedProvinceId);
         } else if (activeTab === 'subdistricts') {
-            fetchSubdistricts(selectedDistrictId);
+            fetchSubdistricts(selectedDistrictId, selectedSubdistrictProvinceId);
+        } else if (activeTab === 'locations') {
+            fetchLocations(selectedLocationTypeId, selectedLocationProvinceId);
+        } else if (activeTab === 'location-types') {
+            fetchLocationTypes();
         }
-    }, [activeTab, selectedCountryId, selectedProvinceId, selectedDistrictId]);
+    }, [activeTab, selectedCountryId, selectedProvinceId, selectedDistrictId, selectedSubdistrictProvinceId, selectedLocationTypeId, selectedLocationProvinceId]);
 
     const fetchCountries = async () => {
         if (!USE_API_MODE) return;
@@ -173,15 +203,17 @@ export default function LocationManagement() {
         }
     };
 
-    const fetchSubdistricts = async (districtId?: string) => {
+    const fetchSubdistricts = async (districtId?: string, provinceId?: string) => {
         if (!USE_API_MODE) return;
         
         try {
             setLoading(true);
             const token = localStorage.getItem('accessToken');
-            const url = districtId 
-                ? `${API_BASE_URL}/api/admin/location/subdistricts?districtId=${districtId}`
-                : `${API_BASE_URL}/api/admin/location/subdistricts`;
+            let url = `${API_BASE_URL}/api/admin/location/subdistricts?`;
+            const params = new URLSearchParams();
+            if (districtId) params.append('districtId', districtId);
+            if (provinceId) params.append('provinceId', provinceId);
+            url += params.toString();
             
             const response = await fetch(url, {
                 headers: {
@@ -199,6 +231,66 @@ export default function LocationManagement() {
         } catch (error) {
             console.error('Error fetching subdistricts:', error);
             message.error('เกิดข้อผิดพลาดในการโหลดข้อมูลตำบล');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchLocationTypes = async () => {
+        if (!USE_API_MODE) return;
+        
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`${API_BASE_URL}/api/admin/location-types`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const result = await response.json();
+            if (checkAuthError(response, result)) return;
+
+            if (result.success) {
+                setLocationTypes(result.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching location types:', error);
+            message.error('เกิดข้อผิดพลาดในการโหลดข้อมูลประเภทสถานที่');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchLocations = async (locationTypeId?: string, provinceId?: string) => {
+        if (!USE_API_MODE) return;
+        
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('accessToken');
+            let url = `${API_BASE_URL}/api/admin/locations?`;
+            const params = new URLSearchParams();
+            if (locationTypeId) params.append('locationTypeId', locationTypeId);
+            if (provinceId) params.append('provinceId', provinceId);
+            url += params.toString();
+            
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const result = await response.json();
+            if (checkAuthError(response, result)) return;
+
+            if (result.success) {
+                setLocations(result.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching locations:', error);
+            message.error('เกิดข้อผิดพลาดในการโหลดข้อมูลสถานที่');
         } finally {
             setLoading(false);
         }
@@ -249,6 +341,11 @@ export default function LocationManagement() {
                         else if (type === 'provinces') fetchProvinces(selectedCountryId);
                         else if (type === 'districts') fetchDistricts(selectedProvinceId);
                         else if (type === 'subdistricts') fetchSubdistricts(selectedDistrictId);
+                        else if (type === 'location-types') {
+                            fetchLocationTypes();
+                        } else if (type === 'locations') {
+                            fetchLocations(selectedLocationTypeId, selectedLocationProvinceId);
+                        }
                     }
                 } catch (error) {
                     console.error('Error deleting:', error);
@@ -266,11 +363,25 @@ export default function LocationManagement() {
 
         try {
             const token = localStorage.getItem('accessToken');
-            const url = editingItem
-                ? `${API_BASE_URL}/api/admin/location/${activeTab}/${editingItem.id}`
-                : `${API_BASE_URL}/api/admin/location/${activeTab}`;
-            
-            const method = editingItem ? 'PUT' : 'POST';
+            let url: string;
+            let method: string;
+
+            if (activeTab === 'location-types') {
+                url = editingItem
+                    ? `${API_BASE_URL}/api/admin/location-types/${editingItem.id}`
+                    : `${API_BASE_URL}/api/admin/location-types`;
+                method = editingItem ? 'PUT' : 'POST';
+            } else if (activeTab === 'locations') {
+                url = editingItem
+                    ? `${API_BASE_URL}/api/admin/locations/${editingItem.id}`
+                    : `${API_BASE_URL}/api/admin/locations`;
+                method = editingItem ? 'PUT' : 'POST';
+            } else {
+                url = editingItem
+                    ? `${API_BASE_URL}/api/admin/location/${activeTab}/${editingItem.id}`
+                    : `${API_BASE_URL}/api/admin/location/${activeTab}`;
+                method = editingItem ? 'PUT' : 'POST';
+            }
 
             const response = await fetch(url, {
                 method,
@@ -293,7 +404,9 @@ export default function LocationManagement() {
                 if (activeTab === 'countries') fetchCountries();
                 else if (activeTab === 'provinces') fetchProvinces(selectedCountryId);
                 else if (activeTab === 'districts') fetchDistricts(selectedProvinceId);
-                else if (activeTab === 'subdistricts') fetchSubdistricts(selectedDistrictId);
+                        else if (activeTab === 'subdistricts') fetchSubdistricts(selectedDistrictId, selectedSubdistrictProvinceId);
+                else if (activeTab === 'location-types') fetchLocationTypes();
+                else if (activeTab === 'locations') fetchLocations(selectedLocationTypeId, selectedLocationProvinceId);
             }
         } catch (error) {
             console.error('Error saving:', error);
@@ -437,6 +550,74 @@ export default function LocationManagement() {
         },
     ];
 
+    const locationTypeColumns: ColumnsType<LocationType> = [
+        {
+            title: 'ID',
+            dataIndex: 'id',
+            key: 'id',
+        },
+        {
+            title: 'ชื่อประเภท (ไทย)',
+            dataIndex: 'nameTh',
+            key: 'nameTh',
+        },
+        {
+            title: 'ชื่อประเภท (อังกฤษ)',
+            dataIndex: 'nameEn',
+            key: 'nameEn',
+        },
+        {
+            title: 'Action',
+            key: 'action',
+            width: 150,
+            render: (_, record) => (
+                <Space size="middle">
+                    <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+                    <Button icon={<DeleteOutlined />} danger onClick={() => handleDelete(record.id.toString(), 'location-types')} />
+                </Space>
+            ),
+        },
+    ];
+
+    const locationColumns: ColumnsType<Location> = [
+        {
+            title: 'ชื่อสถานที่',
+            dataIndex: 'name',
+            key: 'name',
+        },
+        {
+            title: 'จังหวัด',
+            key: 'province',
+            render: (_, record) => record.province?.name || '-',
+        },
+        {
+            title: 'อำเภอ',
+            key: 'district',
+            render: (_, record) => record.district?.name || '-',
+        },
+        {
+            title: 'ตำบล',
+            key: 'subdistrict',
+            render: (_, record) => record.subdistrict?.name || '-',
+        },
+        {
+            title: 'ประเภทสถานที่',
+            key: 'locationType',
+            render: (_, record) => record.locationType?.nameTh || '-',
+        },
+        {
+            title: 'Action',
+            key: 'action',
+            width: 150,
+            render: (_, record) => (
+                <Space size="middle">
+                    <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+                    <Button icon={<DeleteOutlined />} danger onClick={() => handleDelete(record.id, 'locations')} />
+                </Space>
+            ),
+        },
+    ];
+
     const getCurrentColumns = (): ColumnsType<LocationItem> => {
         switch (activeTab) {
             case 'countries':
@@ -447,6 +628,10 @@ export default function LocationManagement() {
                 return districtColumns as ColumnsType<LocationItem>;
             case 'subdistricts':
                 return subdistrictColumns as ColumnsType<LocationItem>;
+            case 'location-types':
+                return locationTypeColumns as ColumnsType<LocationItem>;
+            case 'locations':
+                return locationColumns as ColumnsType<LocationItem>;
             default:
                 return countryColumns as ColumnsType<LocationItem>;
         }
@@ -462,6 +647,10 @@ export default function LocationManagement() {
                 return districts;
             case 'subdistricts':
                 return subdistricts;
+            case 'location-types':
+                return locationTypes;
+            case 'locations':
+                return locations;
             default:
                 return [];
         }
@@ -490,6 +679,8 @@ export default function LocationManagement() {
                                 <TabPane tab="จังหวัด" key="provinces" />
                                 <TabPane tab="อำเภอ" key="districts" />
                                 <TabPane tab="ตำบล" key="subdistricts" />
+                                <TabPane tab="สถานที่" key="locations" />
+                                <TabPane tab="ประเภทสถานที่" key="location-types" />
                             </Tabs>
                             <Button
                                 type="primary"
@@ -544,20 +735,87 @@ export default function LocationManagement() {
                         )}
 
                         {activeTab === 'subdistricts' && (
-                            <div className="mb-4">
+                            <div className="mb-4 flex gap-4">
+                                <Select
+                                    placeholder="เลือกจังหวัด"
+                                    style={{ width: 300 }}
+                                    allowClear
+                                    value={selectedSubdistrictProvinceId}
+                                    onChange={(value) => {
+                                        setSelectedSubdistrictProvinceId(value);
+                                        setSelectedDistrictId(undefined); // Reset district when province changes
+                                        // Fetch districts for selected province
+                                        if (value) {
+                                            fetchDistricts(value);
+                                        } else {
+                                            fetchDistricts();
+                                        }
+                                        // Fetch subdistricts for selected province
+                                        fetchSubdistricts(undefined, value);
+                                    }}
+                                >
+                                    {provinces.map((province) => (
+                                        <Select.Option key={province.id} value={province.id}>
+                                            {province.name}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
                                 <Select
                                     placeholder="เลือกอำเภอ"
                                     style={{ width: 300 }}
                                     allowClear
                                     value={selectedDistrictId}
+                                    disabled={!selectedSubdistrictProvinceId}
                                     onChange={(value) => {
                                         setSelectedDistrictId(value);
-                                        fetchSubdistricts(value);
+                                        fetchSubdistricts(value, selectedSubdistrictProvinceId);
                                     }}
                                 >
-                                    {districts.map((district) => (
-                                        <Select.Option key={district.id} value={district.id}>
-                                            {district.name}
+                                    {districts
+                                        .filter((district) => 
+                                            !selectedSubdistrictProvinceId || 
+                                            district.provinceId === selectedSubdistrictProvinceId
+                                        )
+                                        .map((district) => (
+                                            <Select.Option key={district.id} value={district.id}>
+                                                {district.name}
+                                            </Select.Option>
+                                        ))}
+                                </Select>
+                            </div>
+                        )}
+
+                        {activeTab === 'locations' && (
+                            <div className="mb-4 flex gap-4">
+                                <Select
+                                    placeholder="เลือกประเภทสถานที่"
+                                    style={{ width: 300 }}
+                                    allowClear
+                                    value={selectedLocationTypeId}
+                                    onChange={(value) => {
+                                        setSelectedLocationTypeId(value);
+                                        fetchLocations(value, selectedLocationProvinceId);
+                                    }}
+                                >
+                                    {locationTypes.map((type) => (
+                                        <Select.Option key={type.id} value={type.id.toString()}>
+                                            {type.nameTh}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                                <Select
+                                    placeholder="เลือกจังหวัด"
+                                    style={{ width: 300 }}
+                                    allowClear
+                                    value={selectedLocationProvinceId}
+                                    onChange={(value) => {
+                                        setSelectedLocationProvinceId(value);
+                                        fetchLocations(selectedLocationTypeId, value);
+                                    }}
+                                >
+                                    {provinces.map((province) => (
+                                        <Select.Option key={province.id} value={province.id}>
+                                            {province.name}
                                         </Select.Option>
                                     ))}
                                 </Select>
@@ -733,6 +991,95 @@ export default function LocationManagement() {
                                     label="รหัสไปรษณีย์"
                                 >
                                     <Input placeholder="เช่น 10200" />
+                                </Form.Item>
+                            </>
+                        )}
+
+                        {activeTab === 'location-types' && (
+                            <>
+                                <Form.Item
+                                    name="id"
+                                    label="ID"
+                                    rules={[{ required: true, message: 'กรุณากรอก ID' }]}
+                                >
+                                    <Input type="number" placeholder="เช่น 0" disabled={!!editingItem} />
+                                </Form.Item>
+                                <Form.Item
+                                    name="nameTh"
+                                    label="ชื่อประเภท (ไทย)"
+                                    rules={[{ required: true, message: 'กรุณากรอกชื่อประเภท' }]}
+                                >
+                                    <Input placeholder="เช่น ไม่ระบุ" />
+                                </Form.Item>
+                                <Form.Item
+                                    name="nameEn"
+                                    label="ชื่อประเภท (อังกฤษ)"
+                                >
+                                    <Input placeholder="เช่น Not Specified" />
+                                </Form.Item>
+                            </>
+                        )}
+
+                        {activeTab === 'locations' && (
+                            <>
+                                <Form.Item
+                                    name="name"
+                                    label="ชื่อสถานที่"
+                                    rules={[{ required: true, message: 'กรุณากรอกชื่อสถานที่' }]}
+                                >
+                                    <Input placeholder="เช่น Suvarnabhumi Airport" />
+                                </Form.Item>
+                                <Form.Item
+                                    name="provinceId"
+                                    label="จังหวัด"
+                                    rules={[{ required: true, message: 'กรุณาเลือกจังหวัด' }]}
+                                >
+                                    <Select placeholder="เลือกจังหวัด">
+                                        {provinces.map((province) => (
+                                            <Select.Option key={province.id} value={province.id}>
+                                                {province.name}
+                                            </Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                                <Form.Item
+                                    name="districtId"
+                                    label="อำเภอ"
+                                    rules={[{ required: true, message: 'กรุณาเลือกอำเภอ' }]}
+                                >
+                                    <Select placeholder="เลือกอำเภอ">
+                                        {districts.map((district) => (
+                                            <Select.Option key={district.id} value={district.id}>
+                                                {district.name}
+                                            </Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                                <Form.Item
+                                    name="subdistrictId"
+                                    label="ตำบล"
+                                    rules={[{ required: true, message: 'กรุณาเลือกตำบล' }]}
+                                >
+                                    <Select placeholder="เลือกตำบล">
+                                        {subdistricts.map((subdistrict) => (
+                                            <Select.Option key={subdistrict.id} value={subdistrict.id}>
+                                                {subdistrict.name}
+                                            </Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                                <Form.Item
+                                    name="locationTypeId"
+                                    label="ประเภทสถานที่"
+                                    rules={[{ required: true, message: 'กรุณาเลือกประเภทสถานที่' }]}
+                                >
+                                    <Select placeholder="เลือกประเภทสถานที่">
+                                        {locationTypes.map((type) => (
+                                            <Select.Option key={type.id} value={type.id}>
+                                                {type.nameTh}
+                                            </Select.Option>
+                                        ))}
+                                    </Select>
                                 </Form.Item>
                             </>
                         )}

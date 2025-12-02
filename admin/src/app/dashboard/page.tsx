@@ -3,11 +3,42 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/admin/shared/Sidebar';
-import { Select, Calendar } from 'antd';
+import { Select, Calendar, Spin, Avatar } from 'antd';
+import { API_BASE_URL, USE_API_MODE } from '@/config/api';
+import { checkAuthError } from '@/utils/api';
+import { getProfileImageUrl } from '@/utils/profileImageUrl';
+
+interface Conversation {
+    id: string;
+    participant: {
+        id: string;
+        name: string;
+        avatar: string | null;
+    } | null;
+    last_message: {
+        content: string;
+        sent_at: string;
+    } | null;
+    unread_count: number;
+}
+
+interface Booking {
+    id: string;
+    bookingNumber: string;
+    customerName: string;
+    accommodationName: string;
+    bookingTime: string;
+    status: string;
+    paymentStatus: string;
+}
 
 export default function AdminDashboard() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [bookings, setBookings] = useState<Booking[]>([]);
+    const [loadingMessages, setLoadingMessages] = useState(false);
+    const [loadingBookings, setLoadingBookings] = useState(false);
 
     useEffect(() => {
         // Check if user is logged in
@@ -17,7 +48,75 @@ export default function AdminDashboard() {
             return;
         }
         setIsLoading(false);
+        fetchConversations();
+        fetchTodayBookings();
     }, [router]);
+
+    const fetchConversations = async () => {
+        if (!USE_API_MODE) return;
+        
+        try {
+            setLoadingMessages(true);
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`${API_BASE_URL}/api/chats/conversations?status=open&limit=5`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const result = await response.json();
+            if (checkAuthError(response, result)) return;
+
+            if (result.success && result.data) {
+                setConversations(result.data.conversations || []);
+            }
+        } catch (error) {
+            console.error('Error fetching conversations:', error);
+        } finally {
+            setLoadingMessages(false);
+        }
+    };
+
+    const fetchTodayBookings = async () => {
+        if (!USE_API_MODE) return;
+        
+        try {
+            setLoadingBookings(true);
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`${API_BASE_URL}/api/admin/bookings/today`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const result = await response.json();
+            if (checkAuthError(response, result)) return;
+
+            if (result.success && result.data) {
+                setBookings(result.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching today bookings:', error);
+        } finally {
+            setLoadingBookings(false);
+        }
+    };
+
+    const formatTime = (dateString: string) => {
+        const date = new Date(dateString);
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    };
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        return `${day}/${month}`;
+    };
 
     if (isLoading) {
         return (
@@ -121,61 +220,55 @@ export default function AdminDashboard() {
                             <div>
                                 <div className="flex justify-between items-center mb-4">
                                     <h2 className="text-lg font-semibold" style={{ color: '#333333' }}>
-                                        รายการจอง วันนี้ <span style={{ color: '#999999' }}>(10)</span>
+                                        รายการจอง วันนี้ <span style={{ color: '#999999' }}>({bookings.length})</span>
                                     </h2>
-                                    <button className="text-sm" style={{ color: '#5B8DEE' }}>
+                                    <button 
+                                        className="text-sm" 
+                                        style={{ color: '#5B8DEE' }}
+                                        onClick={() => router.push('/bookings')}
+                                    >
                                         ดูทั้งหมด →
                                     </button>
                                 </div>
 
                                 {/* Booking Items */}
-                                <div className="space-y-3">
-                                    <div 
-                                        className="p-4 rounded-lg flex items-center justify-between"
-                                        style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <input type="checkbox" className="mr-2" style={{ width: '18px', height: '18px' }} defaultChecked />
-                                            <div>
-                                                <div className="font-medium" style={{ color: '#333333' }}>
-                                                    ลูกค้าใหม่จองห้องพัก Tex25258 /18:00 น /โรงแรมสับชายดี
+                                {loadingBookings ? (
+                                    <div className="flex justify-center items-center py-8">
+                                        <Spin />
+                                    </div>
+                                ) : bookings.length === 0 ? (
+                                    <div className="text-center py-8" style={{ color: '#999999' }}>
+                                        ไม่มีรายการจองวันนี้
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {bookings.map((booking) => (
+                                            <div 
+                                                key={booking.id}
+                                                className="p-4 rounded-lg flex items-center justify-between"
+                                                style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <input type="checkbox" className="mr-2" style={{ width: '18px', height: '18px' }} />
+                                                    <div>
+                                                        <div className="font-medium" style={{ color: '#333333' }}>
+                                                            {booking.customerName} จองห้องพัก {booking.bookingNumber} /{booking.bookingTime} น /{booking.accommodationName}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="px-3 py-1 rounded text-sm" style={{ backgroundColor: '#FFF3E0', color: '#F57C00' }}>
+                                                        {booking.status === 'PENDING' ? 'กำลังจองห้องพัก' : booking.status}
+                                                    </span>
+                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E0E0E0' }}>
+                                                        <span className="text-xs">👤</span>
+                                                    </div>
+                                                    <button className="text-sm" style={{ color: '#999999' }}>⋮</button>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="px-3 py-1 rounded text-sm" style={{ backgroundColor: '#FFF3E0', color: '#F57C00' }}>
-                                                กำลังจองห้องพัก
-                                            </span>
-                                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E0E0E0' }}>
-                                                <span className="text-xs">👤</span>
-                                            </div>
-                                            <button className="text-sm" style={{ color: '#999999' }}>⋮</button>
-                                        </div>
+                                        ))}
                                     </div>
-
-                                    <div 
-                                        className="p-4 rounded-lg flex items-center justify-between"
-                                        style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <input type="checkbox" className="mr-2" style={{ width: '18px', height: '18px' }} />
-                                            <div>
-                                                <div className="font-medium" style={{ color: '#333333' }}>
-                                                    ลูกค้าใหม่จองห้องพัก Tex25258 /14:00 น /โรงแรมสับชายดี
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="px-3 py-1 rounded text-sm" style={{ backgroundColor: '#FFF3E0', color: '#F57C00' }}>
-                                                กำลังจองห้องพัก
-                                            </span>
-                                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E0E0E0' }}>
-                                                <span className="text-xs">👤</span>
-                                            </div>
-                                            <button className="text-sm" style={{ color: '#999999' }}>⋮</button>
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
                             </div>
 
                             {/* Popular Services Section */}
@@ -269,62 +362,59 @@ export default function AdminDashboard() {
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-semibold" style={{ color: '#333333' }}>ข้อความใหม่ที่ส่งมาหา</h3>
                                 </div>
-                                <div className="space-y-4">
-                                    {/* Message Item 1 */}
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E0E0E0' }}>
-                                            <span className="text-sm">👤</span>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <div className="font-medium text-sm" style={{ color: '#333333' }}>Andreana Viola</div>
-                                                    <div className="text-xs" style={{ color: '#999999' }}>สวัสดีค่ะ</div>
+                                {loadingMessages ? (
+                                    <div className="flex justify-center items-center py-8">
+                                        <Spin />
+                                    </div>
+                                ) : conversations.length === 0 ? (
+                                    <div className="text-center py-8" style={{ color: '#999999' }}>
+                                        ไม่มีข้อความใหม่
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {conversations.slice(0, 3).map((conv) => (
+                                            <div key={conv.id} className="flex items-center gap-3">
+                                                <Avatar 
+                                                    src={conv.participant?.avatar ? getProfileImageUrl(conv.participant.avatar) : null}
+                                                    style={{ backgroundColor: '#E0E0E0' }}
+                                                >
+                                                    {conv.participant?.name?.charAt(0) || '👤'}
+                                                </Avatar>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <div className="font-medium text-sm" style={{ color: '#333333' }}>
+                                                                {conv.participant?.name || 'Unknown'}
+                                                                {conv.unread_count > 0 && (
+                                                                    <span className="ml-2 px-1.5 py-0.5 rounded-full text-xs" style={{ backgroundColor: '#5B8DEE', color: '#FFFFFF' }}>
+                                                                        {conv.unread_count}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-xs" style={{ color: '#999999' }}>
+                                                                {conv.last_message?.content || 'ไม่มีข้อความ'}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-xs" style={{ color: '#999999' }}>
+                                                            {conv.last_message?.sent_at ? formatTime(conv.last_message.sent_at) : ''}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="text-xs" style={{ color: '#999999' }}>08:30</div>
                                             </div>
-                                        </div>
-                                    </div>
+                                        ))}
 
-                                    {/* Message Item 2 */}
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E0E0E0' }}>
-                                            <span className="text-sm">👤</span>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <div className="font-medium text-sm" style={{ color: '#333333' }}>Francesco Long</div>
-                                                    <div className="text-xs" style={{ color: '#999999' }}>ฉันจะช่วยคุณได้อย่างไร</div>
-                                                </div>
-                                                <div className="text-xs" style={{ color: '#999999' }}>07:00</div>
-                                            </div>
+                                        {/* See All Button */}
+                                        <div className="text-center pt-2">
+                                            <button 
+                                                className="text-sm font-medium" 
+                                                style={{ color: '#5B8DEE' }}
+                                                onClick={() => router.push('/chats')}
+                                            >
+                                                See All
+                                            </button>
                                         </div>
                                     </div>
-
-                                    {/* Message Item 3 */}
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E0E0E0' }}>
-                                            <span className="text-sm">👤</span>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <div className="font-medium text-sm" style={{ color: '#333333' }}>Alexandra Michu</div>
-                                                    <div className="text-xs" style={{ color: '#999999' }}>ขึ้นอยู่กับการเดินทางได้</div>
-                                                </div>
-                                                <div className="text-xs" style={{ color: '#999999' }}>23/11</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* See All Button */}
-                                    <div className="text-center pt-2">
-                                        <button className="text-sm font-medium" style={{ color: '#5B8DEE' }}>
-                                            See All
-                                        </button>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </div>

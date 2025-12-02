@@ -187,7 +187,7 @@ export default function PersonalInformationSection({
 
                         <div>
                             <label className="block text-base font-medium mb-3" style={{ color: '#1F2937' }}>
-                                เบอร์โทรศัพท์ติดต่อ(สำรอง) *
+                                เบอร์โทรศัพท์ติดต่อ(สำรอง)
                             </label>
                             <Input
                                 value={formData.backupPhone}
