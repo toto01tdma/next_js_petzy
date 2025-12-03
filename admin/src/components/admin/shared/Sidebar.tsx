@@ -111,21 +111,44 @@ const Sidebar = () => {
                     
                     return (
                         <div key={index}>
-                            <Link
-                                href={item.path}
-                                className="block px-6 py-3 transition-all cursor-pointer"
-                                style={{
-                                    backgroundColor: isItemActive ? '#3D50DF' : 'transparent',
-                                    color: '#FFFFFF',
-                                    borderLeft: isItemActive ? '4px solid #FFFFFF' : '4px solid transparent',
-                                    fontWeight: isItemActive ? '600' : '400'
-                                }}
-                            >
-                                <div className="flex items-center">
-                                    <span className="mr-3 text-xl">{item.icon}</span>
-                                    <span className="text-sm">{item.title}</span>
+                            {hasSubmenu ? (
+                                <div
+                                    onClick={() => {
+                                        // Toggle submenu visibility by navigating to parent path
+                                        if (!isManageActive) {
+                                            router.push(item.path);
+                                        }
+                                    }}
+                                    className="block px-6 py-3 transition-all cursor-pointer"
+                                    style={{
+                                        backgroundColor: isItemActive ? '#3D50DF' : 'transparent',
+                                        color: '#FFFFFF',
+                                        borderLeft: isItemActive ? '4px solid #FFFFFF' : '4px solid transparent',
+                                        fontWeight: isItemActive ? '600' : '400'
+                                    }}
+                                >
+                                    <div className="flex items-center">
+                                        <span className="mr-3 text-xl">{item.icon}</span>
+                                        <span className="text-sm">{item.title}</span>
+                                    </div>
                                 </div>
-                            </Link>
+                            ) : (
+                                <Link
+                                    href={item.path}
+                                    className="block px-6 py-3 transition-all cursor-pointer"
+                                    style={{
+                                        backgroundColor: isItemActive ? '#3D50DF' : 'transparent',
+                                        color: '#FFFFFF',
+                                        borderLeft: isItemActive ? '4px solid #FFFFFF' : '4px solid transparent',
+                                        fontWeight: isItemActive ? '600' : '400'
+                                    }}
+                                >
+                                    <div className="flex items-center">
+                                        <span className="mr-3 text-xl">{item.icon}</span>
+                                        <span className="text-sm">{item.title}</span>
+                                    </div>
+                                </Link>
+                            )}
                             {hasSubmenu && isManageActive && (
                                 <div className="pl-8">
                                     {item.submenu!.map((subItem, subIndex) => (

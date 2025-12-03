@@ -107,6 +107,10 @@ export default function CreateService() {
         officePhone: '',
         googleMapsLink: '',
         mobilePhone: '',
+        provinceId: '',
+        districtId: '',
+        subdistrictId: '',
+        postCode: '',
     });
 
     // Business Details State
@@ -226,6 +230,10 @@ export default function CreateService() {
                             officePhone: data.data.hotel_location.office_phone || '',
                             googleMapsLink: data.data.hotel_location.google_maps_link || '',
                             mobilePhone: data.data.hotel_location.mobile_phone || '',
+                            provinceId: data.data.hotel_location.province_id || '',
+                            districtId: data.data.hotel_location.district_id || '',
+                            subdistrictId: data.data.hotel_location.subdistrict_id || '',
+                            postCode: data.data.hotel_location.post_code || '',
                         });
                         setBusinessDetails(data.data.hotel_location.business_additional_details || '');
                     }
@@ -660,6 +668,10 @@ export default function CreateService() {
                         office_phone: hotelLocation.officePhone || '',
                         google_maps_link: hotelLocation.googleMapsLink || '',
                         mobile_phone: hotelLocation.mobilePhone || '',
+                        province_id: hotelLocation.provinceId || undefined,
+                        district_id: hotelLocation.districtId || undefined,
+                        subdistrict_id: hotelLocation.subdistrictId || undefined,
+                        post_code: hotelLocation.postCode || undefined,
                         business_additional_details: businessDetails || ''
                     },
                     accommodation_photos: {
@@ -1083,6 +1095,10 @@ export default function CreateService() {
                     office_phone: hotelLocation.officePhone,
                     google_maps_link: hotelLocation.googleMapsLink,
                     mobile_phone: hotelLocation.mobilePhone,
+                    province_id: hotelLocation.provinceId || undefined,
+                    district_id: hotelLocation.districtId || undefined,
+                    subdistrict_id: hotelLocation.subdistrictId || undefined,
+                    post_code: hotelLocation.postCode || undefined,
                     business_additional_details: businessDetails
                 },
 

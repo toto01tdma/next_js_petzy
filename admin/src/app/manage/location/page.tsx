@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/admin/shared/Sidebar';
-import { Button, Table, Space, Modal, Form, Input, Select, message, Tabs } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Table, Space, Modal, Form, Input, Select, message, Tabs, Upload } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { API_BASE_URL, USE_API_MODE } from '@/config/api';
 import type { ColumnsType } from 'antd/es/table';
 import { checkAuthError } from '@/utils/api';
@@ -23,6 +23,7 @@ interface Province {
     code: string;
     name: string;
     nameEn?: string;
+    imageUrl?: string;
     country?: Country;
 }
 
@@ -32,6 +33,7 @@ interface District {
     code: string;
     name: string;
     nameEn?: string;
+    imageUrl?: string;
     province?: Province;
 }
 
@@ -42,6 +44,7 @@ interface Subdistrict {
     name: string;
     nameEn?: string;
     postalCode?: string;
+    imageUrl?: string;
     district?: District;
 }
 
@@ -58,6 +61,7 @@ interface Location {
     districtId: string;
     subdistrictId: string;
     locationTypeId: number;
+    imageUrl?: string;
     province?: Province;
     district?: District;
     subdistrict?: Subdistrict;
@@ -90,6 +94,10 @@ export default function LocationManagement() {
     const [selectedSubdistrictProvinceId, setSelectedSubdistrictProvinceId] = useState<string | undefined>();
     const [selectedLocationTypeId, setSelectedLocationTypeId] = useState<string | undefined>();
     const [selectedLocationProvinceId, setSelectedLocationProvinceId] = useState<string | undefined>();
+    
+    // Image upload states
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [imageFile, setImageFile] = useState<File | null>(null);
 
     useEffect(() => {
         fetchCountries();
@@ -298,12 +306,14 @@ export default function LocationManagement() {
 
     const handleAdd = () => {
         setEditingItem(null);
+        setImageFile(null);
         form.resetFields();
         setIsModalVisible(true);
     };
 
     const handleEdit = (record: LocationItem) => {
         setEditingItem(record);
+        setImageFile(null);
         form.setFieldsValue(record);
         setIsModalVisible(true);
     };
@@ -910,6 +920,33 @@ export default function LocationManagement() {
                                 >
                                     <Input placeholder="เช่น Bangkok" />
                                 </Form.Item>
+                                <Form.Item
+                                    label="รูปภาพ"
+                                >
+                                    <Upload
+                                        beforeUpload={(file) => {
+                                            setImageFile(file);
+                                            return false; // Prevent auto upload
+                                        }}
+                                        onRemove={() => {
+                                            setImageFile(null);
+                                            return true;
+                                        }}
+                                        maxCount={1}
+                                        accept="image/*"
+                                    >
+                                        <Button icon={<UploadOutlined />}>เลือกไฟล์</Button>
+                                    </Upload>
+                                    {editingItem && (editingItem as Province).imageUrl && (
+                                        <div style={{ marginTop: 8 }}>
+                                            <img 
+                                                src={`${API_BASE_URL}/uploads/provinces/${(editingItem as Province).imageUrl}`} 
+                                                alt="Current" 
+                                                style={{ maxWidth: 200, maxHeight: 200 }}
+                                            />
+                                        </div>
+                                    )}
+                                </Form.Item>
                             </>
                         )}
 
@@ -947,6 +984,33 @@ export default function LocationManagement() {
                                     label="ชื่ออำเภอ (อังกฤษ)"
                                 >
                                     <Input placeholder="เช่น Phra Nakhon" />
+                                </Form.Item>
+                                <Form.Item
+                                    label="รูปภาพ"
+                                >
+                                    <Upload
+                                        beforeUpload={(file) => {
+                                            setImageFile(file);
+                                            return false; // Prevent auto upload
+                                        }}
+                                        onRemove={() => {
+                                            setImageFile(null);
+                                            return true;
+                                        }}
+                                        maxCount={1}
+                                        accept="image/*"
+                                    >
+                                        <Button icon={<UploadOutlined />}>เลือกไฟล์</Button>
+                                    </Upload>
+                                    {editingItem && (editingItem as District).imageUrl && (
+                                        <div style={{ marginTop: 8 }}>
+                                            <img 
+                                                src={`${API_BASE_URL}/uploads/districts/${(editingItem as District).imageUrl}`} 
+                                                alt="Current" 
+                                                style={{ maxWidth: 200, maxHeight: 200 }}
+                                            />
+                                        </div>
+                                    )}
                                 </Form.Item>
                             </>
                         )}
@@ -991,6 +1055,33 @@ export default function LocationManagement() {
                                     label="รหัสไปรษณีย์"
                                 >
                                     <Input placeholder="เช่น 10200" />
+                                </Form.Item>
+                                <Form.Item
+                                    label="รูปภาพ"
+                                >
+                                    <Upload
+                                        beforeUpload={(file) => {
+                                            setImageFile(file);
+                                            return false; // Prevent auto upload
+                                        }}
+                                        onRemove={() => {
+                                            setImageFile(null);
+                                            return true;
+                                        }}
+                                        maxCount={1}
+                                        accept="image/*"
+                                    >
+                                        <Button icon={<UploadOutlined />}>เลือกไฟล์</Button>
+                                    </Upload>
+                                    {editingItem && (editingItem as Subdistrict).imageUrl && (
+                                        <div style={{ marginTop: 8 }}>
+                                            <img 
+                                                src={`${API_BASE_URL}/uploads/subdistricts/${(editingItem as Subdistrict).imageUrl}`} 
+                                                alt="Current" 
+                                                style={{ maxWidth: 200, maxHeight: 200 }}
+                                            />
+                                        </div>
+                                    )}
                                 </Form.Item>
                             </>
                         )}
@@ -1080,6 +1171,33 @@ export default function LocationManagement() {
                                             </Select.Option>
                                         ))}
                                     </Select>
+                                </Form.Item>
+                                <Form.Item
+                                    label="รูปภาพ"
+                                >
+                                    <Upload
+                                        beforeUpload={(file) => {
+                                            setImageFile(file);
+                                            return false; // Prevent auto upload
+                                        }}
+                                        onRemove={() => {
+                                            setImageFile(null);
+                                            return true;
+                                        }}
+                                        maxCount={1}
+                                        accept="image/*"
+                                    >
+                                        <Button icon={<UploadOutlined />}>เลือกไฟล์</Button>
+                                    </Upload>
+                                    {editingItem && (editingItem as Location).imageUrl && (
+                                        <div style={{ marginTop: 8 }}>
+                                            <img 
+                                                src={`${API_BASE_URL}/uploads/locations/${(editingItem as Location).imageUrl}`} 
+                                                alt="Current" 
+                                                style={{ maxWidth: 200, maxHeight: 200 }}
+                                            />
+                                        </div>
+                                    )}
                                 </Form.Item>
                             </>
                         )}

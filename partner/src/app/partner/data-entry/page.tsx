@@ -36,6 +36,10 @@ type PartnerDataResponse = {
         google_maps_link: string;
         mobile_phone: string;
         business_additional_details: string;
+        province_id?: string;
+        district_id?: string;
+        subdistrict_id?: string;
+        post_code?: string;
         national_id_card_url: string;
         trade_registration_cert_url: string;
         tax_documents_url: string;
@@ -120,7 +124,11 @@ export default function DataEntry() {
                         officePhone: '021234567',
                         googleMapsLink: 'https://maps.google.com',
                         mobilePhone: '0812345678',
-                        businessAdditionalDetails: 'Preview business details'
+                        businessAdditionalDetails: 'Preview business details',
+                        provinceId: '',
+                        districtId: '',
+                        subdistrictId: '',
+                        postCode: ''
                     });
                     setIsFetching(false);
                     return;
@@ -176,7 +184,11 @@ export default function DataEntry() {
                         officePhone: data.data.office_phone || '',
                         googleMapsLink: data.data.google_maps_link || '',
                         mobilePhone: data.data.mobile_phone || '',
-                        businessAdditionalDetails: data.data.business_additional_details || ''
+                        businessAdditionalDetails: data.data.business_additional_details || '',
+                        provinceId: data.data.province_id || '',
+                        districtId: data.data.district_id || '',
+                        subdistrictId: data.data.subdistrict_id || '',
+                        postCode: data.data.post_code || ''
                     });
 
                     // Set uploaded images if URLs exist
@@ -382,7 +394,11 @@ export default function DataEntry() {
         officePhone: '',
         googleMapsLink: '',
         mobilePhone: '',
-        businessAdditionalDetails: ''
+        businessAdditionalDetails: '',
+        provinceId: '',
+        districtId: '',
+        subdistrictId: '',
+        postCode: ''
     });
 
     const handleInputChange = (field: string, value: string) => {
@@ -530,6 +546,10 @@ export default function DataEntry() {
                 google_maps_link: formData.googleMapsLink,
                 mobile_phone: formData.mobilePhone,
                 business_additional_details: formData.businessAdditionalDetails,
+                province_id: formData.provinceId || undefined,
+                district_id: formData.districtId || undefined,
+                subdistrict_id: formData.subdistrictId || undefined,
+                post_code: formData.postCode || undefined,
                 national_id_card_url: extractFilename(uploadedUrls.national_id_card_url) as string,
                 trade_registration_cert_url: extractFilename(uploadedUrls.trade_registration_cert_url) as string,
                 tax_documents_url: extractFilename(uploadedUrls.tax_documents_url) as string,
